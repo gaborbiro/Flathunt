@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.21'
+}
+
+group 'app.gaborbiro'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
+    implementation "org.seleniumhq.selenium:selenium-java:3.141.59"
+    implementation 'com.google.code.gson:gson:2.8.7'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.21'
+
+    implementation 'com.j256.ormlite:ormlite-core:5.6'
+    implementation 'com.j256.ormlite:ormlite-jdbc:5.6'
+
+    implementation 'com.jcabi:jcabi-manifests:1.1'
+
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'org.slf4j:slf4j-api:1.7.+'
+    implementation 'org.slf4j:slf4j-jdk14:1.7.+'
+}
+
+task allJars {
+    dependsOn('spareroomExpJar', 'rightmoveExpJar', 'zooplaExpJar')
+}
+
+tasks.register('spareroomExpJar', CustomJar, 'spareroom-exp', project)
+tasks.register('rightmoveExpJar', CustomJar, 'rightmove-exp', project)
+tasks.register('zooplaExpJar', CustomJar, 'zoopla-exp', project)
+//tasks.register('zooplaTwoJar', CustomJar, 'zoopla-two', project)
+
+class CustomJar extends org.gradle.jvm.tasks.Jar {
+
+    @javax.inject.Inject
+    CustomJar(String target, Project project) {
+        manifest {
+            attributes(
+                    "Main-Class": "app.gaborbiro.flathunt.FlathuntKt",
+                    "jar-build-timestamp": new Date().toString(),
+                    "target": target,
+            )
+        }
+        archiveFileName.set("Flathunt-${target}.jar")
+
+        from {} with project.jar
+
+        destinationDirectory = project.file(project.rootDir)
+    }
+}
+
+jar {
+    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+}
