@@ -4,7 +4,6 @@ import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.data.model.Property
-import app.gaborbiro.flathunt.google.GOOGLE_MAP_API_KEY
 import app.gaborbiro.flathunt.google.POI
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.service.Service
