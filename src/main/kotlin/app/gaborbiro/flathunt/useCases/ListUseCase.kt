@@ -1,7 +1,6 @@
 package app.gaborbiro.flathunt.useCases
 
 import app.gaborbiro.flathunt.ValidationCriteria
-import app.gaborbiro.flathunt.command
 import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.service.Service
@@ -12,6 +11,17 @@ class ListUseCase(
     private val store: Store,
     criteria: ValidationCriteria
 ) : BaseUseCase(service, store, criteria) {
+
+    override val commands: List<Command<*>>
+        get() = listOf(
+            listProperties,
+            listIds,
+            listUrl,
+            deleteList,
+            deleteBlacklist,
+            listBlacklist,
+            addBlacklist
+        )
 
     private val listProperties = command(
         command = "list properties",
@@ -76,7 +86,4 @@ class ListUseCase(
         val blacklist = store.getBlacklist()
         store.saveBlacklist(ids.split(",") - blacklist + blacklist)
     }
-
-    override fun getCommands() =
-        listOf(listProperties, listIds, listUrl, deleteList, deleteBlacklist, listBlacklist, addBlacklist)
 }

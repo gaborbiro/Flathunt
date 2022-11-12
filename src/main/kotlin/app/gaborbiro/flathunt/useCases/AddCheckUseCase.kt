@@ -1,13 +1,26 @@
 package app.gaborbiro.flathunt.useCases
 
-import app.gaborbiro.flathunt.*
+import app.gaborbiro.flathunt.GlobalVariables
+import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.validate
 
 class AddCheckUseCase(service: Service, store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {
+
+    override val commands: List<Command<*>>
+        get() = listOf(
+            add,
+            addOpen,
+            check,
+            checkOpen,
+            forceAdd,
+            reCheck,
+            reIndex
+        )
 
     private val add = command<String>(
         command = "add",
@@ -108,6 +121,4 @@ class AddCheckUseCase(service: Service, store: Store, criteria: ValidationCriter
         }
         println("Done")
     }
-
-    override fun getCommands() = listOf(add, addOpen, check, checkOpen, forceAdd, reCheck, reIndex)
 }

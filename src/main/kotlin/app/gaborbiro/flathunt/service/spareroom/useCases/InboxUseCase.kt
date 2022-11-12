@@ -3,7 +3,6 @@ package app.gaborbiro.flathunt.service.spareroom.useCases
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.checkValid
-import app.gaborbiro.flathunt.command
 import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.data.model.Message
 import app.gaborbiro.flathunt.data.model.PersistedProperty
@@ -11,30 +10,33 @@ import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.service.spareroom.MessagingService
 import app.gaborbiro.flathunt.service.spareroom.Tag
 import app.gaborbiro.flathunt.useCases.BaseUseCase
+import app.gaborbiro.flathunt.useCases.Command
+import app.gaborbiro.flathunt.useCases.command
 
 class InboxUseCase(private val service: MessagingService, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {
 
-    override fun getCommands() = listOf(
-        command(
-            command = "inbox",
-            description = "Fetches properties from un-tagged messages in your inbox. Prioritizes properties mentioned explicitly. " +
-                    "If none mentioned, checks in the main advert attached to the message " +
-                    "(Note: only single-property adverts are supported for now). It will also calculate commute times to your points of interest and finally it will label/mark messages/properties as needed. Note: real time Google Maps API is used. Results are affected by time of day this command is run."
-        ) {
-            val properties =
-                fetchPropertiesFromAllMessages(
-                    service.fetchMessages(GlobalVariables.safeMode),
-                    GlobalVariables.safeMode
-                )
-            val (_, unsuitable) = fetchRoutes(properties, GlobalVariables.safeMode)
-            unsuitable.forEach { property ->
-                property.messageUrl?.let {
-                    if (!GlobalVariables.safeMode) service.tagMessage(it, Tag.REJECTED)
+    override val commands: List<Command<*>>
+        get() = listOf(
+            command(
+                command = "inbox",
+                description = "Fetches properties from un-tagged messages in your inbox. Prioritizes properties mentioned explicitly. " +
+                        "If none mentioned, checks in the main advert attached to the message " +
+                        "(Note: only single-property adverts are supported for now). It will also calculate commute times to your points of interest and finally it will label/mark messages/properties as needed. Note: real time Google Maps API is used. Results are affected by time of day this command is run."
+            ) {
+                val properties =
+                    fetchPropertiesFromAllMessages(
+                        service.fetchMessages(GlobalVariables.safeMode),
+                        GlobalVariables.safeMode
+                    )
+                val (_, unsuitable) = fetchRoutes(properties, GlobalVariables.safeMode)
+                unsuitable.forEach { property ->
+                    property.messageUrl?.let {
+                        if (!GlobalVariables.safeMode) service.tagMessage(it, Tag.REJECTED)
+                    }
                 }
             }
-        }
-    )
+        )
 
     /**
      * Fetch properties from all messages. Marks messages as needed.

@@ -11,6 +11,9 @@ import app.gaborbiro.flathunt.service.Service
 class SearchUseCase(private val service: Service, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {
 
+    override val commands
+        get() = listOf(search)
+
     private val search = command<String>(
         command = "search",
         description = "Reads new properties from a search url. Marks, saves and prints found properties that are valid",
@@ -39,6 +42,7 @@ class SearchUseCase(private val service: Service, private val store: Store, crit
                             addedIds.add(it)
                         }
                     } catch (t: Throwable) {
+                        t.printStackTrace()
                         failedIds.add(id)
                     }
                 }
@@ -88,6 +92,4 @@ class SearchUseCase(private val service: Service, private val store: Store, crit
         }
         return null
     }
-
-    override fun getCommands() = listOf(search)
 }

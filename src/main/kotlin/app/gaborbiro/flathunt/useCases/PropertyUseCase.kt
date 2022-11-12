@@ -1,13 +1,28 @@
 package app.gaborbiro.flathunt.useCases
 
-import app.gaborbiro.flathunt.*
+import app.gaborbiro.flathunt.GlobalVariables
+import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.google.getRoutesToNearestStations
+import app.gaborbiro.flathunt.orNull
+import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.service.Service
 
 class PropertyUseCase(service: Service, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {
+
+    override val commands: List<Command<*>>
+        get() = listOf(
+            print,
+            open,
+            tyn,
+            delete,
+            mark,
+            comment,
+            commentAppend,
+            stations
+        )
 
     private val print = command<String>(
         command = "print",
@@ -54,9 +69,9 @@ class PropertyUseCase(service: Service, private val store: Store, criteria: Vali
 
     private val delete = command<String, Boolean>(
         command = "delete",
-        description = "Deletes a properti(es) from the database, by index(es) or id(s). " +
+        description = "Deletes one or more properties from the database, by indexes or ids (comma separated). " +
                 "Pass '-u' after the index to also mark the property as unsuitable.",
-        argumentName1 = "index(es) or id(s)",
+        argumentName1 = "indexes or ids (comma separated)",
         argumentName2 = "mark as unsuitable (true/false)",
     )
     { (arg, mark) ->
@@ -68,8 +83,8 @@ class PropertyUseCase(service: Service, private val store: Store, criteria: Vali
 
     private val mark = command<String, Boolean>(
         command = "mark",
-        description = "Mark properti(es) as unsuitable/hidden or removes such mark, by index(es) or id(s)",
-        argumentName1 = "index(es) or id(s)",
+        description = "Marks one or more properties as unsuitable/hidden or removes such mark, by indexes or ids (comma separated)",
+        argumentName1 = "indexes or ids (comma separated)",
         argumentName2 = "unsuitable"
     )
     { (arg, unsuitable) ->
@@ -138,8 +153,6 @@ class PropertyUseCase(service: Service, private val store: Store, criteria: Vali
             }
             ?: run { println("Cannot find property with index or id $indexOrId") }
     }
-
-    override fun getCommands() = listOf(print, open, tyn, delete, mark, comment, commentAppend, stations)
 
     private fun getPropertiesByIndexOrIds(arg: String): List<PersistedProperty> {
         val arg = arg.checkLastUsedIndexOrId()

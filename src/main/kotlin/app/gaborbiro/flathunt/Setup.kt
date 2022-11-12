@@ -7,14 +7,7 @@ import app.gaborbiro.flathunt.minutes
 import app.gaborbiro.flathunt.or
 import java.time.LocalDate
 
-val poiAndreu = POI.Explicit(
-    description = "Andreu",
-    name = "Kingwood Apartments",
-    coordinates = LatLon(latitude = "51.4885858", longitude = "-0.0341688"),
-    max = 20 minutes CYCLING or 35 minutes TRANSIT,
-)
-
-val poiSchwann = POI.Explicit(
+val poiCW = POI.Explicit(
     description = "Schwann",
     name = "Canada Water Station",
     coordinates = LatLon(latitude = "51.4988863", longitude = "-0.1322229"),
@@ -38,7 +31,7 @@ val poiSoho = POI.Explicit(
 val EXP = ValidationCriteria(
     pointsOfInterest = listOf(
         poiSoho,
-        poiSchwann,
+        poiCW,
         POI.NearestRailStation,
     ),
     maxPrice = 1300,
@@ -50,10 +43,10 @@ val EXP = ValidationCriteria(
     noBedsit = true,
 )
 
-val TWO = ValidationCriteria(
+val WITH_FLATMATE = ValidationCriteria(
     pointsOfInterest = listOf(
         poiSoho,
-        poiSchwann,
+        poiCW,
         poiMia,
         POI.NearestRailStation,
     ),

@@ -30,7 +30,8 @@ class Flathunt {
     fun main(args: Array<String>) {
         java.util.logging.LogManager.getLogManager().reset() // disable all logging
         if (Manifests.exists("jar-build-timestamp")) {
-            println("\n=====================\nBuilt at:\t" + Manifests.read("jar-build-timestamp"))
+            println("\n==========================================================================" +
+                    "\nBuilt at:\t" + Manifests.read("jar-build-timestamp"))
         }
         val target = if (Manifests.exists("jar-build-timestamp")) {
             Manifests.read("target")
@@ -123,11 +124,15 @@ class Flathunt {
         BufferedReader(InputStreamReader(System.`in`)).use { reader ->
             var input: String?
             if (strictCommand == null) {
-                println()
-                println("Service: $target")
+                println("Service:\t$target")
             }
+            var hintShown = false
             do {
-                println("\n==========================================================================")
+                println("==========================================================================")
+                if (hintShown.not()) {
+                    hintShown = true
+                    println("Type help for a list of available commands")
+                }
                 print("> ")
                 input = reader.readLine()
                 if (input == EXIT_COMMAND_CODE) {
@@ -190,7 +195,7 @@ class Flathunt {
     private fun registerUseCases(serviceName: String, vararg useCases: UseCase) {
         val allCommands = mutableMapOf<String, Command<*>>()
         useCases.forEach {
-            val commands = it.getCommands().map { it.command to it }.associate { it }
+            val commands = it.commands.map { it.command to it }.associate { it }
             val intersection = commands.keys.intersect(allCommands.keys)
             if (intersection.isNotEmpty()) {
                 throw IllegalArgumentException("Error registering interface provider: '$serviceName'. Conflicting commands: ${intersection.joinToString()}")

@@ -1,13 +1,15 @@
 package app.gaborbiro.flathunt.useCases
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.service.Service
 import app.gaborbiro.flathunt.ValidationCriteria
-import app.gaborbiro.flathunt.command
 import app.gaborbiro.flathunt.data.Store
+import app.gaborbiro.flathunt.service.Service
 
 class RoutesUseCase(service: Service, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {
+
+    override val commands: List<Command<*>>
+        get() = listOf(routes)
 
     private val routes = command(
         command = "routes",
@@ -18,6 +20,4 @@ class RoutesUseCase(service: Service, private val store: Store, criteria: Valida
         fetchRoutes(store.getProperties(), GlobalVariables.safeMode)
         println("Finished")
     }
-
-    override fun getCommands() = listOf(routes)
 }

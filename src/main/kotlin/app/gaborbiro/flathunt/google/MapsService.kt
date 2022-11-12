@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt.google
 
-import app.gaborbiro.flathunt.*
+import app.gaborbiro.flathunt.LocalProperties
+import app.gaborbiro.flathunt.callGet
 import app.gaborbiro.flathunt.data.model.LatLon
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.data.model.Route
@@ -219,7 +220,7 @@ fun getRoutesToNearestStations(from: LatLon): List<Route> {
             "&lon=${from.longitude}" +
             "&radius=${ceil(radius).toInt()}" +
             "&stoptypes=NaptanMetroStation,NaptanRailStation" +
-            "&modes=dlr,overground,tube,tram,national-rail,tflrail"
+            "&modes=dlr,overground,tube,tram,national-rail"
     val json = callGet(url)
     val stops = gson.fromJson(json, TflStopsResponse::class.java).stopPoints
     return stops.mapNotNull {
