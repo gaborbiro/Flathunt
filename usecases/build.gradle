@@ -1,0 +1,17 @@
+plugins {
+    id 'kotlin'
+}
+
+group = 'app.gaborbiro'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(project(":base"))
+    implementation(project(":service"))
+    implementation(project(":data"))
+    implementation(project(":google"))
+}

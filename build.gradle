@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.21'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
 }
 
 group 'app.gaborbiro'
@@ -11,10 +11,15 @@ repositories {
 }
 
 dependencies {
-    implementation project("rightmove")
+    implementation project(":rightmove")
+    implementation project(":zoopla")
+    implementation project(":spareroom")
+    implementation project(":service")
+    implementation project(":usecases")
+    implementation project(":data")
+    implementation project(":google")
+    implementation project(":base")
 
-    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
-    implementation "org.seleniumhq.selenium:selenium-java:4.10.0"
     implementation 'com.google.code.gson:gson:2.8.9'
 
     implementation 'com.j256.ormlite:ormlite-core:5.6'
@@ -27,6 +32,9 @@ dependencies {
     implementation 'org.slf4j:slf4j-jdk14:1.7.+'
 
     implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
+    implementation("org.seleniumhq.selenium:selenium-java:4.10.0")
 }
 
 task allJars {

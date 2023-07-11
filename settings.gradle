@@ -1,3 +1,10 @@
 rootProject.name = 'FlatHunt'
 include 'rightmove'
+include 'data'
+include 'service'
+include 'google'
+include 'base'
+include 'zoopla'
+include 'usecases'
+include 'spareroom'
 

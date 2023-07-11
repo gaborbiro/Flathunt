@@ -7,10 +7,10 @@ import app.gaborbiro.flathunt.data.zoopla.ZooplaExpStore
 import app.gaborbiro.flathunt.service.Service
 import app.gaborbiro.flathunt.service.rightmove.RightmoveService
 import app.gaborbiro.flathunt.service.spareroom.SpareRoomService
-import app.gaborbiro.flathunt.service.spareroom.useCases.InboxUseCase
+import app.gaborbiro.flathunt.service.spareroom.usecases.InboxUseCase
 import app.gaborbiro.flathunt.service.zoopla.ZooplaService
 import app.gaborbiro.flathunt.usecases.*
-import com.google.common.reflect.TypeToken
+import com.google.gson.reflect.TypeToken
 import com.jcabi.manifests.Manifests
 import java.io.BufferedReader
 import java.io.InputStreamReader

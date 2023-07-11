@@ -1,27 +1,27 @@
 import app.gaborbiro.flathunt.google.POI
 import app.gaborbiro.flathunt.google.TravelMode.CYCLING
 import app.gaborbiro.flathunt.google.TravelMode.TRANSIT
-import app.gaborbiro.flathunt.ValidationCriteria
-import app.gaborbiro.flathunt.data.model.LatLon
-import app.gaborbiro.flathunt.minutes
-import app.gaborbiro.flathunt.or
+import app.gaborbiro.flathunt.usecases.ValidationCriteria
+import app.gaborbiro.flathunt.LatLon
+import app.gaborbiro.flathunt.google.minutes
+import app.gaborbiro.flathunt.google.or
 import java.time.LocalDate
 
-val poiCW = POI.Explicit(
+val poiCW = POI.Destination(
     description = "Schwann",
     name = "Canada Water Station",
     coordinates = LatLon(latitude = "51.4988863", longitude = "-0.1322229"),
     max = 20 minutes CYCLING or 30 minutes TRANSIT,
 )
 
-val poiMia = POI.Explicit(
+val poiMia = POI.Destination(
     description = "Mia's WP",
     name = "Westminster Station",
     coordinates = LatLon(latitude = "51.4988524", longitude = "-0.1292879"),
     max = 40 minutes TRANSIT,
 )
 
-val poiSoho = POI.Explicit(
+val poiSoho = POI.Destination(
     description = "Soho",
     name = "Dean Street",
     coordinates = LatLon(latitude = "51.5142306", longitude = "-0.1300049"),
