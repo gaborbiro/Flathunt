@@ -30,23 +30,23 @@ task allJars {
     dependsOn('spareroomExpJar', 'rightmoveExpJar', 'zooplaExpJar')
 }
 
-tasks.register('spareroomExpJar', CustomJar, 'spareroom-exp', project)
-tasks.register('rightmoveExpJar', CustomJar, 'rightmove-exp', project)
-tasks.register('zooplaExpJar', CustomJar, 'zoopla-exp', project)
+tasks.register('spareroomExpJar', CustomJar, /* service = */ 'spareroom-exp', project)
+tasks.register('rightmoveExpJar', CustomJar, /* service = */  'rightmove-exp', project)
+tasks.register('zooplaExpJar', CustomJar, /* service = */  'zoopla-exp', project)
 //tasks.register('zooplaTwoJar', CustomJar, 'zoopla-two', project)
 
 class CustomJar extends org.gradle.jvm.tasks.Jar {
 
     @javax.inject.Inject
-    CustomJar(String target, Project project) {
+    CustomJar(String service, Project project) {
         manifest {
             attributes(
-                    "Main-Class": "app.gaborbiro.flathunt.FlathuntKt",
+                    "Main-Class": "app.gaborbiro.flathunt.FlatHuntKt",
                     "jar-build-timestamp": new Date().toString(),
-                    "target": target,
+                    "service": service,
             )
         }
-        archiveFileName.set("Flathunt-${target}.jar")
+        archiveFileName.set("FlatHunt-${service}.jar")
 
         from {} with project.jar
 

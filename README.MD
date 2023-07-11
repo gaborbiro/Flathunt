@@ -1,15 +1,23 @@
+### How to run:
+
+> java -jar FlatHunt-rightmove-exp.jar
+
+Note: you can't run FlatHunt just like on its own, it needs a service specified. A service is basically a combination of the flathunting website you want to use and a criteria set.
+Currently, three services are supported: rightmove-exp, spareroom-exp and zoopla-exp. "exp" being the filtering criteria used to find the right flat. See Setup.kt#EXP
+
+Running ".\gradlew allJars" creates an executable jar file for all three services.
+
+Alternatively run app/gaborbiro/flathunt/FlatHunt.kt#main() with one of the services passed as argument.
+
 ### How to build:
+
+Check what driver version you need by looking at your current Chrome install's version and fetching the corresponding chromedriver.exe from https://chromedriver.chromium.org/downloads
+Note: you need a Stable release of Chrome. Beta/Dev/Canary won't work.
 
 Create a local.properties file and add google.api.key=[your Google API key]. 
 Google services needed: Directions API, Maps Static API (both billable).
 
 Run .\gradlew allJars
-
-You might have to update the chrome driver to a newer version. See: https://chromedriver.chromium.org/downloads
-
-### How to run:
-
-Just hit enter on one of the jar files.
 
 ### How to use:
 
@@ -18,7 +26,7 @@ Welcome to Flathunt!
 This app does not use any flathunt website APIs but uses web-scraping.
 It has two main modes of operating. 
 
-It can scan your inbox for incoming messages with the 'inbox' command. 
+It can scan your inbox (if the website supports it) for incoming messages with the 'inbox' command. 
 It fetches all the properties mentioned in the messages, checks if they match your search criteria and saves them for later viewing. (Only supported for spareroom.co.uk).
 
 You can also create a search profile on spareroom/rightmove/zoopla, grab the url and pass it to the 'search' command (make sure you use the jar that corresponds to the website). The command will similarly parse all properties and validate them.
