@@ -129,9 +129,9 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         super.markAsUnsuitable(id, index, unsuitable)
         store.getCookies()?.let { cookies ->
             if (GlobalVariables.safeMode || callPost(
-                    "https://my.rightmove.co.uk/property/status",
-                    "[{\"id\": \"$id\", \"action\": \"${if (unsuitable) "HIDE" else "UNHIDE"}\"}]",
-                    cookies
+                    url = "https://my.rightmove.co.uk/property/status",
+                    payload = "[{\"id\": \"$id\", \"action\": \"${if (unsuitable) "HIDE" else "UNHIDE"}\"}]",
+                    cookies = cookies
                 )
             ) {
                 println("$id marked${index?.let { " ($it)" } ?: ""}")

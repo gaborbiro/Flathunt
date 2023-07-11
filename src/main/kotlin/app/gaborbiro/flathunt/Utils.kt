@@ -3,10 +3,11 @@ package app.gaborbiro.flathunt
 import app.gaborbiro.flathunt.data.model.Cookies
 import app.gaborbiro.flathunt.google.TravelLimit
 import app.gaborbiro.flathunt.google.TravelMode
-import okhttp3.MediaType
+import okhttp3.FormBody
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 import java.io.UnsupportedEncodingException
@@ -29,9 +30,10 @@ fun callGet(url: String): String {
 }
 
 fun callPost(url: String, payload: String, cookies: Cookies): Boolean {
-    val type = MediaType.get("application/json; charset=utf-8")
-    val body = RequestBody.create(type, payload)
-    val request = Request.Builder()
+    val type = "application/json; charset=utf-8".toMediaType()
+    val body = payload.toRequestBody(type)
+    FormBody
+    val request: Request = Request.Builder()
         .addHeader("Cookie", cookies.cookies.joinToString("; "))
         .addHeader("Content-Type", "application/json")
         .url(url)
@@ -41,8 +43,8 @@ fun callPost(url: String, payload: String, cookies: Cookies): Boolean {
         println(request.toString() + "\n" + payload)
     }
     val result = OkHttpClient().newCall(request).execute()
-    return if (result.code() < 200 || result.code() > 299) {
-        println("Error ${result.code()}: " + result.message())
+    return if (result.code < 200 || result.code > 299) {
+        println("Error ${result.code}: " + result.message)
         false
     } else {
         true

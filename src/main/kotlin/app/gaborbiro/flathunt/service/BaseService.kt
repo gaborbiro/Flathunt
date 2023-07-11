@@ -66,7 +66,7 @@ abstract class BaseService(private val store: Store) : Service {
                     // start-maximized
                     // window-position=0,0", "window-size=1,1
                     addArguments("start-maximized")
-                    setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
+                    setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
                 }
             )
         }

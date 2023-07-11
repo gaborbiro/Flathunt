@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.useCases
+package app.gaborbiro.flathunt.usecases
 
 import app.gaborbiro.flathunt.prettyPrint
 

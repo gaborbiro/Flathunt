@@ -4,11 +4,12 @@ import EXP
 import app.gaborbiro.flathunt.data.rightmove.RightmoveExpStore
 import app.gaborbiro.flathunt.data.spareroom.SpareroomStore
 import app.gaborbiro.flathunt.data.zoopla.ZooplaExpStore
+import app.gaborbiro.flathunt.service.Service
 import app.gaborbiro.flathunt.service.rightmove.RightmoveService
-import app.gaborbiro.flathunt.service.spareroom.SRoomService
+import app.gaborbiro.flathunt.service.spareroom.SpareRoomService
 import app.gaborbiro.flathunt.service.spareroom.useCases.InboxUseCase
 import app.gaborbiro.flathunt.service.zoopla.ZooplaService
-import app.gaborbiro.flathunt.useCases.*
+import app.gaborbiro.flathunt.usecases.*
 import com.google.common.reflect.TypeToken
 import com.jcabi.manifests.Manifests
 import java.io.BufferedReader
@@ -29,98 +30,25 @@ class FlatHunt {
 
     fun main(args: Array<String>) {
         java.util.logging.LogManager.getLogManager().reset() // disable all logging
+
         if (Manifests.exists("jar-build-timestamp")) {
-            println("\n==========================================================================" +
-                    "\nBuilt at:\t" + Manifests.read("jar-build-timestamp"))
+            println(
+                "\n==========================================================================" +
+                        "\nBuilt at:\t" + Manifests.read("jar-build-timestamp")
+            )
         }
-        val serviceStr = if (Manifests.exists("jar-build-timestamp")) {
-            Manifests.read("service")
-        } else args[0]
-        val strictCommand = if (args.size > 1) {
-            when {
-                args[0] == "-c" -> {
-                    args[1]
-                }
-                args[1] == "-c" -> {
-                    args[2]
-                }
-                args[1] == "debug" -> {
-                    GlobalVariables.debug = true
-                    null
-                }
-                else -> {
-                    null
-                }
-            }
-        } else {
-            null
-        }
-        val service = when (serviceStr) {
-            "spareroom-exp" -> {
-                val store = SpareroomStore()
-                val service = SRoomService(store)
-                registerUseCases(
-                    serviceName = serviceStr,
-                    InboxUseCase(service, store, EXP),
-                    SearchUseCase(service, store, EXP),
-                    AddCheckUseCase(service, store, EXP),
-                    RoutesUseCase(service, store, EXP),
-                    ListUseCase(service, store, EXP),
-                    PropertyUseCase(service, store, EXP),
-                    MaintenanceUseCase(store),
-                )
-                service
-            }
-            "rightmove-exp" -> {
-                val store = RightmoveExpStore()
-                val service = RightmoveService(store)
-                registerUseCases(
-                    serviceName = serviceStr,
-                    SearchUseCase(service, store, EXP),
-                    AddCheckUseCase(service, store, EXP),
-                    RoutesUseCase(service, store, EXP),
-                    ListUseCase(service, store, EXP),
-                    PropertyUseCase(service, store, EXP),
-                    MaintenanceUseCase(store),
-                )
-                service
-            }
-            "zoopla-exp" -> {
-                val store = ZooplaExpStore()
-                val service = ZooplaService(store)
-                registerUseCases(
-                    serviceName = serviceStr,
-                    SearchUseCase(service, store, EXP),
-                    AddCheckUseCase(service, store, EXP),
-                    RoutesUseCase(service, store, EXP),
-                    ListUseCase(service, store, EXP),
-                    PropertyUseCase(service, store, EXP),
-                    MaintenanceUseCase(store),
-                )
-                service
-            }
-//            "zoopla-two" -> {
-//                val store = ZooplaTwoStore()
-//                val service = ZooplaService(store)
-//                registerUseCases(
-//                    serviceName = target,
-//                    SearchUseCase(service, store, TWO),
-//                    AddCheckUseCase(service, store, TWO),
-//                    RoutesUseCase(service, store, TWO),
-//                    ListUseCase(service, store, TWO),
-//                    PropertyUseCase(service, store, TWO),
-//                    MaintenanceUseCase(store),
-//                )
-//                service
-//            }
-            else -> throw IllegalArgumentException("Missing target parameter from Manifest")
-        }
+
+        val serviceStr = getServiceFromArgs(args)
+        val service = getService(serviceStr)
+        val strictCommand = getStrictCommand(args)
+
         if (strictCommand != null) {
             processCommand(strictCommand)?.let { (command, args) ->
                 GlobalVariables.strict = true
                 executeCommand(command, args)
             } ?: run { println("Invalid command") }
         }
+
         BufferedReader(InputStreamReader(System.`in`)).use { reader ->
             var input: String?
             if (strictCommand == null) {
@@ -147,7 +75,91 @@ class FlatHunt {
                 }
             } while (true)
         }
+
         service.cleanup()
+    }
+
+    private fun getStrictCommand(args: Array<String>): String? {
+        return if (args.size > 1) {
+            when {
+                args[0] == "-c" -> {
+                    args[1]
+                }
+
+                args[1] == "-c" -> {
+                    args[2]
+                }
+
+                args[1] == "debug" -> {
+                    GlobalVariables.debug = true
+                    null
+                }
+
+                else -> {
+                    null
+                }
+            }
+        } else {
+            null
+        }
+    }
+
+    private fun getServiceFromArgs(args: Array<String>): String {
+        return if (Manifests.exists("jar-build-timestamp")) {
+            Manifests.read("service")
+        } else args[0]
+    }
+
+    private fun getService(serviceStr: String): Service {
+        return when (serviceStr) {
+            "spareroom-exp" -> {
+                val store = SpareroomStore()
+                val service = SpareRoomService(store)
+                buildCommandSet(
+                    serviceName = serviceStr,
+                    InboxUseCase(service, store, EXP),
+                    SearchUseCase(service, store, EXP),
+                    AddCheckUseCase(service, store, EXP),
+                    RoutesUseCase(service, store, EXP),
+                    ListUseCase(service, store, EXP),
+                    PropertyUseCase(service, store, EXP),
+                    MaintenanceUseCase(store),
+                )
+                service
+            }
+
+            "rightmove-exp" -> {
+                val store = RightmoveExpStore()
+                val service = RightmoveService(store)
+                buildCommandSet(
+                    serviceName = serviceStr,
+                    SearchUseCase(service, store, EXP),
+                    AddCheckUseCase(service, store, EXP),
+                    RoutesUseCase(service, store, EXP),
+                    ListUseCase(service, store, EXP),
+                    PropertyUseCase(service, store, EXP),
+                    MaintenanceUseCase(store),
+                )
+                service
+            }
+
+            "zoopla-exp" -> {
+                val store = ZooplaExpStore()
+                val service = ZooplaService(store)
+                buildCommandSet(
+                    serviceName = serviceStr,
+                    SearchUseCase(service, store, EXP),
+                    AddCheckUseCase(service, store, EXP),
+                    RoutesUseCase(service, store, EXP),
+                    ListUseCase(service, store, EXP),
+                    PropertyUseCase(service, store, EXP),
+                    MaintenanceUseCase(store),
+                )
+                service
+            }
+
+            else -> throw IllegalArgumentException("Missing service parameter from Manifest")
+        }
     }
 
     private fun processCommand(input: String): Pair<Command<*>, List<String>>? {
@@ -192,7 +204,7 @@ class FlatHunt {
         }
     }
 
-    private fun registerUseCases(serviceName: String, vararg useCases: UseCase) {
+    private fun buildCommandSet(serviceName: String, vararg useCases: UseCase) {
         val allCommands = mutableMapOf<String, Command<*>>()
         useCases.forEach {
             val commands = it.commands.map { it.command to it }.associate { it }

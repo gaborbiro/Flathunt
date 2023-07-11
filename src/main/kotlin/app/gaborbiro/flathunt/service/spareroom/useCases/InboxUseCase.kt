@@ -9,9 +9,9 @@ import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.service.spareroom.MessagingService
 import app.gaborbiro.flathunt.service.spareroom.Tag
-import app.gaborbiro.flathunt.useCases.BaseUseCase
-import app.gaborbiro.flathunt.useCases.Command
-import app.gaborbiro.flathunt.useCases.command
+import app.gaborbiro.flathunt.usecases.BaseUseCase
+import app.gaborbiro.flathunt.usecases.Command
+import app.gaborbiro.flathunt.usecases.command
 
 class InboxUseCase(private val service: MessagingService, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {

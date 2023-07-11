@@ -14,7 +14,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
-class SRoomService(private val store: Store) : BaseService(store), MessagingService {
+class SpareRoomService(private val store: Store) : BaseService(store), MessagingService {
 
     override val cookieSessionName = "session_id"
     override val cookieSessionDomain = ".spareroom.co.uk"

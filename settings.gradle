@@ -1,2 +1,3 @@
 rootProject.name = 'FlatHunt'
+include 'rightmove'
 
