@@ -4,6 +4,10 @@ import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.service.Service
 import app.gaborbiro.flathunt.strict
+import app.gaborbiro.flathunt.usecase.base.BaseUseCase
+import app.gaborbiro.flathunt.usecase.base.Command
+import app.gaborbiro.flathunt.usecase.base.ValidationCriteria
+import app.gaborbiro.flathunt.usecase.base.command
 
 class ListUseCase(
     private val service: Service,

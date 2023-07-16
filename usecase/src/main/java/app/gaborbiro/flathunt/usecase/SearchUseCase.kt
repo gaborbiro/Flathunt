@@ -7,6 +7,7 @@ import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.service.Page
 import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.usecase.base.*
 
 class SearchUseCase(private val service: Service, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {

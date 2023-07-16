@@ -6,5 +6,6 @@ include 'google'
 include 'base'
 include 'zoopla'
 include 'usecase'
+include 'usecase:base'
 include 'spareroom'
 

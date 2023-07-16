@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":service"))
     implementation(project(":base"))
-    implementation(project(":usecase"))
+    implementation(project(":usecase:base"))
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
     implementation("org.seleniumhq.selenium:selenium-java:4.10.0")

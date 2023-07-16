@@ -5,6 +5,7 @@ import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.usecase.base.*
 
 class AddCheckUseCase(
     service: Service,

@@ -10,6 +10,7 @@ import app.gaborbiro.flathunt.service.spareroom.SpareRoomService
 import app.gaborbiro.flathunt.service.spareroom.usecase.InboxUseCase
 import app.gaborbiro.flathunt.service.zoopla.ZooplaService
 import app.gaborbiro.flathunt.usecase.*
+import app.gaborbiro.flathunt.usecase.base.*
 import com.google.gson.reflect.TypeToken
 import com.jcabi.manifests.Manifests
 import java.io.BufferedReader
