@@ -1,10 +1,12 @@
 package app.gaborbiro.flathunt
 
 import EXP
+import app.gaborbiro.flathunt.data.idealista.IdealistaStore
 import app.gaborbiro.flathunt.data.rightmove.RightmoveExpStore
 import app.gaborbiro.flathunt.data.spareroom.SpareroomStore
 import app.gaborbiro.flathunt.data.zoopla.ZooplaExpStore
 import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.service.idealista.IdealistaService
 import app.gaborbiro.flathunt.service.rightmove.RightmoveService
 import app.gaborbiro.flathunt.service.spareroom.SpareRoomService
 import app.gaborbiro.flathunt.service.spareroom.usecase.InboxUseCase
@@ -113,6 +115,15 @@ class FlatHunt {
 
     private fun getService(serviceStr: String): Service {
         return when (serviceStr) {
+            "idealista-exp" -> {
+                val store = IdealistaStore()
+                val service = IdealistaService(store)
+                buildCommandSet(
+                    serviceName = serviceStr
+                )
+                service
+            }
+
             "spareroom-exp" -> {
                 val store = SpareroomStore()
                 val service = SpareRoomService(store)
