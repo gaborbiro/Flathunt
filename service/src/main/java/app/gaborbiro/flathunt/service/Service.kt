@@ -4,6 +4,8 @@ import app.gaborbiro.flathunt.data.model.Property
 
 interface Service {
 
+    fun login()
+
     fun openTabs(vararg urls: String): List<String>
 
     /**

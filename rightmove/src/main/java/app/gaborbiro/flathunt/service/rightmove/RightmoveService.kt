@@ -15,8 +15,8 @@ import kotlin.math.ceil
 
 class RightmoveService(private val store: Store) : BaseService(store) {
 
-    override val cookieSessionName = "rmsessionid"
-    override val cookieSessionDomain = ".rightmove.co.uk"
+    override val sessionCookieNames = arrayOf("rmsessionid")
+    override val sessionCookieDomain = ".rightmove.co.uk"
 
     override fun login() {
         driver.findElement(By.className("sign-in-link")).click()

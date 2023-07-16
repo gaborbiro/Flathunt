@@ -9,7 +9,7 @@ class IdealistaStore : BaseStore(
     prefBlacklistKey = PREF_BLACKLIST,
 )
 
-private const val PREF_PROPERTIES = "properties"
-private const val PREF_INDEX = "index"
-private const val PREF_COOKIES = "cookies"
-private const val PREF_BLACKLIST = "blacklist_sr"
+private const val PREF_PROPERTIES = "properties_idealista"
+private const val PREF_INDEX = "index_idealista"
+private const val PREF_COOKIES = "cookies_idealista"
+private const val PREF_BLACKLIST = "blacklist_idealista"

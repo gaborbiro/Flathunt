@@ -16,8 +16,8 @@ import kotlin.math.ceil
 
 class ZooplaService(private val store: Store) : BaseService(store) {
 
-    override val cookieSessionName = "_cs_s"
-    override val cookieSessionDomain = ".zoopla.co.uk"
+    override val sessionCookieNames = arrayOf("_cs_s")
+    override val sessionCookieDomain = ".zoopla.co.uk"
 
     override fun beforeSession() {
         Thread.sleep(500)

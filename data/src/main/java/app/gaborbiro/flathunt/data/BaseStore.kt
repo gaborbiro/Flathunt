@@ -87,7 +87,3 @@ abstract class BaseStore(
         Preferences.clear(prefIndexKey)
     }
 }
-
-private class PropertiesWrapper(
-    val data: List<PersistedProperty>
-)

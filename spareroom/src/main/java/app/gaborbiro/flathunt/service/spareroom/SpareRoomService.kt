@@ -16,8 +16,8 @@ import kotlin.math.ceil
 
 class SpareRoomService(private val store: Store) : BaseService(store), MessagingService {
 
-    override val cookieSessionName = "session_id"
-    override val cookieSessionDomain = ".spareroom.co.uk"
+    override val sessionCookieNames = arrayOf("session_id")
+    override val sessionCookieDomain = ".spareroom.co.uk"
 
     override fun afterSession() {
         if (driver.findElements(By.className("show-user-auth-popup")).isNotEmpty()) {
@@ -123,7 +123,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     }
 
     override fun tagMessage(messageUrl: String, vararg tags: Tag) {
-        ensureDriver()
+        ensureBrowser()
         driver[messageUrl]
         tags.forEach { tag ->
             val success: Boolean =
