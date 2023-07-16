@@ -15,7 +15,7 @@ dependencies {
     implementation project(":zoopla")
     implementation project(":spareroom")
     implementation project(":service")
-    implementation project(":usecases")
+    implementation project(":usecase")
     implementation project(":data")
     implementation project(":google")
     implementation project(":base")
@@ -62,6 +62,8 @@ class CustomJar extends org.gradle.jvm.tasks.Jar {
         from {} with project.jar
 
         destinationDirectory = project.file(project.rootDir)
+
+        duplicatesStrategy = DuplicatesStrategy.WARN
     }
 }
 

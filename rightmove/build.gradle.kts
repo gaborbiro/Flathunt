@@ -1,9 +1,6 @@
 plugins {
-    id("kotlin")
+    kotlin("jvm")
 }
-
-group = "app.gaborbiro"
-version = "1.0"
 
 repositories {
     mavenCentral()
