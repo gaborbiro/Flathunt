@@ -5,11 +5,11 @@ import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.data.model.Message
 import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.data.model.Property
-import app.gaborbiro.flathunt.service.spareroom.MessagingService
-import app.gaborbiro.flathunt.service.spareroom.Tag
+import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.MessageTag
 import app.gaborbiro.flathunt.usecase.base.*
 
-class InboxUseCase(private val service: MessagingService, private val store: Store, criteria: ValidationCriteria) :
+class InboxUseCase(private val service: BaseService, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {
 
     override val commands: List<Command<*>>
@@ -28,7 +28,7 @@ class InboxUseCase(private val service: MessagingService, private val store: Sto
                 val (_, unsuitable) = fetchRoutes(properties, GlobalVariables.safeMode)
                 unsuitable.forEach { property ->
                     property.messageUrl?.let {
-                        if (!GlobalVariables.safeMode) service.tagMessage(it, Tag.REJECTED)
+                        if (!GlobalVariables.safeMode) service.tagMessage(it, MessageTag.REJECTED)
                     }
                 }
             }
@@ -75,7 +75,7 @@ class InboxUseCase(private val service: MessagingService, private val store: Sto
                     service.fetchProperty(id).clone(senderName = message.senderName, messageUrl = message.messageLink)
                 }
                 if (property.isBuddyUp) {
-                    if (!safeMode) service.tagMessage(message.messageLink, Tag.BUDDY_UP)
+                    if (!safeMode) service.tagMessage(message.messageLink, MessageTag.BUDDY_UP)
                 } else if (!property.checkValid(criteria)) {
                     if (!property.markedUnsuitable) { // not yet marked as unsuitable
                         if (!safeMode) service.markAsUnsuitable(id, (property as? PersistedProperty)?.index, true)
@@ -84,7 +84,7 @@ class InboxUseCase(private val service: MessagingService, private val store: Sto
                 } else {
                     if (property.prices.isEmpty()) {
                         println("Price missing")
-                        if (!safeMode) service.tagMessage(message.messageLink, Tag.PRICE_MISSING)
+                        if (!safeMode) service.tagMessage(message.messageLink, MessageTag.PRICE_MISSING)
                     } else {
                         newProperties.add(property)
                     }
@@ -95,9 +95,9 @@ class InboxUseCase(private val service: MessagingService, private val store: Sto
         }
         if (rejectionMap.values.any { it }) {
             if (rejectionMap.values.all { it }) {
-                if (!safeMode) service.tagMessage(message.messageLink, Tag.REJECTED)
+                if (!safeMode) service.tagMessage(message.messageLink, MessageTag.REJECTED)
             } else if (rejectionMap.values.any { it }) {
-                if (!safeMode) service.tagMessage(message.messageLink, Tag.PARTIALLY_REJECTED)
+                if (!safeMode) service.tagMessage(message.messageLink, MessageTag.PARTIALLY_REJECTED)
                 println("Partial rejection:\n" + rejectionMap.map { it.key + " -> " + if (it.value) "rejected" else "fine" }
                     .joinToString("\n"))
             }

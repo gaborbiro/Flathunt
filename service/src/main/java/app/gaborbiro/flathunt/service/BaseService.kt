@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt.service
 
 import app.gaborbiro.flathunt.data.Store
 import app.gaborbiro.flathunt.data.model.Cookies
+import app.gaborbiro.flathunt.data.model.Message
 import app.gaborbiro.flathunt.data.model.Property
 import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.UnexpectedAlertBehaviour
@@ -15,20 +16,34 @@ import java.util.*
 
 abstract class BaseService(private val store: Store) : Service {
 
-    protected lateinit var driver: WebDriver
+    private lateinit var driver: WebDriver
     private val tabHandleStack = Stack<Set<String>>()
 
-    abstract val rootUrl: String
-    abstract val sessionCookieName: String
-    abstract val sessionCookieDomain: String
+    protected abstract val rootUrl: String
+    protected abstract val sessionCookieName: String
+    protected abstract val sessionCookieDomain: String
 
-    protected open fun beforeSession() {
+    protected open fun beforeSession(driver: WebDriver) {
+
+    }
+
+    protected open fun afterSession(driver: WebDriver) {
 
     }
 
-    protected open fun afterSession() {
-
+    final override fun login() {
+        ensureBrowser()
+        login(driver)
     }
+
+    protected abstract fun login(driver: WebDriver)
+
+    final override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
+        ensureBrowser()
+        return fetchLinksFromSearch(driver, searchUrl, propertiesRemoved)
+    }
+
+    protected abstract fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page
 
     override fun openTabs(vararg urls: String): List<String> {
         ensureBrowser()
@@ -48,6 +63,13 @@ abstract class BaseService(private val store: Store) : Service {
         }
     }
 
+    final override fun getPhotoUrls(id: String): List<String> {
+        ensureBrowser()
+        return getPhotoUrls(driver, id)
+    }
+
+    protected abstract fun getPhotoUrls(driver: WebDriver, id: String): List<String>
+
     override fun popTabHandles() {
         val handles: Set<String> = if (tabHandleStack.isNotEmpty()) {
             tabHandleStack.pop()
@@ -64,27 +86,25 @@ abstract class BaseService(private val store: Store) : Service {
         }
     }
 
-//    override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
-//        ensureTab(searchUrl)
-//        val page: Int = getPageFromUrl(searchUrl)
-//        val pageCount = driver.getPageCount()
-//    }
-//
-//    abstract fun getPageFromUrl(url: String): Int
-//
-//    abstract fun WebDriver.getPageCount(): Int
-
-    override fun fetchProperty(id: String, newTab: Boolean): Property {
+    final override fun fetchProperty(id: String, newTab: Boolean): Property {
         if (newTab && ::driver.isInitialized) {
             openNewTab()
             driver[getUrlFromId(id)]
         } else {
+            ensureBrowser()
             ensurePageWithSession(getUrlFromId(id))
         }
-        return fetchProperty(id)
+        return fetchProperty(driver, id)
     }
 
-    abstract fun fetchProperty(id: String): Property
+    protected abstract fun fetchProperty(driver: WebDriver, id: String): Property
+
+    final override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
+        ensureBrowser()
+        markAsUnsuitable(driver, id, index, unsuitable)
+    }
+
+    protected abstract fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean)
 
     override fun cleanup() {
         if (::driver.isInitialized) {
@@ -93,7 +113,6 @@ abstract class BaseService(private val store: Store) : Service {
     }
 
     fun ensurePageWithSession(vararg expectedUrls: String) {
-        ensureBrowser()
         runCatching { driver.currentUrl }.exceptionOrNull()?.let {
             driver.switchTo().window("")
         }
@@ -114,7 +133,7 @@ abstract class BaseService(private val store: Store) : Service {
         }
         ensureSession {
             login()
-            Thread.sleep(300)
+            Thread.sleep(500)
             store.saveCookies(Cookies(driver.manage().cookies))
             driver[finalUrls[0]]
         }
@@ -135,12 +154,12 @@ abstract class BaseService(private val store: Store) : Service {
                     sessionAvailable = true
                 } else {
                     // browser has no session cookies
-                    beforeSession()
+                    beforeSession(driver)
                     if (storedCookies.any { it.name == sessionCookieName && it.domain == sessionCookieDomain }) {
                         // we have session cookies stored
                         driver.manage().deleteAllCookies()
                         storedCookies.forEach { driver.manage().addCookie(it) }
-                        afterSession()
+                        afterSession(driver)
                         sessionAvailable = true
                     }
                 }
@@ -186,5 +205,23 @@ abstract class BaseService(private val store: Store) : Service {
                 null
             }
         }
+    }
+
+    final override fun fetchMessages(safeMode: Boolean): List<Message> {
+        ensureBrowser()
+        return fetchMessages(driver, safeMode)
+    }
+
+    protected open fun fetchMessages(driver: WebDriver, safeMode: Boolean): List<Message> {
+        throw NotImplementedError()
+    }
+
+    final override fun tagMessage(messageUrl: String, vararg tags: MessageTag) {
+        ensureBrowser()
+        tagMessage(driver, messageUrl, *tags)
+    }
+
+    protected open fun tagMessage(driver: WebDriver, messageUrl: String, vararg tags: MessageTag) {
+        throw NotImplementedError()
     }
 }

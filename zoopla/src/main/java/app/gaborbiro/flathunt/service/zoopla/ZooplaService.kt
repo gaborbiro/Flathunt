@@ -11,6 +11,7 @@ import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import app.gaborbiro.flathunt.splitQuery
 import com.google.gson.Gson
 import org.openqa.selenium.By
+import org.openqa.selenium.WebDriver
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
@@ -26,7 +27,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         private const val PASSWORD = "PS3em?jyK6y&s\$\$"
     }
 
-    override fun beforeSession() {
+    override fun beforeSession(driver: WebDriver) {
         Thread.sleep(500)
         runCatching {
             driver.switchTo().frame("gdpr-consent-notice")
@@ -35,7 +36,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         }
     }
 
-    override fun login() {
+    override fun login(driver: WebDriver) {
         driver.findElement(By.className("css-1rwrl3a")).click()
         driver.findElement(By.id("input-email-address")).click()
         driver.findElement(By.id("input-email-address")).sendKeys(USERNAME)
@@ -44,7 +45,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         driver.findElement(By.className("e1oiir0n4")).click()
     }
 
-    override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
+    override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
         ensurePageWithSession(searchUrl)
         var page = splitQuery(searchUrl)["pn"]?.toInt() ?: 0
         val urls = driver.findElement(By.className("css-kdnpqc-ListingsContainer"))
@@ -69,7 +70,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         )
     }
 
-    override fun fetchProperty(id: String): Property {
+    override fun fetchProperty(driver: WebDriver, id: String): Property {
         ensurePageWithSession(getUrlFromId(id))
 
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
@@ -173,7 +174,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         }
     }
 
-    override fun getPhotoUrls(id: String): List<String> {
+    override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
         ensurePageWithSession(getUrlFromId(id))
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
         val propertyData = Gson().fromJson(json, ZooplaResponse::class.java).props.initialProps.pageProps.data.listing
@@ -192,7 +193,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         return images
     }
 
-    override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
+    override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
         val blacklist = store.getBlacklist().toMutableList().also {
             it.add(id)
         }

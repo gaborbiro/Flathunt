@@ -7,15 +7,17 @@ import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.data.model.Message
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.MessageTag
 import app.gaborbiro.flathunt.service.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.openqa.selenium.By
+import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
-class SpareRoomService(private val store: Store) : BaseService(store), MessagingService {
+class SpareRoomService(private val store: Store) : BaseService(store) {
 
     companion object {
         const val MISSING_VALUE = "missing"
@@ -28,14 +30,14 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     override val sessionCookieName = "session_id"
     override val sessionCookieDomain = ".spareroom.co.uk"
 
-    override fun afterSession() {
+    override fun afterSession(driver: WebDriver) {
         if (driver.findElements(By.className("show-user-auth-popup")).isNotEmpty()) {
             // old session
             login()
         }
     }
 
-    override fun login() {
+    override fun login(driver: WebDriver) {
         driver.findElement(By.className("show-user-auth-popup")).click()
         driver.findElement(By.id("loginemail")).click()
         driver.findElement(By.id("loginemail")).sendKeys(USERNAME)
@@ -45,54 +47,9 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     }
 
     /**
-     * Requires same webpage to stay open
-     */
-    override fun fetchMessages(safeMode: Boolean): List<Message> {
-        ensurePageWithSession("$rootUrl/flatshare/mythreads.pl")
-        val messages = mutableListOf<Message>()
-
-        runCatching {
-            driver.findElement(By.linkText("Oldest first")).click()
-            val rawMessages = driver.findElements(By.className("msg_row"))
-
-            if (rawMessages.isEmpty()) {
-                println("no messages found")
-            } else {
-                rawMessages[0].click()
-                do {
-                    if (getMessageTags().isEmpty()) { // ignoring tagged messages
-                        val message = fetchMessage()
-                        if (message.propertyUrls.isEmpty()) {
-                            if (!safeMode) tagMessage(driver.currentUrl, Tag.NO_LINKS)
-                        } else {
-                            messages.add(message)
-                        }
-                    }
-                } while (runCatching { driver.findElement(By.linkText("Next thread >>")) }.let {
-                        it.getOrNull()?.click()
-                        it.isSuccess
-                    })
-            }
-        }.apply {
-            if (isFailure) {
-                this.exceptionOrNull()?.printStackTrace()
-            }
-        }
-        return messages
-    }
-
-    /**
      * Assumes message is open
      */
-    private fun getMessageTags(): List<String> {
-        return runCatching { driver.findElements(By.className("add-label__attached-label")) }
-            .getOrNull()?.map { it.text } ?: emptyList()
-    }
-
-    /**
-     * Assumes message is open
-     */
-    private fun fetchMessage(): Message {
+    private fun fetchMessage(driver: WebDriver): Message {
         val senderName = driver.findElement(By.className("message_in__name")).text
         val messageBody = driver.findElement(By.xpath("//dd[@class='message_body']"))
         val links = mutableListOf<String>().apply {
@@ -128,25 +85,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         }
     }
 
-    override fun tagMessage(messageUrl: String, vararg tags: Tag) {
-        ensurePageWithSession(messageUrl)
-        tags.forEach { tag ->
-            val success: Boolean =
-                runCatching { driver.findElement(By.className("add-label__link")) }.getOrNull()?.let {
-                    it.click() // open tag menu
-                    runCatching { driver.findElement(By.id(tag.id)) }.getOrNull()
-                        ?.let { it.click(); true }
-                        ?: run { driver.findElement(By.className("add-label__close")).click(); true }
-                } ?: false
-            if (success) {
-                println("Message tagged $tag")
-            } else {
-                println("Failed to tag message with $tag")
-            }
-        }
-    }
-
-    override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
+    override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
         ensurePageWithSession(searchUrl)
         var page = splitQuery(searchUrl)["offset"]?.let { it.toInt() / 10 } ?: 0
         val urls = driver.findElements(By.className("listing-result")).mapNotNull {
@@ -177,7 +116,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         )
     }
 
-    override fun fetchProperty(id: String): Property {
+    override fun fetchProperty(driver: WebDriver, id: String): Property {
         ensurePageWithSession(getUrlFromId(id))
         with(driver) {
             val roomOnlyPricesXpath =
@@ -222,7 +161,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
                 title = findSimpleText("//h1[1]") ?: MISSING_VALUE,
                 comment = null,
                 markedUnsuitable = linkExists("Marked as unsuitable"),
-                isBuddyUp = checkForBuddyUp(),
+                isBuddyUp = checkForBuddyUp(driver),
                 senderName = null,
                 messageUrl = null,
                 prices = prices.map { ensurePriceIsPerMonth(it) }.toTypedArray(),
@@ -271,13 +210,13 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         }
     }
 
-    private fun checkForBuddyUp(): Boolean {
+    private fun checkForBuddyUp(driver: WebDriver): Boolean {
         return driver.findElements(By.className("key-features__feature")).any {
             it.text.contains("wanted")
         }
     }
 
-    override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
+    override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
         val blacklist = store.getBlacklist().toMutableList().also {
             it.add(id)
         }
@@ -397,10 +336,80 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         }
     }
 
-    override fun getPhotoUrls(id: String): List<String> {
+    override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
         ensurePageWithSession(getUrlFromId(id))
         return driver.findElements(By.className("photoswipe_me")).map {
             it.findElement(By.tagName("img")).getAttribute("src").replace("square", "large")
+        }
+    }
+
+    /**
+     * Requires same webpage to stay open
+     */
+    override fun fetchMessages(driver: WebDriver, safeMode: Boolean): List<Message> {
+        ensurePageWithSession("$rootUrl/flatshare/mythreads.pl")
+        val messages = mutableListOf<Message>()
+
+        runCatching {
+            driver.findElement(By.linkText("Oldest first")).click()
+            val rawMessages = driver.findElements(By.className("msg_row"))
+
+            if (rawMessages.isEmpty()) {
+                println("no messages found")
+            } else {
+                rawMessages[0].click()
+                do {
+                    if (getMessageTags(driver).isEmpty()) { // ignoring tagged messages
+                        val message = fetchMessage(driver)
+                        if (message.propertyUrls.isEmpty()) {
+                            if (!safeMode) tagMessage(driver.currentUrl, MessageTag.NO_LINKS)
+                        } else {
+                            messages.add(message)
+                        }
+                    }
+                } while (runCatching { driver.findElement(By.linkText("Next thread >>")) }.let {
+                        it.getOrNull()?.click()
+                        it.isSuccess
+                    })
+            }
+        }.apply {
+            if (isFailure) {
+                this.exceptionOrNull()?.printStackTrace()
+            }
+        }
+        return messages
+    }
+
+    /**
+     * Assumes message is open
+     */
+    private fun getMessageTags(driver: WebDriver): List<String> {
+        return runCatching { driver.findElements(By.className("add-label__attached-label")) }
+            .getOrNull()?.map { it.text } ?: emptyList()
+    }
+
+    override fun tagMessage(driver: WebDriver, messageUrl: String, vararg tags: MessageTag) {
+        ensurePageWithSession(messageUrl)
+        tags.forEach { tag ->
+            val success: Boolean =
+                runCatching { driver.findElement(By.className("add-label__link")) }.getOrNull()?.let {
+                    it.click() // open tag menu
+                    val id = when (tag) {
+                        MessageTag.REJECTED -> "add_label_354322"
+                        MessageTag.PARTIALLY_REJECTED -> "add_label_1482847"
+                        MessageTag.PRICE_MISSING -> "add_label_1481816"
+                        MessageTag.NO_LINKS -> "add_label_1481817"
+                        MessageTag.BUDDY_UP -> "add_label_1482896"
+                    }
+                    runCatching { driver.findElement(By.id(id)) }.getOrNull()
+                        ?.let { it.click(); true }
+                        ?: run { driver.findElement(By.className("add-label__close")).click(); true }
+                } ?: false
+            if (success) {
+                println("Message tagged $tag")
+            } else {
+                println("Failed to tag message with $tag")
+            }
         }
     }
 }

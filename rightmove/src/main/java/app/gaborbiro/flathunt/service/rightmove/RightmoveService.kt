@@ -9,6 +9,7 @@ import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.openqa.selenium.By
+import org.openqa.selenium.WebDriver
 import org.openqa.selenium.remote.RemoteWebElement
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -25,7 +26,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         private const val PASSWORD = "FA2x2+zh+/zD9Gc"
     }
 
-    override fun login() {
+    override fun login(driver: WebDriver) {
         driver.findElement(By.className("sign-in-link")).click()
         driver.findElement(By.id("email-input")).click()
         driver.findElement(By.id("email-input")).sendKeys(USERNAME)
@@ -34,7 +35,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         driver.findElement(By.id("submit")).click()
     }
 
-    override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
+    override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
         ensurePageWithSession(searchUrl)
         var page = splitQuery(searchUrl)["index"]?.let { it.toInt() / 24 } ?: 0
         val totalSize = driver.findElement(By.className("searchHeader-resultCount")).text.toInt()
@@ -65,7 +66,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         )
     }
 
-    override fun fetchProperty(id: String): Property {
+    override fun fetchProperty(driver: WebDriver, id: String): Property {
         ensurePageWithSession(getUrlFromId(id))
         with(driver) {
             val location = findElement(By.className("_1kck3jRw2PGQSOEy3Lihgp"))
@@ -130,7 +131,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         }
     }
 
-    override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
+    override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
         val blacklist = store.getBlacklist().toMutableList().also {
             it.add(id)
         }
@@ -190,7 +191,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         }
     }
 
-    override fun getPhotoUrls(id: String): List<String> {
+    override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
         ensurePageWithSession(getUrlFromId(id))
         return driver.findElements(By.className("_2zqynvtIxFMCq18pu-g8d_"))
             .mapNotNull {

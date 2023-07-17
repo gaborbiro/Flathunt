@@ -1,5 +1,6 @@
 package app.gaborbiro.flathunt.service
 
+import app.gaborbiro.flathunt.data.model.Message
 import app.gaborbiro.flathunt.data.model.Property
 
 interface Service {
@@ -37,4 +38,8 @@ interface Service {
     fun pushTabHandles()
 
     fun popTabHandles()
+
+    fun fetchMessages(safeMode: Boolean): List<Message>
+
+    fun tagMessage(messageUrl: String, vararg tags: MessageTag)
 }

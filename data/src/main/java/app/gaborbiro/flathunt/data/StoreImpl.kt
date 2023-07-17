@@ -5,14 +5,17 @@ import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.data.model.Property
 import com.google.gson.Gson
 
-abstract class BaseStore(
-    private val prefPropertiesKey: String,
-    private val prefIndexKey: String,
-    private val prefCookiesKey: String,
-    private val prefBlacklistKey: String,
+class StoreImpl(
+    serviceName: String,
+    tag: String? = null,
 ) : Store {
 
     private val gson = Gson()
+
+    private val prefPropertiesKey = "${PREF_PROPERTIES_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
+    private val prefIndexKey = "${PREF_INDEX_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
+    private val prefCookiesKey = "${PREF_COOKIES_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
+    private val prefBlacklistKey = "${PREF_BLACKLIST_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
 
     // START Properties
 
@@ -87,3 +90,8 @@ abstract class BaseStore(
         Preferences.clear(prefIndexKey)
     }
 }
+
+private const val PREF_PROPERTIES_KEY_BASE = "properties"
+private const val PREF_INDEX_KEY_BASE = "index"
+private const val PREF_COOKIES_KEY_BASE = "cookies"
+private const val PREF_BLACKLIST_KEY_BASE = "blacklist"

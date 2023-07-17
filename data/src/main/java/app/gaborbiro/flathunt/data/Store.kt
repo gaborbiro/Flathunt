@@ -5,7 +5,6 @@ import app.gaborbiro.flathunt.data.model.PersistedProperty
 import app.gaborbiro.flathunt.data.model.Property
 
 interface Store {
-
     fun getJsonProperties(): String?
 
     fun getProperties(): List<PersistedProperty>
