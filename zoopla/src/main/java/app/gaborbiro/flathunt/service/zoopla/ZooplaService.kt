@@ -7,6 +7,7 @@ import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import app.gaborbiro.flathunt.splitQuery
 import com.google.gson.Gson
 import org.openqa.selenium.By
@@ -16,8 +17,14 @@ import kotlin.math.ceil
 
 class ZooplaService(private val store: Store) : BaseService(store) {
 
-    override val sessionCookieNames = arrayOf("_cs_s")
+    override val rootUrl = "https://www.zoopla.co.uk"
+    override val sessionCookieName = "_cs_s"
     override val sessionCookieDomain = ".zoopla.co.uk"
+
+    companion object {
+        private const val USERNAME = "gabor.biro@yahoo.com"
+        private const val PASSWORD = "PS3em?jyK6y&s\$\$"
+    }
 
     override fun beforeSession() {
         Thread.sleep(500)
@@ -35,12 +42,10 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         driver.findElement(By.id("input-password")).click()
         driver.findElement(By.id("input-password")).sendKeys(PASSWORD)
         driver.findElement(By.className("e1oiir0n4")).click()
-
-        store.saveCookies(Cookies(driver.manage().cookies))
     }
 
     override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
-        ensureTab(searchUrl)
+        ensurePageWithSession(searchUrl)
         var page = splitQuery(searchUrl)["pn"]?.toInt() ?: 0
         val urls = driver.findElement(By.className("css-kdnpqc-ListingsContainer"))
             .findElements(By.className("e2uk8e3")).map { it.getAttribute("href") }
@@ -65,7 +70,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
     }
 
     override fun fetchProperty(id: String): Property {
-        ensureTab(getUrlFromId(id))
+        ensurePageWithSession(getUrlFromId(id))
 
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
         val propertyData = Gson().fromJson(json, ZooplaResponse::class.java)
@@ -103,7 +108,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
             isBuddyUp = false,
             senderName = null,
             messageUrl = null,
-            prices = arrayOf(perWeekToPerMonth(propertyData.pricing.label)),
+            prices = arrayOf(ensurePriceIsPerMonth(propertyData.pricing.label)),
             billsIncluded = features?.contains("Bills Included"),
             deposit = "",
             availableFrom = availableFrom?.toEpochDay(),
@@ -141,11 +146,11 @@ class ZooplaService(private val store: Store) : BaseService(store) {
     }
 
     override fun getUrlFromId(id: String): String {
-        return "$ZOOPLA_ROOT_URL/to-rent/details/$id/"
+        return "$rootUrl/to-rent/details/$id/"
     }
 
     override fun isValidUrl(url: String): Boolean {
-        return url.startsWith("$ZOOPLA_ROOT_URL/") && url.split("$ZOOPLA_ROOT_URL/").size == 2
+        return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
     }
 
     override fun cleanUrl(url: String): String {
@@ -157,7 +162,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
         if (!isValidUrl(cleanUrl)) {
             val matcher = cleanUrl.matcher("^([\\d]+)$")
             if (matcher.find()) {
-                cleanUrl = "$ZOOPLA_ROOT_URL/to-rent/details/$arg/"
+                cleanUrl = "$rootUrl/to-rent/details/$arg/"
             }
         }
         return if (isValidUrl(cleanUrl)) {
@@ -169,7 +174,7 @@ class ZooplaService(private val store: Store) : BaseService(store) {
     }
 
     override fun getPhotoUrls(id: String): List<String> {
-        ensureTab(getUrlFromId(id))
+        ensurePageWithSession(getUrlFromId(id))
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
         val propertyData = Gson().fromJson(json, ZooplaResponse::class.java).props.initialProps.pageProps.data.listing
         val images = mutableListOf<String>()
@@ -185,5 +190,12 @@ class ZooplaService(private val store: Store) : BaseService(store) {
             it.original?.let { images.add(it) }
         }
         return images
+    }
+
+    override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
+        val blacklist = store.getBlacklist().toMutableList().also {
+            it.add(id)
+        }
+        store.saveBlacklist(blacklist)
     }
 }

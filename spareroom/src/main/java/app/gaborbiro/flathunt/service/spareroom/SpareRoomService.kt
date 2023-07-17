@@ -8,6 +8,7 @@ import app.gaborbiro.flathunt.data.model.Message
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.Page
+import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.openqa.selenium.By
 import org.openqa.selenium.WebElement
 import java.time.LocalDate
@@ -16,7 +17,15 @@ import kotlin.math.ceil
 
 class SpareRoomService(private val store: Store) : BaseService(store), MessagingService {
 
-    override val sessionCookieNames = arrayOf("session_id")
+    companion object {
+        const val MISSING_VALUE = "missing"
+
+        private const val USERNAME = "gabor.biro@yahoo.com"
+        private const val PASSWORD = "6euBDNW9JUssLwy"
+    }
+
+    override val rootUrl = "https://www.spareroom.co.uk"
+    override val sessionCookieName = "session_id"
     override val sessionCookieDomain = ".spareroom.co.uk"
 
     override fun afterSession() {
@@ -33,16 +42,13 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         driver.findElement(By.id("loginpass")).click()
         driver.findElement(By.id("loginpass")).sendKeys(PASSWORD)
         driver.findElement(By.id("sign-in-button")).click()
-
-        store.saveCookies(Cookies(driver.manage().cookies))
     }
 
     /**
      * Requires same webpage to stay open
      */
     override fun fetchMessages(safeMode: Boolean): List<Message> {
-        ensureTab(SROOM_ROOT_URL)
-        driver["$SROOM_ROOT_URL/flatshare/mythreads.pl"] // open inbox
+        ensurePageWithSession("$rootUrl/flatshare/mythreads.pl")
         val messages = mutableListOf<Message>()
 
         runCatching {
@@ -99,7 +105,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
                         .substringAfter("flatshare_id=", "")
                         .substringBefore("&", "")
                 if (propertyId.isNotBlank()) {
-                    links.add("$SROOM_ROOT_URL/$propertyId")
+                    links.add("$rootUrl/$propertyId")
                 }
             }
         }
@@ -123,8 +129,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     }
 
     override fun tagMessage(messageUrl: String, vararg tags: Tag) {
-        ensureBrowser()
-        driver[messageUrl]
+        ensurePageWithSession(messageUrl)
         tags.forEach { tag ->
             val success: Boolean =
                 runCatching { driver.findElement(By.className("add-label__link")) }.getOrNull()?.let {
@@ -142,7 +147,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     }
 
     override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
-        ensureTab(searchUrl)
+        ensurePageWithSession(searchUrl)
         var page = splitQuery(searchUrl)["offset"]?.let { it.toInt() / 10 } ?: 0
         val urls = driver.findElements(By.className("listing-result")).mapNotNull {
             if (runCatching { it.findElement(By.linkText("Unsuitable")) }.getOrNull() != null) {
@@ -173,7 +178,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     }
 
     override fun fetchProperty(id: String): Property {
-        ensureTab(getUrlFromId(id))
+        ensurePageWithSession(getUrlFromId(id))
         with(driver) {
             val roomOnlyPricesXpath =
                 "//div[@class=\"property-details\"]/section[@class=\"feature feature--price_room_only\"]/ul/li"
@@ -214,13 +219,13 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
 
             return Property(
                 id = id,
-                title = findSimpleText("//h1[1]") ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                title = findSimpleText("//h1[1]") ?: MISSING_VALUE,
                 comment = null,
                 markedUnsuitable = linkExists("Marked as unsuitable"),
                 isBuddyUp = checkForBuddyUp(),
                 senderName = null,
                 messageUrl = null,
-                prices = prices.map { perWeekToPerMonth(it) }.toTypedArray(),
+                prices = prices.map { ensurePriceIsPerMonth(it) }.toTypedArray(),
                 location = findRegex("latitude: \"(.*?)\",longitude: \"(.*?)\"")?.let {
                     if (it[0].isNotEmpty() && it[1].isNotEmpty())
                         LatLon(it[0], it[1])
@@ -229,20 +234,20 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
                 billsIncluded = null,
                 deposit = findSimpleText(
                     "//dt[@class=\"feature-list__key\" and text()=\"Deposit\"]/following-sibling::dd[1]"
-                ) ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                ) ?: MISSING_VALUE,
                 availableFrom = availableFrom?.toEpochDay(),
                 minTerm = findSimpleText(
                     "//dt[@class=\"feature-list__key\" and text()=\"Minimum term\"]/following-sibling::dd[1]"
-                ) ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                ) ?: MISSING_VALUE,
                 maxTerm = findSimpleText(
                     "//dt[@class=\"feature-list__key\" and text()=\"Maximum term\"]/following-sibling::dd[1]"
-                ) ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                ) ?: MISSING_VALUE,
                 furnished = findSimpleText(
                     "//dt[@class=\"feature-list__key\" and text()=\"Furnishings\"]/following-sibling::dd[1]"
                 ) == "Furnished",
                 broadband = findSimpleText(
                     "//dt[@class=\"feature-list__key\" and text()=\"Broadband\"]/following-sibling::dd[1]"
-                ) ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                ) ?: MISSING_VALUE,
                 livingRoom = findSimpleText(
                     "//dt[@class=\"feature-list__key\" and text()=\"Living room\"]/following-sibling::dd[1]"
                 ) == "Yes",
@@ -254,13 +259,13 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
                 )?.toInt(),
                 householdGender = findSimpleText(
                     "//section[@class=\"feature feature--current-household\"]//dt[@class=\"feature-list__key\" and contains(text(),\"Gender\")]/following-sibling::dd[1]"
-                ) ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                ) ?: MISSING_VALUE,
                 preferredGender = findSimpleText(
                     "//section[@class=\"feature feature--household-preferences\"]//dt[@class=\"feature-list__key\" and contains(text(),\"Gender\")]/following-sibling::dd[1]"
-                ) ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                ) ?: MISSING_VALUE,
                 occupation = findSimpleText(
                     "//section[@class=\"feature feature--household-preferences\"]//dt[@class=\"feature-list__key\" and contains(text(),\"Occupation\")]/following-sibling::dd[1]"
-                ) ?: app.gaborbiro.flathunt.service.spareroom.MISSING_VALUE,
+                ) ?: MISSING_VALUE,
                 routes = null,
             )
         }
@@ -273,8 +278,11 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     }
 
     override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
-        super.markAsUnsuitable(id, index, unsuitable)
-        ensureTab(getUrlFromId(id))
+        val blacklist = store.getBlacklist().toMutableList().also {
+            it.add(id)
+        }
+        store.saveBlacklist(blacklist)
+        ensurePageWithSession(getUrlFromId(id))
         if (unsuitable) {
             runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                 ?.let {
@@ -285,7 +293,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
                 }
             runCatching { driver.findElement(By.linkText("Saved - remove ad")) }.getOrNull()?.let {
                 it.click()
-                driver[getUrlFromId(id)]
+                ensurePageWithSession(getUrlFromId(id))
                 runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                     ?.let {
                         it.click()
@@ -304,7 +312,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         } else {
             runCatching { driver.findElement(By.linkText("Marked as Unsuitable")) }.getOrNull()?.let {
                 it.click()
-                driver[getUrlFromId(id)]
+                ensurePageWithSession(getUrlFromId(id))
                 runCatching { driver.findElement(By.linkText("Remove from saved")) }.getOrNull()
                     ?.let {
                         it.click()
@@ -326,7 +334,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
             if (matcher.find()) {
                 matcher.group("id")
             } else {
-                matcher = url.matcher("$SROOM_ROOT_URL/(?<id>[\\d]+)")
+                matcher = url.matcher("$rootUrl/(?<id>[\\d]+)")
                 if (matcher.find()) {
                     matcher.group("id")
                 } else {
@@ -343,26 +351,32 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         }
     }
 
-    override fun getUrlFromId(id: String) = "$SROOM_ROOT_URL/$id"
+    override fun getUrlFromId(id: String) = "$rootUrl/$id"
 
-    override fun isValidUrl(url: String) = url.startsWith(SROOM_ROOT_URL) && url.split(SROOM_ROOT_URL).size == 2
+    override fun isValidUrl(url: String) = url.startsWith(rootUrl) && url.split(rootUrl).size == 2
 
     override fun cleanUrl(url: String): String {
+        val ROOT_URL_2 = "www.spareroom.co.uk"
+        val ROOT_URL_3 = "http://www.spareroom.co.uk"
+        val ROOT_URL_MOBILE = "https://m.spareroom.co.uk"
+        val ROOT_URL_MOBILE_2 = "m.spareroom.co.uk"
+        val ROOT_URL_MOBILE_3 = "http://m.spareroom.co.uk"
+
         var cleanUrl = url.trim()
-        if (cleanUrl.startsWith(SROOM_ROOT_URL_2)) { // www.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(SROOM_ROOT_URL_2, SROOM_ROOT_URL)
+        if (cleanUrl.startsWith(ROOT_URL_2)) { // www.spareroom.co.uk
+            cleanUrl = cleanUrl.replace(ROOT_URL_2, rootUrl)
         }
-        if (cleanUrl.startsWith(SROOM_ROOT_URL_3)) { // http://www.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(SROOM_ROOT_URL_3, SROOM_ROOT_URL)
+        if (cleanUrl.startsWith(ROOT_URL_3)) { // http://www.spareroom.co.uk
+            cleanUrl = cleanUrl.replace(ROOT_URL_3, rootUrl)
         }
-        if (cleanUrl.startsWith(SROOM_ROOT_MURL_2)) { // m.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(SROOM_ROOT_MURL_2, SROOM_ROOT_URL)
+        if (cleanUrl.startsWith(ROOT_URL_MOBILE_2)) { // m.spareroom.co.uk
+            cleanUrl = cleanUrl.replace(ROOT_URL_MOBILE_2, rootUrl)
         }
-        if (cleanUrl.startsWith(SROOM_ROOT_MURL_3)) { // http://m.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(SROOM_ROOT_MURL_3, SROOM_ROOT_URL)
+        if (cleanUrl.startsWith(ROOT_URL_MOBILE_3)) { // http://m.spareroom.co.uk
+            cleanUrl = cleanUrl.replace(ROOT_URL_MOBILE_3, rootUrl)
         }
-        if (cleanUrl.startsWith(SROOM_ROOT_MURL)) { // https://m.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(SROOM_ROOT_MURL, SROOM_ROOT_URL)
+        if (cleanUrl.startsWith(ROOT_URL_MOBILE)) { // https://m.spareroom.co.uk
+            cleanUrl = cleanUrl.replace(ROOT_URL_MOBILE, rootUrl)
         }
         return cleanUrl
     }
@@ -372,7 +386,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
         if (!isValidUrl(cleanUrl)) {
             val matcher = cleanUrl.matcher("^([\\d]+)$")
             if (matcher.find()) {
-                cleanUrl = "$SROOM_ROOT_URL/$arg"
+                cleanUrl = "$rootUrl/$arg"
             }
         }
         return if (isValidUrl(cleanUrl)) {
@@ -384,7 +398,7 @@ class SpareRoomService(private val store: Store) : BaseService(store), Messaging
     }
 
     override fun getPhotoUrls(id: String): List<String> {
-        ensureTab(getUrlFromId(id))
+        ensurePageWithSession(getUrlFromId(id))
         return driver.findElements(By.className("photoswipe_me")).map {
             it.findElement(By.tagName("img")).getAttribute("src").replace("square", "large")
         }

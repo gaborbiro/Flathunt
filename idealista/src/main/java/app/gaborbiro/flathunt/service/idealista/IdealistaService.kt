@@ -10,53 +10,58 @@ import org.openqa.selenium.Cookie
 
 class IdealistaService(private val store: Store) : BaseService(store) {
 
-    override val sessionCookieNames = arrayOf("SESSION")
+    override val rootUrl = "https://www.idealista.pt/en/"
+    override val sessionCookieName = "SESSION"
     override val sessionCookieDomain = ".www.idealista.pt"
 
-    override fun login() {
-        ensureBrowser()
-        driver[RM_ROOT_URL]
-        driver.manage().deleteAllCookies()
+    companion object {
+        private const val USERNAME = "gabor.biro@yahoo.com"
+        private const val PASSWORD = "1qazse45rdxSW2"
+    }
+
+    override fun beforeSession() {
         with(driver.manage()) {
+            deleteAllCookies()
             addCookie(
                 Cookie.Builder(
                     "datadome",
-                    "1l1UMy2QthQJoq4zBvoYrRN6zxUU9hzE3sLFLt5CpGuKFL-67IRYJbYtq6H31Vc1FpYYRR~fnb1vlrmZfmmNCQZ7cB9bauuL8yx3hTcDHso359zU-qHFvp4xXBWx71pX"
+                    "0XswcVvRgs~HK~3_9DhtjxI_XdzOGaLFiQtUKkP3MYdPNFIkZdzoBaR6Gf-0sGAQxBjoqolQx9OhhGN_0g8vvXbR5QX-iRJ6q9hELtavxeLD2McHwNtwTnqEKnam0PpV"
                 ).build()
             )
         }
-        driver[RM_ROOT_URL]
+        driver[rootUrl]
+    }
+
+    override fun login() {
         driver.findElement(By.className("icon-user-no-logged")).click()
         driver.findElement(By.className("js-email-field")).sendKeys(USERNAME)
         driver.findElement(By.className("js-password-field")).sendKeys(PASSWORD)
         driver.findElement(By.id("doLogin")).click()
-
-        store.saveCookies(Cookies(driver.manage().cookies))
     }
 
     override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
-        ensureTab(searchUrl)
+        ensurePageWithSession(searchUrl)
         return Page(
             urls = emptyList(),
             page = 0,
             pageCount = 0,
             propertiesRemoved = 0,
             nextPage = {
-                this
+                null
             }
         )
     }
 
     override fun fetchProperty(id: String): Property {
-        ensureTab(getUrlFromId(id))
-        with(driver) {
-            return Property()
-        }
+        ensurePageWithSession(getUrlFromId(id))
+        return Property()
     }
 
     override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
-        super.markAsUnsuitable(id, index, unsuitable)
-
+        val blacklist = store.getBlacklist().toMutableList().also {
+            it.add(id)
+        }
+        store.saveBlacklist(blacklist)
     }
 
     override fun getPropertyIdFromUrl(url: String): String {
@@ -72,7 +77,7 @@ class IdealistaService(private val store: Store) : BaseService(store) {
     }
 
     override fun isValidUrl(url: String): Boolean {
-        return url.startsWith("$RM_ROOT_URL/") && url.split("$RM_ROOT_URL/").size == 2
+        return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
     }
 
     override fun cleanUrl(url: String): String {
@@ -85,7 +90,7 @@ class IdealistaService(private val store: Store) : BaseService(store) {
     }
 
     override fun getPhotoUrls(id: String): List<String> {
-        ensureTab(getUrlFromId(id))
+        ensurePageWithSession(getUrlFromId(id))
         return emptyList()
     }
 }

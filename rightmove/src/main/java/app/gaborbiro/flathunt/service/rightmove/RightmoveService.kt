@@ -7,6 +7,7 @@ import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.data.model.Property
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.Page
+import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.openqa.selenium.By
 import org.openqa.selenium.remote.RemoteWebElement
 import java.time.LocalDate
@@ -15,8 +16,14 @@ import kotlin.math.ceil
 
 class RightmoveService(private val store: Store) : BaseService(store) {
 
-    override val sessionCookieNames = arrayOf("rmsessionid")
+    override val rootUrl = "https://www.rightmove.co.uk"
+    override val sessionCookieName = "rmsessionid"
     override val sessionCookieDomain = ".rightmove.co.uk"
+
+    companion object {
+        private const val USERNAME = "gabor.biro@yahoo.com"
+        private const val PASSWORD = "FA2x2+zh+/zD9Gc"
+    }
 
     override fun login() {
         driver.findElement(By.className("sign-in-link")).click()
@@ -25,12 +32,10 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         driver.findElement(By.id("password-input")).click()
         driver.findElement(By.id("password-input")).sendKeys(PASSWORD)
         driver.findElement(By.id("submit")).click()
-
-        store.saveCookies(Cookies(driver.manage().cookies))
     }
 
     override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
-        ensureTab(searchUrl)
+        ensurePageWithSession(searchUrl)
         var page = splitQuery(searchUrl)["index"]?.let { it.toInt() / 24 } ?: 0
         val totalSize = driver.findElement(By.className("searchHeader-resultCount")).text.toInt()
         val listItems = driver.findElements(By.className("is-list"))
@@ -61,7 +66,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
     }
 
     override fun fetchProperty(id: String): Property {
-        ensureTab(getUrlFromId(id))
+        ensurePageWithSession(getUrlFromId(id))
         with(driver) {
             val location = findElement(By.className("_1kck3jRw2PGQSOEy3Lihgp"))
                 .findElement(By.tagName("img"))
@@ -98,7 +103,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
                 senderName = null,
                 messageUrl = null,
                 prices = arrayOf(
-                    perWeekToPerMonth(
+                    ensurePriceIsPerMonth(
                         findElement(By.className("_1gfnqJ3Vtd1z40MlC0MzXu")).findElement(
                             By.tagName(
                                 "span"
@@ -126,7 +131,10 @@ class RightmoveService(private val store: Store) : BaseService(store) {
     }
 
     override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
-        super.markAsUnsuitable(id, index, unsuitable)
+        val blacklist = store.getBlacklist().toMutableList().also {
+            it.add(id)
+        }
+        store.saveBlacklist(blacklist)
         store.getCookies()?.let { cookies ->
             if (GlobalVariables.safeMode || callPost(
                     url = "https://my.rightmove.co.uk/property/status",
@@ -155,11 +163,11 @@ class RightmoveService(private val store: Store) : BaseService(store) {
     }
 
     override fun getUrlFromId(id: String): String {
-        return "$RM_ROOT_URL/properties/$id#/"
+        return "$rootUrl/properties/$id#/"
     }
 
     override fun isValidUrl(url: String): Boolean {
-        return url.startsWith("$RM_ROOT_URL/") && url.split("$RM_ROOT_URL/").size == 2
+        return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
     }
 
     override fun cleanUrl(url: String): String {
@@ -171,7 +179,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
         if (!isValidUrl(cleanUrl)) {
             val matcher = cleanUrl.matcher("^([\\d]+)$")
             if (matcher.find()) {
-                cleanUrl = "$RM_ROOT_URL/properties/$arg"
+                cleanUrl = "$rootUrl/properties/$arg"
             }
         }
         return if (isValidUrl(cleanUrl)) {
@@ -183,7 +191,7 @@ class RightmoveService(private val store: Store) : BaseService(store) {
     }
 
     override fun getPhotoUrls(id: String): List<String> {
-        ensureTab(getUrlFromId(id))
+        ensurePageWithSession(getUrlFromId(id))
         return driver.findElements(By.className("_2zqynvtIxFMCq18pu-g8d_"))
             .mapNotNull {
                 kotlin.runCatching { (it.findElement(By.tagName("meta")) as RemoteWebElement).getAttribute("content") }

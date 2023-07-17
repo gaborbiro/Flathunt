@@ -120,7 +120,6 @@ class FlatHunt {
                 val service = IdealistaService(store)
                 buildCommandSet(
                     serviceName = serviceStr,
-                    DemoUseCase(service, store, EXP),
                     SearchUseCase(service, store, EXP),
                 )
                 service
