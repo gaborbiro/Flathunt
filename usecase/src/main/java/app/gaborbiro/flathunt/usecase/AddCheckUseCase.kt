@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.usecase.base.*
 
 class AddCheckUseCase(

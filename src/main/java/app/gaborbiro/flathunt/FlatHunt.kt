@@ -2,7 +2,7 @@ package app.gaborbiro.flathunt
 
 import EXP
 import app.gaborbiro.flathunt.data.StoreImpl
-import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.idealista.IdealistaService
 import app.gaborbiro.flathunt.service.rightmove.RightmoveService
 import app.gaborbiro.flathunt.service.spareroom.SpareRoomService

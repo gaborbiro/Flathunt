@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.service
+package app.gaborbiro.flathunt.service.domain.model
 
 class Page(
     val urls: List<String>,

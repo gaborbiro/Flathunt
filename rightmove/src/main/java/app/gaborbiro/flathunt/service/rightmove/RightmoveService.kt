@@ -5,7 +5,7 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.service.BaseService
-import app.gaborbiro.flathunt.service.Page
+import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver

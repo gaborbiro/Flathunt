@@ -4,6 +4,9 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Cookies
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.model.MessageTag
+import app.gaborbiro.flathunt.service.domain.model.Page
 import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver
@@ -165,7 +168,7 @@ abstract class BaseService(private val store: Store) : Service {
             }
         }
         if (!sessionAvailable) {
-             onSessionUnavailable()
+            onSessionUnavailable()
         }
         afterSession(driver)
     }

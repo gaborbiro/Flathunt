@@ -16,6 +16,7 @@ dependencies {
     implementation project(":spareroom")
     implementation project(":idealista")
     implementation project(":service")
+    implementation project(":service:domain")
     implementation project(":usecase")
     implementation project(":data")
     implementation(project(":data:domain"))

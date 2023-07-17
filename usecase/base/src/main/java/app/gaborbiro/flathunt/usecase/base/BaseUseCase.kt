@@ -6,7 +6,7 @@ import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.POI
 import app.gaborbiro.flathunt.google.calculateRoutes
-import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.service.domain.Service
 
 abstract class BaseUseCase(
     private val service: Service,

@@ -9,6 +9,7 @@ repositories {
 dependencies {
     implementation(project(":data:domain"))
     implementation(project(":service"))
+    implementation(project(":service:domain"))
     implementation(project(":base"))
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java

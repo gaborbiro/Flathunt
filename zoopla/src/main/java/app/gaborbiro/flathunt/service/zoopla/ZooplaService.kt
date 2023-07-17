@@ -1,6 +1,6 @@
 package app.gaborbiro.flathunt.service.zoopla
 
-import app.gaborbiro.flathunt.service.Page
+import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.data.domain.model.Property

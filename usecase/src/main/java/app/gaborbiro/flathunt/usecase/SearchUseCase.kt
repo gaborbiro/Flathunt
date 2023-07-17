@@ -5,8 +5,8 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.calculateRoutes
-import app.gaborbiro.flathunt.service.Page
-import app.gaborbiro.flathunt.service.Service
+import app.gaborbiro.flathunt.service.domain.model.Page
+import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.usecase.base.*
 
 class SearchUseCase(private val service: Service, private val store: Store, criteria: ValidationCriteria) :

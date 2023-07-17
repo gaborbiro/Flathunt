@@ -8,7 +8,7 @@ repositories {
 
 dependencies {
     implementation(project(":base"))
-    implementation(project(":service"))
+    implementation(project(":service:domain"))
     implementation(project(":data:domain"))
     implementation(project(":google"))
 }
