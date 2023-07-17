@@ -1,8 +1,8 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.data.Store
-import app.gaborbiro.flathunt.data.model.PersistedProperty
+import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.google.getRoutesToNearestStations
 import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.prettyPrint

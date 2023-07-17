@@ -1,10 +1,9 @@
 package app.gaborbiro.flathunt.service.zoopla
 
 import app.gaborbiro.flathunt.service.Page
-import app.gaborbiro.flathunt.data.Store
-import app.gaborbiro.flathunt.data.model.Cookies
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.LatLon
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth

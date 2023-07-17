@@ -1,10 +1,10 @@
 package app.gaborbiro.flathunt.service.spareroom.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.data.Store
-import app.gaborbiro.flathunt.data.model.Message
-import app.gaborbiro.flathunt.data.model.PersistedProperty
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.Message
+import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
+import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.MessageTag
 import app.gaborbiro.flathunt.usecase.base.*

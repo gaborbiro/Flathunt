@@ -1,6 +1,6 @@
 package app.gaborbiro.flathunt.usecase.base
 
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.Route
 import app.gaborbiro.flathunt.google.POI
 import app.gaborbiro.flathunt.matcher

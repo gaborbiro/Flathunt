@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/base" />
             <option value="$PROJECT_DIR$/data" />
+            <option value="$PROJECT_DIR$/data/domain" />
             <option value="$PROJECT_DIR$/google" />
             <option value="$PROJECT_DIR$/idealista" />
             <option value="$PROJECT_DIR$/rightmove" />

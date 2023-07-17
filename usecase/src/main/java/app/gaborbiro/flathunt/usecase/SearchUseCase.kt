@@ -1,9 +1,9 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.*
-import app.gaborbiro.flathunt.data.Store
-import app.gaborbiro.flathunt.data.model.PersistedProperty
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
+import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.service.Page
 import app.gaborbiro.flathunt.service.Service

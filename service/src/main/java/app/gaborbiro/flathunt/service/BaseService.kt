@@ -1,9 +1,9 @@
 package app.gaborbiro.flathunt.service
 
-import app.gaborbiro.flathunt.data.Store
-import app.gaborbiro.flathunt.data.model.Cookies
-import app.gaborbiro.flathunt.data.model.Message
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.Cookies
+import app.gaborbiro.flathunt.data.domain.model.Message
+import app.gaborbiro.flathunt.data.domain.model.Property
 import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver
@@ -32,7 +32,6 @@ abstract class BaseService(private val store: Store) : Service {
     }
 
     final override fun login() {
-        ensureBrowser()
         login(driver)
     }
 
@@ -140,6 +139,7 @@ abstract class BaseService(private val store: Store) : Service {
     }
 
     private fun ensureSession(onSessionUnavailable: () -> Unit) {
+        beforeSession(driver)
         val storedCookies = store.getCookies()?.cookies
         val browserCookies = driver.manage().cookies
         var sessionAvailable = false
@@ -154,20 +154,20 @@ abstract class BaseService(private val store: Store) : Service {
                     sessionAvailable = true
                 } else {
                     // browser has no session cookies
-                    beforeSession(driver)
+
                     if (storedCookies.any { it.name == sessionCookieName && it.domain == sessionCookieDomain }) {
                         // we have session cookies stored
                         driver.manage().deleteAllCookies()
                         storedCookies.forEach { driver.manage().addCookie(it) }
-                        afterSession(driver)
                         sessionAvailable = true
                     }
                 }
             }
         }
         if (!sessionAvailable) {
-            onSessionUnavailable()
+             onSessionUnavailable()
         }
+        afterSession(driver)
     }
 
     private fun ensureBrowser() {

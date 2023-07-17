@@ -1,6 +1,6 @@
 package app.gaborbiro.flathunt.usecase
 
-import app.gaborbiro.flathunt.data.Store
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.service.Service
 import app.gaborbiro.flathunt.strict

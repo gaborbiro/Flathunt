@@ -1,8 +1,8 @@
-package app.gaborbiro.flathunt.data
+package app.gaborbiro.flathunt.data.domain
 
-import app.gaborbiro.flathunt.data.model.Cookies
-import app.gaborbiro.flathunt.data.model.PersistedProperty
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.model.Cookies
+import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
+import app.gaborbiro.flathunt.data.domain.model.Property
 
 interface Store {
     fun getJsonProperties(): String?

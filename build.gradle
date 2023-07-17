@@ -18,6 +18,7 @@ dependencies {
     implementation project(":service")
     implementation project(":usecase")
     implementation project(":data")
+    implementation(project(":data:domain"))
     implementation project(":google")
     implementation project(":base")
 

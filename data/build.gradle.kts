@@ -7,8 +7,8 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":google"))
     implementation(project(":base"))
+    implementation(project(":data:domain"))
 
     implementation("com.google.code.gson:gson:2.8.9")
 

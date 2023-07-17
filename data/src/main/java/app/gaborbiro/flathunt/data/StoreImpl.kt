@@ -1,8 +1,9 @@
 package app.gaborbiro.flathunt.data
 
-import app.gaborbiro.flathunt.data.model.Cookies
-import app.gaborbiro.flathunt.data.model.PersistedProperty
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.Cookies
+import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
+import app.gaborbiro.flathunt.data.domain.model.Property
 import com.google.gson.Gson
 
 class StoreImpl(

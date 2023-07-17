@@ -1,7 +1,7 @@
 package app.gaborbiro.flathunt.service
 
 import app.gaborbiro.flathunt.AVG_WEEKS_IN_MONTH
-import app.gaborbiro.flathunt.data.model.Price
+import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.matcher
 
 fun ensurePriceIsPerMonth(price: String): Price {

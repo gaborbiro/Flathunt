@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.data.model
+package app.gaborbiro.flathunt.data.domain.model
 
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.google.Route

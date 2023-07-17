@@ -1,8 +1,7 @@
 package app.gaborbiro.flathunt.service.idealista
 
-import app.gaborbiro.flathunt.data.Store
-import app.gaborbiro.flathunt.data.model.Cookies
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.Page
 import org.openqa.selenium.By
@@ -26,7 +25,7 @@ class IdealistaService(private val store: Store) : BaseService(store) {
             addCookie(
                 Cookie.Builder(
                     "datadome",
-                    "0XswcVvRgs~HK~3_9DhtjxI_XdzOGaLFiQtUKkP3MYdPNFIkZdzoBaR6Gf-0sGAQxBjoqolQx9OhhGN_0g8vvXbR5QX-iRJ6q9hELtavxeLD2McHwNtwTnqEKnam0PpV"
+                    "6Nn6khyJkunzjlUhb2TGTuul6fB3QAfv8MBblFz6xDJ4Mf0eDylfJqJ3DtGRKU-GudD~6EBBEH2MVi8nF_HGry1tCccX-YBxmCVS2yberuVPJ0GPtahQKGJTFLUXZpQI"
                 ).build()
             )
         }

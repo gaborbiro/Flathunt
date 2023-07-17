@@ -1,7 +1,7 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.data.Store
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.service.Service
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command

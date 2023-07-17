@@ -1,7 +1,7 @@
 package app.gaborbiro.flathunt.service
 
-import app.gaborbiro.flathunt.data.model.Message
-import app.gaborbiro.flathunt.data.model.Property
+import app.gaborbiro.flathunt.data.domain.model.Message
+import app.gaborbiro.flathunt.data.domain.model.Property
 
 interface Service {
 

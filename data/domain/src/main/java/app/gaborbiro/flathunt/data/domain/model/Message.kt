@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.data.model
+package app.gaborbiro.flathunt.data.domain.model
 
 class Message(
     val senderName: String,
