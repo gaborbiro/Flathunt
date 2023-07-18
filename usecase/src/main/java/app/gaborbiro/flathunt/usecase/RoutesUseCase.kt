@@ -2,14 +2,14 @@ package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.data.domain.Store
-import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
-import app.gaborbiro.flathunt.usecase.base.ValidationCriteria
 import app.gaborbiro.flathunt.usecase.base.command
+import org.koin.core.component.inject
 
-class RoutesUseCase(service: Service, private val store: Store, criteria: ValidationCriteria) :
-    BaseUseCase(service, store, criteria) {
+class RoutesUseCase : BaseUseCase() {
+
+    private val store: Store by inject<Store>()
 
     override val commands: List<Command<*>>
         get() = listOf(routes)

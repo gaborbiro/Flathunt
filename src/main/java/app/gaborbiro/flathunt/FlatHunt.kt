@@ -1,24 +1,22 @@
 package app.gaborbiro.flathunt
 
-import EXP
-import app.gaborbiro.flathunt.data.StoreImpl
-import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.data.di.DataModule
+import app.gaborbiro.flathunt.di.setupKoin
+import app.gaborbiro.flathunt.service.di.ServiceModule
 import app.gaborbiro.flathunt.service.domain.Service
-import app.gaborbiro.flathunt.service.idealista.IdealistaService
-import app.gaborbiro.flathunt.service.rightmove.RightmoveService
-import app.gaborbiro.flathunt.service.spareroom.SpareRoomService
 import app.gaborbiro.flathunt.service.spareroom.usecase.InboxUseCase
-import app.gaborbiro.flathunt.service.zoopla.ZooplaService
 import app.gaborbiro.flathunt.usecase.*
-import app.gaborbiro.flathunt.usecase.base.*
-import com.google.gson.reflect.TypeToken
+import app.gaborbiro.flathunt.usecase.base.UseCase
+import app.gaborbiro.flathunt.usecase.base.ValidationCriteria
 import com.jcabi.manifests.Manifests
+import org.koin.core.KoinApplication
+import org.koin.core.context.startKoin
+import org.koin.core.qualifier.StringQualifier
+import org.koin.dsl.module
+import org.koin.ksp.generated.module
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 
 fun main(args: Array<String>) {
@@ -26,8 +24,6 @@ fun main(args: Array<String>) {
 }
 
 class FlatHunt {
-
-    private lateinit var commands: Map<String, Command<*>>
 
     fun main(args: Array<String>) {
         java.util.logging.LogManager.getLogManager().reset() // disable all logging
@@ -39,50 +35,71 @@ class FlatHunt {
             )
         }
 
-        val serviceStr = getServiceFromArgs(args)
-        val store = StoreImpl(serviceStr)
-        val service = getService(serviceStr, store)
-        this.commands = getCommands(serviceStr, service, store).buildCommandSet()
-        val strictCommand = getStrictCommand(args)
+        val serviceConfig = getServiceConfigFromArgs(args)
+        val strictCommand = getStrictCommandFromArgs(args)
 
-        if (strictCommand != null) {
-            processCommand(strictCommand)?.let { (command, args) ->
-                GlobalVariables.strict = true
-                executeCommand(command, args)
-            } ?: run { println("Invalid command") }
+        if (strictCommand == null) {
+            println("Service:\t$serviceConfig")
         }
+
+        val (serviceName, criteria) = serviceConfig.split("-")
+        val app = setupKoin(serviceName, criteria)
+
+        val useCases = getUseCases(serviceConfig)
+        val commands = CommandSetBuilder(serviceConfig, useCases).buildCommandSet()
 
         BufferedReader(InputStreamReader(System.`in`)).use { reader ->
-            var input: String?
-            if (strictCommand == null) {
-                println("Service:\t$serviceStr")
+            val getCommandUseCase = GetCommandUseCase(commands)
+            val commandProcessor = CommandProcessor {
+                reader.readLine()
             }
-            var hintShown = false
-            do {
-                println("==========================================================================")
-                if (hintShown.not()) {
-                    hintShown = true
-                    println("Type help for a list of available commands")
-                }
-                print("> ")
-                input = reader.readLine()
-                if (input == EXIT_COMMAND_CODE) {
-                    return@use
-                }
-                try {
-                    processCommand(input)?.let { (command, args) ->
-                        executeCommand(command, reader, args)
-                    } ?: run { println("Invalid command") }
-                } catch (t: Throwable) {
-                    t.printStackTrace()
-                }
-            } while (true)
+
+            if (strictCommand != null) {
+                getCommandUseCase.execute(strictCommand)?.let { (command, args) ->
+                    GlobalVariables.strict = true
+                    commandProcessor.doExecute(command, args)
+                } ?: run { println("Invalid command") }
+            }
+
+            processInput(reader, getCommandUseCase, commandProcessor)
         }
 
-        service.cleanup()
+        app.koin.get<Service>().cleanup()
     }
 
-    private fun getStrictCommand(args: Array<String>): String? {
+    private fun processInput(
+        reader: BufferedReader,
+        getCommandUseCase: GetCommandUseCase,
+        commandProcessor: CommandProcessor
+    ) {
+        var input: String?
+        var hintShown = false
+        do {
+            println("==========================================================================")
+            if (hintShown.not()) {
+                hintShown = true
+                println("Type help for a list of available commands")
+            }
+            print("> ")
+            input = reader.readLine()
+            if (input == CommandSetBuilder.EXIT_COMMAND_CODE) {
+                return
+            }
+            try {
+                getCommandUseCase.execute(input)
+                    ?.let {
+                        commandProcessor.execute(it)
+                    }
+                    ?: run {
+                        println("Invalid command")
+                    }
+            } catch (t: Throwable) {
+                t.printStackTrace()
+            }
+        } while (true)
+    }
+
+    private fun getStrictCommandFromArgs(args: Array<String>): String? {
         return if (args.size > 1) {
             when {
                 args[0] == "-c" -> {
@@ -107,167 +124,48 @@ class FlatHunt {
         }
     }
 
-    private fun getServiceFromArgs(args: Array<String>): String {
+    private fun getServiceConfigFromArgs(args: Array<String>): String {
         return if (Manifests.exists("jar-build-timestamp")) {
-            Manifests.read("service")
+            Manifests.read("serviceConfig")
         } else args[0]
     }
 
-    private fun getService(serviceStr: String, store: Store): Service {
-        return when (serviceStr) {
-            "idealista-exp" -> IdealistaService(store)
-            "spareroom-exp" -> SpareRoomService(store)
-            "rightmove-exp" -> RightmoveService(store)
-            "zoopla-exp" -> ZooplaService(store)
-            else -> throw IllegalArgumentException("Missing service parameter from Manifest")
-        }
-    }
+    private fun getUseCases(serviceConfig: String): Set<UseCase> {
+        return when (serviceConfig) {
+            Constants.`idealista-exp` -> setOf(
+                SearchUseCase(),
+                MaintenanceUseCase(),
+            )
 
-    private fun getCommands(serviceStr: String, service: Service, store: Store): CommandSetBuilder {
-        val useCases = when (serviceStr) {
-            "idealista-exp" -> {
-                setOf(
-                    SearchUseCase(service, store, EXP),
-                    MaintenanceUseCase(store),
-                )
-            }
+            Constants.`spareroom-exp` -> setOf(
+                InboxUseCase(),
+                SearchUseCase(),
+                AddCheckUseCase(),
+                RoutesUseCase(),
+                ListUseCase(),
+                PropertyUseCase(),
+                MaintenanceUseCase(),
+            )
 
-            "spareroom-exp" -> {
-                setOf(
-                    InboxUseCase(service, store, EXP),
-                    SearchUseCase(service, store, EXP),
-                    AddCheckUseCase(service, store, EXP),
-                    RoutesUseCase(service, store, EXP),
-                    ListUseCase(service, store, EXP),
-                    PropertyUseCase(service, store, EXP),
-                    MaintenanceUseCase(store),
-                )
-            }
+            Constants.`rightmove-exp` -> setOf(
+                SearchUseCase(),
+                AddCheckUseCase(),
+                RoutesUseCase(),
+                ListUseCase(),
+                PropertyUseCase(),
+                MaintenanceUseCase(),
+            )
 
-            "rightmove-exp" -> {
-                setOf(
-                    SearchUseCase(service, store, EXP),
-                    AddCheckUseCase(service, store, EXP),
-                    RoutesUseCase(service, store, EXP),
-                    ListUseCase(service, store, EXP),
-                    PropertyUseCase(service, store, EXP),
-                    MaintenanceUseCase(store),
-                )
-            }
-
-            "zoopla-exp" -> {
-                setOf(
-                    SearchUseCase(service, store, EXP),
-                    AddCheckUseCase(service, store, EXP),
-                    RoutesUseCase(service, store, EXP),
-                    ListUseCase(service, store, EXP),
-                    PropertyUseCase(service, store, EXP),
-                    MaintenanceUseCase(store),
-                )
-            }
+            Constants.`zoopla-exp` -> setOf(
+                SearchUseCase(),
+                AddCheckUseCase(),
+                RoutesUseCase(),
+                ListUseCase(),
+                PropertyUseCase(),
+                MaintenanceUseCase(),
+            )
 
             else -> throw IllegalArgumentException("Missing service parameter from Manifest")
-        }
-        return CommandSetBuilder(
-            serviceStr,
-            useCases
-        )
-    }
-
-    private fun processCommand(input: String): Pair<Command<*>, List<String>>? {
-        val tokens = input.trim().split(Regex("[\\s]+"))
-        var tokenCount = tokens.size
-        var candidateCount: Int
-        var matcher: Matcher
-        var solution: String? = null
-        var candidate: String?
-        do {
-            candidate = tokens.take(tokenCount).joinToString(" ")
-
-            val candidatePattern = Pattern.compile("^${Pattern.quote(candidate)}([^\\s]*)")
-            candidateCount = commands.keys.filter { key ->
-                matcher = candidatePattern.matcher(key)
-                if (matcher.find()) {
-                    solution = key
-                    true
-                } else {
-                    false
-                }
-            }.size
-            tokenCount--
-        } while (candidateCount != 1 && tokenCount > 0)
-
-        return if (candidateCount > 1) {
-            val exactMatch = commands.keys.firstOrNull { candidate == it }
-            if (exactMatch != null) {
-                val args =
-                    input.removePrefix(exactMatch).trim().split(Regex("[\\s]+")).filter { it.isNotBlank() }
-                commands[exactMatch]!! to args
-            } else {
-                println("No exact match found. Type in more of the command.")
-                null
-            }
-        } else if (candidateCount == 1) {
-            val args =
-                input.removePrefix(candidate!!).trim().split(Regex("[\\s]+")).filter { it.isNotBlank() }
-            commands[solution]!! to args
-        } else {
-            null
-        }
-    }
-
-    private fun buildCommandSet(serviceName: String, vararg useCases: UseCase) {
-        val allCommands = mutableMapOf<String, Command<*>>()
-        useCases.forEach {
-            val commands = it.commands.map { it.command to it }.associate { it }
-            val intersection = commands.keys.intersect(allCommands.keys)
-            if (intersection.isNotEmpty()) {
-                throw IllegalArgumentException("Error registering interface provider: '$serviceName'. Conflicting commands: ${intersection.joinToString()}")
-            }
-            allCommands.putAll(commands)
-        }
-        allCommands.apply {
-            put(HELP_COMMAND_CODE, command(command = HELP_COMMAND_CODE, description = "Prints this menu") {
-                printInfo(serviceName, allCommands)
-            })
-            put(EXIT_COMMAND_CODE, command(EXIT_COMMAND_CODE, "Exit this app") {} as Command<*>)
-        }
-        this.commands = allCommands
-    }
-
-    private fun executeCommand(command: Command<*>, reader: BufferedReader, args: List<String>) {
-        val requiredArgCount = command.requiredArguments.size
-        val completeArgs = if (args.size < requiredArgCount) {
-            (args + (args.size until requiredArgCount).map { i ->
-                print(command.requiredArguments[i] + ": ")
-                reader.readLine()
-            })
-        } else {
-            args
-        }
-        executeCommand(command, completeArgs)
-    }
-
-    private fun executeCommand(command: Command<*>, args: List<String>) {
-        val paramTypes: Array<Type> =
-            ((command.javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as? ParameterizedType)?.actualTypeArguments
-                ?: arrayOf(object : TypeToken<Unit>() {}.type)
-        val adaptedArgs = args.mapIndexed { index, item -> toType(item, paramTypes[index]) }
-        val finalArgs = when (adaptedArgs.size) {
-            0 -> Unit
-            1 -> Single(adaptedArgs[0])
-            2 -> Pair(adaptedArgs[0], adaptedArgs[1])
-            3 -> Triple(adaptedArgs[0], adaptedArgs[1], adaptedArgs[2])
-            else -> println("Argument count ${adaptedArgs.size} not supported")
-        }
-        runCatching {
-            val exec: (Any) -> Unit = command.exec as ((Any) -> Unit)
-            exec.invoke(finalArgs)
-        }.exceptionOrNull()?.let {
-            println(it.message)
         }
     }
 }
-
-private const val EXIT_COMMAND_CODE = "exit"
-private const val HELP_COMMAND_CODE = "help"

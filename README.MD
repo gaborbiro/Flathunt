@@ -3,7 +3,7 @@
 > java -jar FlatHunt-rightmove-exp.jar
 
 Note: you can't run FlatHunt just like on its own, it needs a service specified. A service is basically a combination of the flathunting website you want to use and a criteria set.
-Currently, three services are supported: rightmove-exp, spareroom-exp and zoopla-exp. "exp" being the filtering criteria used to find the right flat. See Setup.kt#EXP
+Currently, three services are supported: rightmove-exp, spareroom-exp and zoopla-exp. "exp" being the filtering criteria used to find the right flat. See Validation.kt#EXP
 
 Running ".\gradlew allJars" creates an executable jar file for all three services.
 

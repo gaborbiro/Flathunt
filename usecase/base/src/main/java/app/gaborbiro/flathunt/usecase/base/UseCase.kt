@@ -74,10 +74,3 @@ inline fun <reified A, reified B, reified C> command(
     listOf(argumentName1, argumentName2, argumentName3),
     exec
 ) {}
-
-fun printInfo(serviceName: String, commands: Map<String, Command<*>>) {
-    println("\nAvailable commands:")
-    println(commands.mapKeys { "- ${it.key}" }.mapValues { it.value.description }.prettyPrint())
-    println()
-    println("Service:\t\t$serviceName")
-}

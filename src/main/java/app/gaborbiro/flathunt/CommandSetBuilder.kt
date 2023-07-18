@@ -3,34 +3,46 @@ package app.gaborbiro.flathunt
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.UseCase
 import app.gaborbiro.flathunt.usecase.base.command
-import app.gaborbiro.flathunt.usecase.base.printInfo
 
 class CommandSetBuilder(
-    private val serviceName: String,
+    private val serviceConfig: String,
     private val useCases: Set<UseCase>
 ) {
 
     companion object {
-        private const val EXIT_COMMAND_CODE = "exit"
-        private const val HELP_COMMAND_CODE = "help"
+        const val EXIT_COMMAND_CODE = "exit"
+        const val HELP_COMMAND_CODE = "help"
     }
 
-    fun buildCommandSet(): Map<String, Command<*>> {
+    fun buildCommandSet(): CommandSet {
         val allCommands = mutableMapOf<String, Command<*>>()
         useCases.forEach {
             val commands = it.commands.map { it.command to it }.associate { it }
             val intersection = commands.keys.intersect(allCommands.keys)
             if (intersection.isNotEmpty()) {
-                throw IllegalArgumentException("Error registering interface provider: '$serviceName'. Conflicting commands: ${intersection.joinToString()}")
+                throw IllegalArgumentException("Error registering interface provider: '$serviceConfig'. Conflicting commands: ${intersection.joinToString()}")
             }
             allCommands.putAll(commands)
         }
         allCommands.apply {
-            put(HELP_COMMAND_CODE, command(command = HELP_COMMAND_CODE, description = "Prints this menu") {
-                printInfo(serviceName, allCommands)
-            })
-            put(EXIT_COMMAND_CODE, command(EXIT_COMMAND_CODE, "Exit this app") {} as Command<*>)
+            put(
+                HELP_COMMAND_CODE,
+                command(command = HELP_COMMAND_CODE, description = "Prints this menu") {
+                    printInfo(serviceConfig, allCommands)
+                }
+            )
+            put(
+                EXIT_COMMAND_CODE,
+                command(EXIT_COMMAND_CODE, "Exit this app") {} as Command<*>
+            )
         }
-        return allCommands
+        return CommandSet(allCommands)
+    }
+
+    private fun printInfo(serviceConfig: String, commands: Map<String, Command<*>>) {
+        println("\nAvailable commands:")
+        println(commands.mapKeys { "- ${it.key}" }.mapValues { it.value.description }.prettyPrint())
+        println()
+        println("Service:\t\t$serviceConfig")
     }
 }

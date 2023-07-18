@@ -2,6 +2,7 @@ import dev.gaborbiro.investments.Dependencies
 
 plugins {
     kotlin("jvm")
+    id("com.google.devtools.ksp")
 }
 
 repositories {
@@ -14,4 +15,8 @@ dependencies {
 
     implementation(Dependencies.Google.gson)
     implementation(Dependencies.Selenium.java)
+
+    implementation(Dependencies.Koin.core)
+    implementation(Dependencies.Koin.annotations)
+    ksp(Dependencies.Koin.ksp)
 }

@@ -1,3 +1,5 @@
+import dev.gaborbiro.investments.Dependencies
+
 plugins {
     kotlin("jvm")
 }
@@ -12,4 +14,6 @@ dependencies {
     implementation(project(":service:domain"))
     implementation(project(":data:domain"))
     implementation(project(":google"))
+
+    implementation(Dependencies.Koin.core)
 }

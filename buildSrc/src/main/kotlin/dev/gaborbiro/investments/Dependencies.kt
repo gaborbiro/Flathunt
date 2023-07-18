@@ -22,4 +22,15 @@ object Dependencies {
     object Jcabi {
         const val mainfests = "com.jcabi:jcabi-manifests:1.1"
     }
+
+    object Koin {
+        const val core = "io.insert-koin:koin-core:3.1.2"
+        const val annotations = "io.insert-koin:koin-annotations:1.2.2"
+        const val ksp = "io.insert-koin:koin-ksp-compiler:1.2.2"
+    }
+
+    object CompileTimeConstants {
+        const val version = "1.0.5"
+        const val lib = "com.anatawa12.compile-time-constant"
+    }
 }

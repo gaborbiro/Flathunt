@@ -6,12 +6,13 @@ import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.usecase.base.*
+import org.koin.core.component.inject
 
-class AddCheckUseCase(
-    service: Service,
-    store: Store,
-    criteria: ValidationCriteria
-) : BaseUseCase(service, store, criteria) {
+class AddCheckUseCase : BaseUseCase() {
+
+    private val store: Store by inject<Store>()
+    private val service: Service by inject<Service>()
+    private val criteria: ValidationCriteria by inject<ValidationCriteria>()
 
     override val commands: List<Command<*>>
         get() = listOf(

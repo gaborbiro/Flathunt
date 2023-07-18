@@ -5,6 +5,14 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version '1.9.0'
     id("com.anatawa12.compile-time-constant") version "1.0.5"
+    id("com.google.devtools.ksp") version "1.9.0-1.0.11"
+}
+
+apply from: "$project.rootDir/service.gradle"
+
+// KSP - To use generated sources
+sourceSets.main {
+    java.srcDirs("build/generated/ksp/main/kotlin")
 }
 
 group 'app.gaborbiro'
@@ -15,10 +23,6 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":rightmove"))
-    implementation(project(":zoopla"))
-    implementation(project(":spareroom"))
-    implementation(project(":idealista"))
     implementation(project(":service"))
     implementation(project(":service:domain"))
     implementation(project(":usecase"))
@@ -33,40 +37,40 @@ dependencies {
     implementation(Dependencies.slf4j.jdk14)
     implementation(Dependencies.OkHttp.okhttp)
     implementation(Dependencies.Selenium.java)
-}
 
+    implementation(Dependencies.Koin.core)
+    implementation(Dependencies.Koin.annotations)
+    ksp(Dependencies.Koin.ksp)
+}
 
 def createCompileTimeConstant = tasks.withType(CreateConstantsTask) {
     constantsClass = "app.gaborbiro.flathunt.compileTimeConstant.Constants"
-    if (project.hasProperty("service")) {
-        values(Map.of("service", project.property("service") as String))
-    } else {
-        values(Map.of("service", ""))
-    }
+    values(
+            SERVICE_CONSTANTS.collectEntries { [it, it] }
+    )
+}
+
+SERVICE_CONFIGS.forEach {
+    tasks.register(it, RunnableJar, it, project)
 }
 
 task allJars {
-    dependsOn('spareroomExpJar', 'rightmoveExpJar', 'zooplaExpJar', 'idealistaExpJar')
+    dependsOn(SERVICE_CONFIGS)
 }
 
-tasks.register('spareroomExpJar', CustomJar, /* service = */ 'spareroom-exp', project)
-tasks.register('rightmoveExpJar', CustomJar, /* service = */ 'rightmove-exp', project)
-tasks.register('zooplaExpJar', CustomJar, /* service = */ 'zoopla-exp', project)
-tasks.register('idealistaExpJar', CustomJar, /* service = */ 'idealista-exp', project)
-
-class CustomJar extends org.gradle.jvm.tasks.Jar {
+class RunnableJar extends org.gradle.jvm.tasks.Jar {
 
     @javax.inject.Inject
-    CustomJar(String service, Project project) {
+    RunnableJar(String serviceConfig, Project project) {
         manifest {
             attributes(
                     "Main-Class": "app.gaborbiro.flathunt.FlatHuntKt",
                     "jar-build-timestamp": new Date().toString(),
-                    "service": service,
+                    "serviceConfig": serviceConfig,
             )
         }
-        project.properties["service"] = "idealista-exp"
-        archiveFileName.set("FlatHunt-${service}.jar")
+        project.properties["serviceConfig"] = "idealista-exp"
+        archiveFileName.set("FlatHunt-${serviceConfig}.jar")
 
         from {} with project.jar
 

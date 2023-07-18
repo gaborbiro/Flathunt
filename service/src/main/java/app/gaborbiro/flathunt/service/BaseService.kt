@@ -7,6 +7,8 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.model.Page
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver
@@ -17,7 +19,7 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import java.nio.file.Paths
 import java.util.*
 
-abstract class BaseService(private val store: Store) : Service {
+abstract class BaseService : Service, KoinComponent {
 
     private lateinit var driver: WebDriver
     private val tabHandleStack = Stack<Set<String>>()
@@ -25,6 +27,8 @@ abstract class BaseService(private val store: Store) : Service {
     protected abstract val rootUrl: String
     protected abstract val sessionCookieName: String
     protected abstract val sessionCookieDomain: String
+
+    private val store: Store by inject<Store>()
 
     protected open fun beforeSession(driver: WebDriver) {
 

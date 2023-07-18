@@ -5,18 +5,21 @@ import app.gaborbiro.flathunt.data.domain.model.Cookies
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import com.google.gson.Gson
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Single
 
+@Single
 class StoreImpl(
-    serviceName: String,
-    tag: String? = null,
+    @Named("serviceName") serviceName: String,
+    @Named("criteria") criteria: String,
 ) : Store {
 
     private val gson = Gson()
 
-    private val prefPropertiesKey = "${PREF_PROPERTIES_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
-    private val prefIndexKey = "${PREF_INDEX_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
-    private val prefCookiesKey = "${PREF_COOKIES_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
-    private val prefBlacklistKey = "${PREF_BLACKLIST_KEY_BASE}_$serviceName" + tag?.let { "_$tag" }
+    private val prefPropertiesKey = "${PREF_PROPERTIES_KEY_BASE}_${serviceName}_$criteria"
+    private val prefIndexKey = "${PREF_INDEX_KEY_BASE}_${serviceName}_$criteria"
+    private val prefCookiesKey = "${PREF_COOKIES_KEY_BASE}_${serviceName}_$criteria"
+    private val prefBlacklistKey = "${PREF_BLACKLIST_KEY_BASE}_${serviceName}_$criteria"
 
     // START Properties
 

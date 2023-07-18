@@ -6,10 +6,14 @@ import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.Single
 import app.gaborbiro.flathunt.usecase.base.UseCase
 import app.gaborbiro.flathunt.usecase.base.command
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.PrintWriter
 
-class MaintenanceUseCase(private val store: Store) : UseCase {
+class MaintenanceUseCase : UseCase, KoinComponent {
+
+    private val store: Store by inject<Store>()
 
     override val commands: List<Command<*>>
         get() = listOf(

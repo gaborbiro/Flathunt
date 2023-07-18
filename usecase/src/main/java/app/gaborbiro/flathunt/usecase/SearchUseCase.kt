@@ -8,9 +8,13 @@ import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.usecase.base.*
+import org.koin.core.component.inject
 
-class SearchUseCase(private val service: Service, private val store: Store, criteria: ValidationCriteria) :
-    BaseUseCase(service, store, criteria) {
+class SearchUseCase : BaseUseCase() {
+
+    private val store: Store by inject<Store>()
+    private val service: Service by inject<Service>()
+    private val criteria: ValidationCriteria by inject<ValidationCriteria>()
 
     override val commands
         get() = listOf(search)

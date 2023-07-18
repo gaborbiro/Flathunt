@@ -7,12 +7,14 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.POI
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.service.domain.Service
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-abstract class BaseUseCase(
-    private val service: Service,
-    private val store: Store,
-    protected val criteria: ValidationCriteria
-) : UseCase {
+abstract class BaseUseCase: UseCase, KoinComponent {
+
+    private val store: Store by inject<Store>()
+    private val service: Service by inject<Service>()
+    private val criteria: ValidationCriteria by inject<ValidationCriteria>()
 
     /**
      * Calculate routes for each property.

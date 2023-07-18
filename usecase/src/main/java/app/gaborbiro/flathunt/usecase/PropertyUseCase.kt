@@ -9,11 +9,13 @@ import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
-import app.gaborbiro.flathunt.usecase.base.ValidationCriteria
 import app.gaborbiro.flathunt.usecase.base.command
+import org.koin.core.component.inject
 
-class PropertyUseCase(service: Service, private val store: Store, criteria: ValidationCriteria) :
-    BaseUseCase(service, store, criteria) {
+class PropertyUseCase : BaseUseCase() {
+
+    private val store: Store by inject<Store>()
+    private val service: Service by inject<Service>()
 
     override val commands: List<Command<*>>
         get() = listOf(
