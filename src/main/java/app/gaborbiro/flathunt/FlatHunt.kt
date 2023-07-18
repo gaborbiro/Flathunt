@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt
 
 import EXP
 import app.gaborbiro.flathunt.data.StoreImpl
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.idealista.IdealistaService
 import app.gaborbiro.flathunt.service.rightmove.RightmoveService
@@ -39,7 +40,9 @@ class FlatHunt {
         }
 
         val serviceStr = getServiceFromArgs(args)
-        val service = getService(serviceStr)
+        val store = StoreImpl(serviceStr)
+        val service = getService(serviceStr, store)
+        this.commands = getCommands(serviceStr, service, store).buildCommandSet()
         val strictCommand = getStrictCommand(args)
 
         if (strictCommand != null) {
@@ -110,23 +113,27 @@ class FlatHunt {
         } else args[0]
     }
 
-    private fun getService(serviceStr: String): Service {
+    private fun getService(serviceStr: String, store: Store): Service {
         return when (serviceStr) {
+            "idealista-exp" -> IdealistaService(store)
+            "spareroom-exp" -> SpareRoomService(store)
+            "rightmove-exp" -> RightmoveService(store)
+            "zoopla-exp" -> ZooplaService(store)
+            else -> throw IllegalArgumentException("Missing service parameter from Manifest")
+        }
+    }
+
+    private fun getCommands(serviceStr: String, service: Service, store: Store): CommandSetBuilder {
+        val useCases = when (serviceStr) {
             "idealista-exp" -> {
-                val store = StoreImpl(serviceStr)
-                val service = IdealistaService(store)
-                buildCommandSet(
-                    serviceName = serviceStr,
+                setOf(
                     SearchUseCase(service, store, EXP),
+                    MaintenanceUseCase(store),
                 )
-                service
             }
 
             "spareroom-exp" -> {
-                val store = StoreImpl(serviceStr)
-                val service = SpareRoomService(store)
-                buildCommandSet(
-                    serviceName = serviceStr,
+                setOf(
                     InboxUseCase(service, store, EXP),
                     SearchUseCase(service, store, EXP),
                     AddCheckUseCase(service, store, EXP),
@@ -135,14 +142,10 @@ class FlatHunt {
                     PropertyUseCase(service, store, EXP),
                     MaintenanceUseCase(store),
                 )
-                service
             }
 
             "rightmove-exp" -> {
-                val store = StoreImpl(serviceStr)
-                val service = RightmoveService(store)
-                buildCommandSet(
-                    serviceName = serviceStr,
+                setOf(
                     SearchUseCase(service, store, EXP),
                     AddCheckUseCase(service, store, EXP),
                     RoutesUseCase(service, store, EXP),
@@ -150,14 +153,10 @@ class FlatHunt {
                     PropertyUseCase(service, store, EXP),
                     MaintenanceUseCase(store),
                 )
-                service
             }
 
             "zoopla-exp" -> {
-                val store = StoreImpl(serviceStr)
-                val service = ZooplaService(store)
-                buildCommandSet(
-                    serviceName = serviceStr,
+                setOf(
                     SearchUseCase(service, store, EXP),
                     AddCheckUseCase(service, store, EXP),
                     RoutesUseCase(service, store, EXP),
@@ -165,11 +164,14 @@ class FlatHunt {
                     PropertyUseCase(service, store, EXP),
                     MaintenanceUseCase(store),
                 )
-                service
             }
 
             else -> throw IllegalArgumentException("Missing service parameter from Manifest")
         }
+        return CommandSetBuilder(
+            serviceStr,
+            useCases
+        )
     }
 
     private fun processCommand(input: String): Pair<Command<*>, List<String>>? {

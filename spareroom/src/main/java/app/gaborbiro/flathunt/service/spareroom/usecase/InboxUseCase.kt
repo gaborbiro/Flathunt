@@ -5,11 +5,11 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.domain.model.MessageTag
 import app.gaborbiro.flathunt.usecase.base.*
 
-class InboxUseCase(private val service: BaseService, private val store: Store, criteria: ValidationCriteria) :
+class InboxUseCase(private val service: Service, private val store: Store, criteria: ValidationCriteria) :
     BaseUseCase(service, store, criteria) {
 
     override val commands: List<Command<*>>
