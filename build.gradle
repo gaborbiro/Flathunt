@@ -1,6 +1,10 @@
+import com.anatawa12.compileTimeConstant.CreateConstantsTask
+import dev.gaborbiro.investments.Dependencies
+
 plugins {
-    id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
+    id("java")
+    id("org.jetbrains.kotlin.jvm") version '1.9.0'
+    id("com.anatawa12.compile-time-constant") version "1.0.5"
 }
 
 group 'app.gaborbiro'
@@ -11,33 +15,34 @@ repositories {
 }
 
 dependencies {
-    implementation project(":rightmove")
-    implementation project(":zoopla")
-    implementation project(":spareroom")
-    implementation project(":idealista")
-    implementation project(":service")
-    implementation project(":service:domain")
-    implementation project(":usecase")
-    implementation project(":data")
+    implementation(project(":rightmove"))
+    implementation(project(":zoopla"))
+    implementation(project(":spareroom"))
+    implementation(project(":idealista"))
+    implementation(project(":service"))
+    implementation(project(":service:domain"))
+    implementation(project(":usecase"))
+    implementation(project(":data"))
     implementation(project(":data:domain"))
-    implementation project(":google")
-    implementation project(":base")
+    implementation(project(":google"))
+    implementation(project(":base"))
 
-    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation(Dependencies.Google.gson)
+    implementation(Dependencies.Jcabi.mainfests)
+    implementation(Dependencies.slf4j.api)
+    implementation(Dependencies.slf4j.jdk14)
+    implementation(Dependencies.OkHttp.okhttp)
+    implementation(Dependencies.Selenium.java)
+}
 
-    implementation 'com.j256.ormlite:ormlite-core:5.6'
-    implementation 'com.j256.ormlite:ormlite-jdbc:5.6'
 
-    implementation 'com.jcabi:jcabi-manifests:1.1'
-
-    implementation 'javax.inject:javax.inject:1'
-    implementation 'org.slf4j:slf4j-api:1.7.+'
-    implementation 'org.slf4j:slf4j-jdk14:1.7.+'
-
-    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
-
-    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
-    implementation("org.seleniumhq.selenium:selenium-java:4.10.0")
+def createCompileTimeConstant = tasks.withType(CreateConstantsTask) {
+    constantsClass = "app.gaborbiro.flathunt.compileTimeConstant.Constants"
+    if (project.hasProperty("service")) {
+        values(Map.of("service", project.property("service") as String))
+    } else {
+        values(Map.of("service", ""))
+    }
 }
 
 task allJars {
@@ -45,10 +50,9 @@ task allJars {
 }
 
 tasks.register('spareroomExpJar', CustomJar, /* service = */ 'spareroom-exp', project)
-tasks.register('rightmoveExpJar', CustomJar, /* service = */  'rightmove-exp', project)
-tasks.register('zooplaExpJar', CustomJar, /* service = */  'zoopla-exp', project)
-tasks.register('idealistaExpJar', CustomJar, /* service = */  'idealista-exp', project)
-//tasks.register('zooplaTwoJar', CustomJar, 'zoopla-two', project)
+tasks.register('rightmoveExpJar', CustomJar, /* service = */ 'rightmove-exp', project)
+tasks.register('zooplaExpJar', CustomJar, /* service = */ 'zoopla-exp', project)
+tasks.register('idealistaExpJar', CustomJar, /* service = */ 'idealista-exp', project)
 
 class CustomJar extends org.gradle.jvm.tasks.Jar {
 
@@ -61,6 +65,7 @@ class CustomJar extends org.gradle.jvm.tasks.Jar {
                     "service": service,
             )
         }
+        project.properties["service"] = "idealista-exp"
         archiveFileName.set("FlatHunt-${service}.jar")
 
         from {} with project.jar

@@ -1,3 +1,5 @@
+import dev.gaborbiro.investments.Dependencies
+
 plugins {
     kotlin("jvm")
 }
@@ -11,6 +13,5 @@ dependencies {
     implementation(project(":service:domain"))
     implementation(project(":base"))
 
-    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
-    implementation("org.seleniumhq.selenium:selenium-java:4.10.0")
+    implementation(Dependencies.Selenium.java)
 }
