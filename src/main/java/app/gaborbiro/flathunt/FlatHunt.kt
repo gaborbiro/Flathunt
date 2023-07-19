@@ -1,20 +1,12 @@
 package app.gaborbiro.flathunt
 
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
-import app.gaborbiro.flathunt.data.di.DataModule
 import app.gaborbiro.flathunt.di.setupKoin
-import app.gaborbiro.flathunt.service.di.ServiceModule
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.spareroom.usecase.InboxUseCase
 import app.gaborbiro.flathunt.usecase.*
 import app.gaborbiro.flathunt.usecase.base.UseCase
-import app.gaborbiro.flathunt.usecase.base.ValidationCriteria
 import com.jcabi.manifests.Manifests
-import org.koin.core.KoinApplication
-import org.koin.core.context.startKoin
-import org.koin.core.qualifier.StringQualifier
-import org.koin.dsl.module
-import org.koin.ksp.generated.module
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -36,32 +28,30 @@ class FlatHunt {
         }
 
         val serviceConfig = getServiceConfigFromArgs(args)
-        val strictCommand = getStrictCommandFromArgs(args)
-
-        if (strictCommand == null) {
-            println("Service:\t$serviceConfig")
-        }
 
         val (serviceName, criteria) = serviceConfig.split("-")
         val app = setupKoin(serviceName, criteria)
+
+        val strictCommandStr = getStrictCommandFromArgs(args)
+        if (strictCommandStr == null) {
+            println("Service:\t$serviceConfig")
+        }
 
         val useCases = getUseCases(serviceConfig)
         val commands = CommandSetBuilder(serviceConfig, useCases).buildCommandSet()
 
         BufferedReader(InputStreamReader(System.`in`)).use { reader ->
-            val getCommandUseCase = GetCommandUseCase(commands)
-            val commandProcessor = CommandProcessor {
-                reader.readLine()
-            }
+            val parseCommandUseCase = ParseCommandUseCase(commands)
+            val commandUseCase = CommandUseCase()
 
-            if (strictCommand != null) {
-                getCommandUseCase.execute(strictCommand)?.let { (command, args) ->
+            if (strictCommandStr != null) {
+                parseCommandUseCase.execute(strictCommandStr)?.let { command ->
                     GlobalVariables.strict = true
-                    commandProcessor.doExecute(command, args)
+                    commandUseCase.execute(command)
                 } ?: run { println("Invalid command") }
             }
 
-            processInput(reader, getCommandUseCase, commandProcessor)
+            processInput(reader, parseCommandUseCase, commandUseCase)
         }
 
         app.koin.get<Service>().cleanup()
@@ -69,16 +59,19 @@ class FlatHunt {
 
     private fun processInput(
         reader: BufferedReader,
-        getCommandUseCase: GetCommandUseCase,
-        commandProcessor: CommandProcessor
+        parseCommandUseCase: ParseCommandUseCase,
+        commandUseCase: CommandUseCase
     ) {
         var input: String?
         var hintShown = false
+        val argumentsUseCase = ArgumentsUseCase {
+            reader.readLine()
+        }
         do {
             println("==========================================================================")
             if (hintShown.not()) {
                 hintShown = true
-                println("Type help for a list of available commands")
+                println("Type 'help' for a list of available commands")
             }
             print("> ")
             input = reader.readLine()
@@ -86,10 +79,10 @@ class FlatHunt {
                 return
             }
             try {
-                getCommandUseCase.execute(input)
-                    ?.let {
-                        commandProcessor.execute(it)
-                    }
+                var command = parseCommandUseCase.execute(input)
+                command = command?.let(argumentsUseCase::execute)
+                command
+                    ?.let(commandUseCase::execute)
                     ?: run {
                         println("Invalid command")
                     }
@@ -140,28 +133,28 @@ class FlatHunt {
             Constants.`spareroom-exp` -> setOf(
                 InboxUseCase(),
                 SearchUseCase(),
-                AddCheckUseCase(),
+                FetchPropertyUseCase(),
                 RoutesUseCase(),
                 ListUseCase(),
-                PropertyUseCase(),
+                ManagePropertyUseCase(),
                 MaintenanceUseCase(),
             )
 
             Constants.`rightmove-exp` -> setOf(
                 SearchUseCase(),
-                AddCheckUseCase(),
+                FetchPropertyUseCase(),
                 RoutesUseCase(),
                 ListUseCase(),
-                PropertyUseCase(),
+                ManagePropertyUseCase(),
                 MaintenanceUseCase(),
             )
 
             Constants.`zoopla-exp` -> setOf(
                 SearchUseCase(),
-                AddCheckUseCase(),
+                FetchPropertyUseCase(),
                 RoutesUseCase(),
                 ListUseCase(),
-                PropertyUseCase(),
+                ManagePropertyUseCase(),
                 MaintenanceUseCase(),
             )
 

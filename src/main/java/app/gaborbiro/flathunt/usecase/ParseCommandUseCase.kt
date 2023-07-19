@@ -1,10 +1,10 @@
-package app.gaborbiro.flathunt
+package app.gaborbiro.flathunt.usecase
 
-import app.gaborbiro.flathunt.usecase.base.Command
+import app.gaborbiro.flathunt.CommandSet
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-class GetCommandUseCase(private val commands: CommandSet) {
+class ParseCommandUseCase(private val commands: CommandSet) {
 
     fun execute(input: String): CommandWithArgs? {
         val tokens = input.trim().split(Regex("[\\s]+"))

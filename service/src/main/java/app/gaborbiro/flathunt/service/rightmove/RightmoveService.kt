@@ -139,10 +139,6 @@ class RightmoveService : BaseService() {
     }
 
     override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
-        val blacklist = store.getBlacklist().toMutableList().also {
-            it.add(id)
-        }
-        store.saveBlacklist(blacklist)
         store.getCookies()?.let { cookies ->
             if (GlobalVariables.safeMode || callPost(
                     url = "https://my.rightmove.co.uk/property/status",

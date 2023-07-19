@@ -224,10 +224,6 @@ class SpareRoomService : BaseService() {
     }
 
     override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
-        val blacklist = store.getBlacklist().toMutableList().also {
-            it.add(id)
-        }
-        store.saveBlacklist(blacklist)
         ensurePageWithSession(getUrlFromId(id))
         if (unsuitable) {
             runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()

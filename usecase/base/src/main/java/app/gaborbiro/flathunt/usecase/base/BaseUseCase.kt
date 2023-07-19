@@ -50,44 +50,6 @@ abstract class BaseUseCase: UseCase, KoinComponent {
     }
 
     /**
-     * Ad-hoc scan of a property. Marks property as unsuitable if needed.
-     */
-    fun fetchProperty(arg: String, save: SaveType, safeMode: Boolean): Property? {
-        val cleanUrl = service.checkUrlOrId(arg)
-        if (cleanUrl != null) {
-            println()
-            println(cleanUrl)
-            val id = service.getPropertyIdFromUrl(cleanUrl)
-            GlobalVariables.lastUsedIndexOrId = id
-            val property = service.fetchProperty(id, newTab = true)
-            if (property.isBuddyUp && save != SaveType.FORCE_ADD) {
-                println("\nBuddy up - skipping...")
-                return null
-            }
-            val routes = calculateRoutes(property.location, criteria.pointsOfInterest)
-            val propertyWithRoutes = property.withRoutes(routes)
-            println(propertyWithRoutes.prettyPrint())
-            if (propertyWithRoutes.checkValid(criteria)) {
-                when (save) {
-                    SaveType.FORCE_ADD -> addOrUpdateProperty(propertyWithRoutes)
-                    SaveType.CHECK -> {
-                    }
-
-                    SaveType.ADD -> addOrUpdateProperty(propertyWithRoutes)
-                }
-            } else if (save == SaveType.FORCE_ADD) {
-                addOrUpdateProperty(propertyWithRoutes)
-            } else if (!propertyWithRoutes.markedUnsuitable) {
-                if (!safeMode) service.markAsUnsuitable(id, (propertyWithRoutes as? PersistedProperty)?.index, true)
-            } else {
-                println("\nAlready marked unsuitable")
-            }
-            return propertyWithRoutes
-        }
-        return null
-    }
-
-    /**
      * @return true if it was added, false if it was updated
      */
     fun addOrUpdateProperty(property: Property): Boolean {

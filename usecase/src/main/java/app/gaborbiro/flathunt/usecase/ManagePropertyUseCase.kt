@@ -12,7 +12,7 @@ import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
 import org.koin.core.component.inject
 
-class PropertyUseCase : BaseUseCase() {
+class ManagePropertyUseCase : BaseUseCase() {
 
     private val store: Store by inject<Store>()
     private val service: Service by inject<Service>()

@@ -67,10 +67,6 @@ class IdealistaService : BaseService() {
     }
 
     override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
-        val blacklist = store.getBlacklist().toMutableList().also {
-            it.add(id)
-        }
-        store.saveBlacklist(blacklist)
     }
 
     override fun getPropertyIdFromUrl(url: String): String {

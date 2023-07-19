@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt
+package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.usecase.base.Command
 

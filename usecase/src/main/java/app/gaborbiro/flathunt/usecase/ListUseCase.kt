@@ -1,18 +1,20 @@
 package app.gaborbiro.flathunt.usecase
 
+import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
+import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.strict
-import app.gaborbiro.flathunt.usecase.base.BaseUseCase
-import app.gaborbiro.flathunt.usecase.base.Command
-import app.gaborbiro.flathunt.usecase.base.command
+import app.gaborbiro.flathunt.usecase.base.*
 import org.koin.core.component.inject
 
 class ListUseCase : BaseUseCase() {
 
     private val store: Store by inject<Store>()
     private val service: Service by inject<Service>()
+    private val criteria: ValidationCriteria by inject<ValidationCriteria>()
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -22,7 +24,9 @@ class ListUseCase : BaseUseCase() {
             deleteList,
             deleteBlacklist,
             listBlacklist,
-            addBlacklist
+            addBlacklist,
+            reIndex,
+            reCheck,
         )
 
     private val listProperties = command(
@@ -87,5 +91,33 @@ class ListUseCase : BaseUseCase() {
     ) { (ids) ->
         val blacklist = store.getBlacklist()
         store.saveBlacklist(ids.split(",") - blacklist + blacklist)
+    }
+
+    private val reIndex = command(
+        command = "reindex",
+        description = "Re-indexes all properties in the database starting from 1"
+    )
+    {
+        val properties: List<PersistedProperty> = store.getProperties()
+        store.resetIndexes()
+        if (!GlobalVariables.safeMode) {
+            store.saveProperties(properties.map { Property(it) })
+        }
+        println("Done")
+    }
+
+    private val reCheck = command(
+        command = "recheck",
+        description = "Removes all invalid properties from the database. Useful for re-testing previously added properties after criteria change."
+    )
+    {
+        val properties = store.getProperties()
+        val validProperties = properties.filter { it.validate(criteria).isEmpty() }
+        val toDelete = (properties - validProperties.toSet()).joinToString("\n") { it.index.toString() + " " + it.id }
+        println("Deleting properties:")
+        println(toDelete)
+        if (!GlobalVariables.safeMode) {
+            store.saveProperties(validProperties)
+        }
     }
 }

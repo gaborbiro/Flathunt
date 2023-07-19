@@ -106,6 +106,10 @@ abstract class BaseService : Service, KoinComponent {
     protected abstract fun fetchProperty(driver: WebDriver, id: String): Property
 
     final override fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean) {
+        val blacklist = store.getBlacklist().toMutableList().also {
+            it.add(id)
+        }
+        store.saveBlacklist(blacklist)
         ensureBrowser()
         markAsUnsuitable(driver, id, index, unsuitable)
     }
