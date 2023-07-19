@@ -9,4 +9,5 @@ repositories {
 dependencies {
     implementation(project(":base"))
     implementation(project(":data:domain"))
+    implementation(project(":repo:domain"))
 }

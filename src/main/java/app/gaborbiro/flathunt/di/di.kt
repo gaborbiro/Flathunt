@@ -1,11 +1,12 @@
 package app.gaborbiro.flathunt.di
 
 import app.gaborbiro.flathunt.EXP
+import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.di.DataModule
+import app.gaborbiro.flathunt.repo.di.RepoModule
 import app.gaborbiro.flathunt.service.di.ServiceModule
 import app.gaborbiro.flathunt.service.domain.Service
-import app.gaborbiro.flathunt.usecase.base.ValidationCriteria
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.StringQualifier
@@ -25,6 +26,7 @@ fun setupKoin(serviceName: String, criteria: String): KoinApplication {
         modules(
             appModule,
             DataModule().module,
+            RepoModule().module,
             ServiceModule().module
         )
     }

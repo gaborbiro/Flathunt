@@ -1,38 +1,39 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.usecase.base.Command
-import app.gaborbiro.flathunt.usecase.base.Single
 import app.gaborbiro.flathunt.usecase.base.UseCase
 import app.gaborbiro.flathunt.usecase.base.command
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.File
-import java.io.PrintWriter
 
 class MaintenanceUseCase : UseCase, KoinComponent {
 
-    private val store: Store by inject<Store>()
+    private val repo: MaintenanceRepository by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(
             command(
                 command = "clear session",
                 description = "Deletes session cookies (will re-login on next launch)",
-                exec = { store.clearCookies() }
+                exec = { repo.clearCookies() }
             ),
-            command(
+            command<String>(
                 command = "export",
                 description = "Exports saved properties to the specified path",
                 argumentName = "path",
-                exec = ::backup
+                exec = {
+                    repo.backup(it.first)
+                }
             ),
-            command(
+            command<String>(
                 command = "backup",
                 description = "Exports saved properties to the specified path",
                 argumentName = "path",
-                exec = ::backup
+                exec = {
+                    repo.backup(it.first)
+                }
             ),
             command<String>(
                 command = "import",
@@ -41,9 +42,8 @@ class MaintenanceUseCase : UseCase, KoinComponent {
                 argumentName = "path",
             ) { (path) ->
                 try {
-                    val json = File(path).bufferedReader().use { it.readText() }
-                    store.saveJsonProperties(json)
-                    println("Imported ${store.getProperties().size} properties")
+                    val size = repo.restore(path)
+                    println("Imported $size properties")
                 } catch (t: Throwable) {
                     t.printStackTrace()
                 }
@@ -84,17 +84,4 @@ class MaintenanceUseCase : UseCase, KoinComponent {
                 println("Safe mode disabled. Messages or properties will be labeled/marked as needed.")
             }
         )
-
-    private fun backup(path: Single<String>) {
-        store.getJsonProperties()?.let { json ->
-            try {
-                PrintWriter(path.first).use { it.print(json) }
-                println("${json.length} bytes backed up")
-            } catch (t: Throwable) {
-                t.printStackTrace()
-            }
-        } ?: run {
-            println("Nothing to back up")
-        }
-    }
 }

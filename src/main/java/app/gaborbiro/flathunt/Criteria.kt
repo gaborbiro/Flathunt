@@ -1,11 +1,7 @@
 package app.gaborbiro.flathunt
 
-import app.gaborbiro.flathunt.google.POI
-import app.gaborbiro.flathunt.google.TravelMode.CYCLING
-import app.gaborbiro.flathunt.google.TravelMode.TRANSIT
-import app.gaborbiro.flathunt.google.minutes
-import app.gaborbiro.flathunt.google.or
-import app.gaborbiro.flathunt.usecase.base.ValidationCriteria
+import app.gaborbiro.flathunt.TravelMode.CYCLING
+import app.gaborbiro.flathunt.TravelMode.TRANSIT
 import java.time.LocalDate
 
 val poiCW = POI.Destination(

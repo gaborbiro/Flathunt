@@ -32,18 +32,18 @@ class StoreImpl(
         return gson.fromJson(jsonProperties, PropertiesWrapper::class.java).data
     }
 
-    override fun saveProperties(properties: List<Property>) {
+    override fun overrideProperties(properties: List<Property>) {
         val jsonProperties = gson.toJson(PropertiesWrapper(properties.map {
             if (it is PersistedProperty) {
                 it
             } else {
-                PersistedProperty(it, getNextIndex().also { index -> println("new index: $index") })
+                PersistedProperty(it, nextIndex().also { index -> println("new index: $index") })
             }
         }))
-        saveJsonProperties(jsonProperties)
+        overrideJsonProperties(jsonProperties)
     }
 
-    override fun saveJsonProperties(json: String) {
+    override fun overrideJsonProperties(json: String) {
         Preferences.save(prefPropertiesKey, json)
     }
 
@@ -68,7 +68,7 @@ class StoreImpl(
 
     // END Blacklist
 
-    private fun getNextIndex(): Int {
+    private fun nextIndex(): Int {
         return synchronized(this) {
             val index = Preferences.getInt(prefIndexKey, 0)
             Preferences.setInt(prefIndexKey, index + 1)
@@ -90,7 +90,7 @@ class StoreImpl(
         Preferences.clear(prefCookiesKey)
     }
 
-    override fun resetIndexes() {
+    override fun resetIndexCounter() {
         Preferences.clear(prefIndexKey)
     }
 }

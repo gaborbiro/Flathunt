@@ -1,8 +1,6 @@
 package app.gaborbiro.flathunt.google
 
-import app.gaborbiro.flathunt.LatLon
-import app.gaborbiro.flathunt.LocalProperties
-import app.gaborbiro.flathunt.callGet
+import app.gaborbiro.flathunt.*
 import com.google.gson.Gson
 import java.time.LocalDate
 import java.time.LocalDateTime

@@ -4,8 +4,8 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Cookies
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.Service
-import app.gaborbiro.flathunt.service.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.model.Page
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -63,7 +63,7 @@ abstract class BaseService : Service, KoinComponent {
     /**
      * Tabs opened after calling this method can be al closed by calling a popTabHandles
      */
-    override fun pushTabHandles() {
+    override fun pinCurrentTabs() {
         runCatching {
             tabHandleStack.push(driver.windowHandles)
         }
@@ -76,7 +76,7 @@ abstract class BaseService : Service, KoinComponent {
 
     protected abstract fun getPhotoUrls(driver: WebDriver, id: String): List<String>
 
-    override fun popTabHandles() {
+    override fun closeUnpinnedTabs() {
         val handles: Set<String> = if (tabHandleStack.isNotEmpty()) {
             tabHandleStack.pop()
         } else emptySet()

@@ -1,7 +1,6 @@
-package app.gaborbiro.flathunt.google
+package app.gaborbiro.flathunt
 
-import app.gaborbiro.flathunt.LatLon
-import app.gaborbiro.flathunt.google.TravelMode.WALKING
+import app.gaborbiro.flathunt.TravelMode.WALKING
 
 sealed class POI(open val description: String, open vararg val max: TravelLimit) {
 

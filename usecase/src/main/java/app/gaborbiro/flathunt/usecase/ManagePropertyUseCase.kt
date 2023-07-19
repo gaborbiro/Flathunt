@@ -1,12 +1,11 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.google.getRoutesToNearestStations
 import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.prettyPrint
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
@@ -14,8 +13,7 @@ import org.koin.core.component.inject
 
 class ManagePropertyUseCase : BaseUseCase() {
 
-    private val store: Store by inject<Store>()
-    private val service: Service by inject<Service>()
+    private val propertyRepository: PropertyRepository by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -36,9 +34,7 @@ class ManagePropertyUseCase : BaseUseCase() {
     )
     { (indexOrId) ->
         val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val properties = store.getProperties()
-        val property = properties.firstOrNull { it.index.toString() == indexOrId }
-            ?: properties.firstOrNull { it.id == indexOrId }
+        val property = propertyRepository.getProperty(indexOrId)
         GlobalVariables.lastUsedIndexOrId = property?.let { indexOrId }
         property
             ?.prettyPrint()?.let(::println)
@@ -51,8 +47,7 @@ class ManagePropertyUseCase : BaseUseCase() {
         argumentName = "index(es) or id(s)",
     )
     { (arg) ->
-        service.popTabHandles()
-        getPropertiesByIndexOrIds(arg).forEach(::openLinks)
+        getPropertiesByIndexOrIdArray(arg).forEach(propertyRepository::openLinks)
     }
 
     private val tyn = command(
@@ -60,15 +55,14 @@ class ManagePropertyUseCase : BaseUseCase() {
         description = "(Thank You Next) Deletes last viewed property, marks it as unsuitable/hidden and opens next index in browser",
     )
     {
-        service.popTabHandles()
-        val next = getNextProperty()
-        getPropertiesByIndexOrIds("$").forEach {
-            deleteProperty(it.index, markAsUnsuitable = true, GlobalVariables.safeMode)
+        val next = GlobalVariables.lastUsedIndexOrId?.let { propertyRepository.getNextProperty(it) }
+        getPropertiesByIndexOrIdArray("$").forEach {
+            propertyRepository.deleteProperty(it.index, markAsUnsuitable = true, GlobalVariables.safeMode)
         }
         next?.let {
             println("${it.index} - ${it.id}")
-            GlobalVariables.lastUsedIndexOrId = it.index.toString()
-            openLinks(it)
+            GlobalVariables.lastUsedIndexOrId = it.id
+            propertyRepository.openLinks(it)
         } ?: run { println("Nothing to open") }
     }
 
@@ -80,9 +74,8 @@ class ManagePropertyUseCase : BaseUseCase() {
         argumentName2 = "mark as unsuitable (true/false)",
     )
     { (arg, mark) ->
-        service.popTabHandles()
-        getPropertiesByIndexOrIds(arg).forEach {
-            deleteProperty(it.index, markAsUnsuitable = mark, GlobalVariables.safeMode)
+        getPropertiesByIndexOrIdArray(arg).forEach {
+            propertyRepository.deleteProperty(it.index, markAsUnsuitable = mark, GlobalVariables.safeMode)
         }
     }
 
@@ -93,7 +86,7 @@ class ManagePropertyUseCase : BaseUseCase() {
         argumentName2 = "unsuitable"
     )
     { (arg, unsuitable) ->
-        getPropertiesByIndexOrIds(arg).forEach { service.markAsUnsuitable(it.id, it.index, unsuitable) }
+        getPropertiesByIndexOrIdArray(arg).forEach { propertyRepository.markAsUnsuitable(it, unsuitable) }
     }
 
     private val comment = command<String, String>(
@@ -104,13 +97,11 @@ class ManagePropertyUseCase : BaseUseCase() {
     )
     { (indexOrId, comment) ->
         val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val properties = store.getProperties()
-        val property = properties.firstOrNull { it.index.toString() == indexOrId }
-            ?: properties.firstOrNull { it.id == indexOrId }
+        val property = propertyRepository.getProperty(indexOrId)
         property
             ?.let {
                 GlobalVariables.lastUsedIndexOrId = indexOrId
-                addOrUpdateProperty(it.clone(comment = comment))
+                propertyRepository.addOrUpdateProperty(it.clone(comment = comment))
             }
             ?: run { println("Cannot find property with index or id $indexOrId") }
     }
@@ -123,14 +114,12 @@ class ManagePropertyUseCase : BaseUseCase() {
     )
     { (indexOrId, comment) ->
         val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val properties = store.getProperties()
-        val property = properties.firstOrNull { it.index.toString() == indexOrId }
-            ?: properties.firstOrNull { it.id == indexOrId }
+        val property = propertyRepository.getProperty(indexOrId)
         property
             ?.let {
                 GlobalVariables.lastUsedIndexOrId = indexOrId
                 if (comment.isNotBlank()) {
-                    addOrUpdateProperty(it.clone(comment = it.comment + " " + comment))
+                    propertyRepository.addOrUpdateProperty(it.clone(comment = it.comment + " " + comment))
                 }
             }
             ?: run { println("Cannot find property with index or id $indexOrId") }
@@ -143,9 +132,7 @@ class ManagePropertyUseCase : BaseUseCase() {
     )
     { (indexOrId) ->
         val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val properties = store.getProperties()
-        val property = properties.firstOrNull { it.index.toString() == indexOrId }
-            ?: properties.firstOrNull { it.id == indexOrId }
+        val property = propertyRepository.getProperty(indexOrId)
         property
             ?.let {
                 GlobalVariables.lastUsedIndexOrId = indexOrId
@@ -159,39 +146,21 @@ class ManagePropertyUseCase : BaseUseCase() {
             ?: run { println("Cannot find property with index or id $indexOrId") }
     }
 
-    private fun getPropertiesByIndexOrIds(arg: String): List<PersistedProperty> {
+    private fun getPropertiesByIndexOrIdArray(arg: String): List<PersistedProperty> {
         val arg = arg.checkLastUsedIndexOrId()
-        val properties = store.getProperties()
-        return (properties.firstOrNull { it.index.toString() == arg }?.let { listOf(it) }
-            ?: properties.firstOrNull { it.id == arg }?.let { listOf(it) })
-            ?.let {
-                GlobalVariables.lastUsedIndexOrId = arg
-                it
-            }
-            ?: run {
-                val tokens = arg.split(Regex("[,\\s]+"))
-                properties.filter { it.index.toString() in tokens || it.id in tokens }.also {
-                    val notFound = tokens - properties.map { it.index.toString() } - properties.map { it.id }
-                    if (notFound.isNotEmpty()) {
-                        println("The following properties were not found in database: ${notFound.joinToString(", ")}")
-                    }
-                }
-            }
-    }
+        var properties = propertyRepository.getProperty(arg)?.let { listOf(it) }
 
-    private fun getNextProperty(): PersistedProperty? {
-        val indexOrId = "$".checkLastUsedIndexOrId()
-        val properties = store.getProperties()
-        val property = (properties.firstOrNull { it.index.toString() == indexOrId }?.let { listOf(it) }
-            ?: properties.firstOrNull { it.id == indexOrId }?.let { listOf(it) })
-            ?: null
-        return property?.let {
-            if (it.size == 1) {
-                val index = it[0].index
-                return properties.sortedBy { it.index }.firstOrNull { it.index > index }
-            } else {
-                null
+        if (properties == null) {
+            val tokens = arg.split(Regex("[,\\s]+"))
+            properties = tokens.map { getPropertiesByIndexOrIdArray(it) }.flatten()
+            val notFound = tokens - properties.map { it.index.toString() } - properties.map { it.id }
+            if (notFound.isNotEmpty()) {
+                println("The following properties were not found in database: ${notFound.joinToString(", ")}")
             }
         }
+        if (properties.size == 1) {
+            GlobalVariables.lastUsedIndexOrId = arg
+        }
+        return properties
     }
 }

@@ -28,6 +28,8 @@ dependencies {
     implementation(project(":usecase"))
     implementation(project(":data"))
     implementation(project(":data:domain"))
+    implementation(project(":repo"))
+    implementation(project(":repo:domain"))
     implementation(project(":google"))
     implementation(project(":base"))
 

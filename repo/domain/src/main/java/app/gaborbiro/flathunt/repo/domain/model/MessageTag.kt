@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.service.domain.model
+package app.gaborbiro.flathunt.repo.domain.model
 
 enum class MessageTag {
     REJECTED,

@@ -1,13 +1,12 @@
 package app.gaborbiro.flathunt.service.spareroom
 
 import app.gaborbiro.flathunt.*
-import app.gaborbiro.flathunt.data.domain.Store
-import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.BaseService
-import app.gaborbiro.flathunt.service.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.koin.core.annotation.Named

@@ -13,6 +13,8 @@
             <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/data/domain" />
             <option value="$PROJECT_DIR$/google" />
+            <option value="$PROJECT_DIR$/repo" />
+            <option value="$PROJECT_DIR$/repo/domain" />
             <option value="$PROJECT_DIR$/service" />
             <option value="$PROJECT_DIR$/service/domain" />
             <option value="$PROJECT_DIR$/usecase" />

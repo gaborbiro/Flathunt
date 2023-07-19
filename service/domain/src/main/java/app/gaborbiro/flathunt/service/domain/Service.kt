@@ -2,7 +2,7 @@ package app.gaborbiro.flathunt.service.domain
 
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.service.domain.model.MessageTag
+import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.model.Page
 
 interface Service {
@@ -37,9 +37,9 @@ interface Service {
 
     fun getPhotoUrls(id: String): List<String>
 
-    fun pushTabHandles()
+    fun pinCurrentTabs()
 
-    fun popTabHandles()
+    fun closeUnpinnedTabs()
 
     fun fetchMessages(safeMode: Boolean): List<Message>
 

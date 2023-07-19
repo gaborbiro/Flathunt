@@ -1,20 +1,18 @@
 package app.gaborbiro.flathunt.usecase
 
-import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.data.domain.Store
-import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
-import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.prettyPrint
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.strict
-import app.gaborbiro.flathunt.usecase.base.*
+import app.gaborbiro.flathunt.usecase.base.BaseUseCase
+import app.gaborbiro.flathunt.usecase.base.Command
+import app.gaborbiro.flathunt.usecase.base.command
 import org.koin.core.component.inject
 
 class ListUseCase : BaseUseCase() {
 
-    private val store: Store by inject<Store>()
-    private val service: Service by inject<Service>()
-    private val criteria: ValidationCriteria by inject<ValidationCriteria>()
+    private val criteria: ValidationCriteria by inject()
+    private val propertyRepository: PropertyRepository by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -25,8 +23,8 @@ class ListUseCase : BaseUseCase() {
             deleteBlacklist,
             listBlacklist,
             addBlacklist,
-            reIndex,
-            reCheck,
+            reindex,
+            verifyAll,
         )
 
     private val listProperties = command(
@@ -34,7 +32,7 @@ class ListUseCase : BaseUseCase() {
         description = "Prints properties"
     )
     {
-        val properties = store.getProperties()
+        val properties = propertyRepository.getProperties()
         if (properties.isNotEmpty()) {
             strict { println("${properties.size} properties in database\n") }
             println(properties.joinToString("\n\n\n") { it.prettyPrint() })
@@ -48,7 +46,7 @@ class ListUseCase : BaseUseCase() {
         description = "Prints property ids"
     )
     {
-        val properties = store.getProperties()
+        val properties = propertyRepository.getProperties()
         if (properties.isNotEmpty()) {
             strict { println("${properties.size} properties in database\n") }
             println(properties.joinToString("\n") { "${it.index}: ${it.id}" })
@@ -62,26 +60,40 @@ class ListUseCase : BaseUseCase() {
         description = "Prints property urls"
     )
     {
-        val properties = store.getProperties()
+        val properties = propertyRepository.getProperties()
         if (properties.isNotEmpty()) {
             strict { println("${properties.size} properties in database\n") }
-            println(properties.joinToString("\n") { "${it.index}\t${service.getUrlFromId(it.id)}\t${it.location}\t\t\t${it.prices[0].pricePerMonthInt}\t\t\t\t${it.title}" })
+            println(properties.joinToString("\n") {
+                "${it.index}" +
+                        "\t${propertyRepository.getPropertyUrl(it.id)}" +
+                        "\t${it.location}" +
+                        "\t\t\t${it.prices[0].pricePerMonthInt}" +
+                        "\t\t\t\t${it.title}"
+            })
         } else {
             strict { println("No saved properties") }
         }
     }
 
-    private val deleteList = command(command = "clear properties", description = "Deletes all data") {
-        store.clearProperties()
+    private val deleteList = command(
+        command = "clear properties",
+        description = "Deletes all data"
+    ) {
+        propertyRepository.clearProperties()
     }
 
-    private val deleteBlacklist =
-        command(command = "clear blacklist", description = "Removes properties from blacklist") {
-            store.clearBlacklist()
-        }
+    private val deleteBlacklist = command(
+        command = "clear blacklist",
+        description = "Removes properties from blacklist"
+    ) {
+        propertyRepository.clearBlacklist()
+    }
 
-    private val listBlacklist = command(command = "list blacklist", description = "Print blacklisted ids") {
-        store.getBlacklist().forEach { println(it) }
+    private val listBlacklist = command(
+        command = "list blacklist",
+        description = "Print blacklisted ids"
+    ) {
+        propertyRepository.getBlacklist().forEach { println(it) }
     }
 
     private val addBlacklist = command<String>(
@@ -89,35 +101,23 @@ class ListUseCase : BaseUseCase() {
         description = "Update blacklist with specified ids",
         argumentName = "ids"
     ) { (ids) ->
-        val blacklist = store.getBlacklist()
-        store.saveBlacklist(ids.split(",") - blacklist + blacklist)
+        propertyRepository.addToBlacklist(ids.split(Regex("[,\\s]+")))
     }
 
-    private val reIndex = command(
+    private val reindex = command(
         command = "reindex",
         description = "Re-indexes all properties in the database starting from 1"
     )
     {
-        val properties: List<PersistedProperty> = store.getProperties()
-        store.resetIndexes()
-        if (!GlobalVariables.safeMode) {
-            store.saveProperties(properties.map { Property(it) })
-        }
+        propertyRepository.reindex()
         println("Done")
     }
 
-    private val reCheck = command(
-        command = "recheck",
+    private val verifyAll = command(
+        command = "verify",
         description = "Removes all invalid properties from the database. Useful for re-testing previously added properties after criteria change."
     )
     {
-        val properties = store.getProperties()
-        val validProperties = properties.filter { it.validate(criteria).isEmpty() }
-        val toDelete = (properties - validProperties.toSet()).joinToString("\n") { it.index.toString() + " " + it.id }
-        println("Deleting properties:")
-        println(toDelete)
-        if (!GlobalVariables.safeMode) {
-            store.saveProperties(validProperties)
-        }
+        propertyRepository.verifyAll()
     }
 }

@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.google
+package app.gaborbiro.flathunt
 
 
 infix fun Int.minutes(travelMode: TravelMode) = TravelLimit(travelMode, this)

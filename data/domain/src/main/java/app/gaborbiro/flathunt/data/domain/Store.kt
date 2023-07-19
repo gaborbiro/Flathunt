@@ -9,9 +9,9 @@ interface Store {
 
     fun getProperties(): List<PersistedProperty>
 
-    fun saveProperties(properties: List<Property>)
+    fun overrideProperties(properties: List<Property>)
 
-    fun saveJsonProperties(json: String)
+    fun overrideJsonProperties(json: String)
 
     fun clearProperties()
 
@@ -27,5 +27,5 @@ interface Store {
 
     fun clearCookies()
 
-    fun resetIndexes()
+    fun resetIndexCounter()
 }
