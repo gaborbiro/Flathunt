@@ -4,7 +4,6 @@ import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.data.domain.model.validate
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.service.domain.Service
 import org.koin.core.annotation.Singleton
@@ -17,6 +16,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     private val store: Store by inject()
     private val service: Service by inject()
     private val criteria: ValidationCriteria by inject()
+    private val validator: PropertyValidator by inject()
 
     override fun getProperty(indexOrId: String): PersistedProperty? {
         val properties = store.getProperties()
@@ -35,7 +35,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         val properties: MutableList<Property> = store.getProperties().toMutableList()
         val index = properties.indexOfFirst { it.id == property.id }
         return if (index > -1) {
-            properties[index] = PersistedProperty(property, (properties[index] as PersistedProperty).index)
+            properties[index] = PersistedProperty(property, index)
             println("\nProperty updated")
             false
         } else {
@@ -49,8 +49,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
 
     override fun verifyAll() {
         val properties = getProperties()
-        val validProperties = properties.filter { it.validate(criteria).isEmpty() }
-        val toDelete = (properties - validProperties.toSet()).joinToString("\n") { it.index.toString() + " " + it.id }
+        val validProperties = properties.filter { validator.validate(it).isEmpty() }
+        val toDelete = (properties - validProperties.toSet()).joinToString("\n") { "#${it.index} ${it.id}" }
         println("Deleting properties:")
         println(toDelete)
         if (!GlobalVariables.safeMode) {
@@ -65,7 +65,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
             store.overrideProperties(properties)
             println("Property deleted")
             if (markAsUnsuitable && !safeMode) {
-                service.markAsUnsuitable(property.id, (property as? PersistedProperty)?.index, true)
+                service.markAsUnsuitable(property.id, unsuitable = true, description = "($index)")
             }
             true
         } ?: run {
@@ -142,7 +142,9 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     }
 
     override fun markAsUnsuitable(property: Property, unsuitable: Boolean) {
-        service.markAsUnsuitable(property.id, (property as? PersistedProperty)?.index, unsuitable)
+        val index = (property as? PersistedProperty)?.index
+        val description = index?.let { "($it)" } ?: ""
+        service.markAsUnsuitable(property.id, unsuitable, description)
     }
 
     override fun getNextProperty(indexOrId: String): PersistedProperty? {

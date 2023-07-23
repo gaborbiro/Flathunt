@@ -1,12 +1,12 @@
 package app.gaborbiro.flathunt.service.zoopla
 
-import app.gaborbiro.flathunt.service.domain.model.Page
-import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import app.gaborbiro.flathunt.splitQuery
 import com.google.gson.Gson
@@ -69,7 +69,7 @@ class ZooplaService : BaseService() {
                 if (page < pageCount) {
                     var searchUrl = searchUrl.replace(Regex("&pn=[\\d]+"), "")
                     searchUrl = searchUrl.replace(Regex("\\?pn=[\\d]+"), "")
-                    fetchLinksFromSearch("$searchUrl&pn=$page")
+                    "$searchUrl&pn=$page"
                 } else {
                     null
                 }
@@ -200,7 +200,7 @@ class ZooplaService : BaseService() {
         return images
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
+    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
         throw NotImplementedError()
     }
 }

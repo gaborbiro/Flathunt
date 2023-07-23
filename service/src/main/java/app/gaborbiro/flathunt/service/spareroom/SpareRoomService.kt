@@ -114,7 +114,7 @@ class SpareRoomService : BaseService() {
                 if (page < pageCount) {
                     var searchUrl = searchUrl.replace(Regex("&offset=[\\d]+"), "")
                     searchUrl = searchUrl.replace(Regex("\\?offset=[\\d]+"), "")
-                    fetchLinksFromSearch(searchUrl + "&offset=${page * 10 - this.propertiesRemoved}")
+                    searchUrl + "&offset=${page * 10 - this.propertiesRemoved}"
                 } else {
                     null
                 }
@@ -222,13 +222,13 @@ class SpareRoomService : BaseService() {
         }
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
+    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
         ensurePageWithSession(getUrlFromId(id))
         if (unsuitable) {
             runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                 ?.let {
                     it.click()
-                    println("$id marked${index?.let { " ($it)" } ?: ""}")
+                    println("$id marked $description")
                     driver.switchTo().alert().dismiss()
                     return
                 }
@@ -238,7 +238,7 @@ class SpareRoomService : BaseService() {
                 runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                     ?.let {
                         it.click()
-                        println("$id marked${index?.let { " ($it)" } ?: ""}")
+                        println("$id marked $description")
                         driver.switchTo().alert().dismiss()
                         return
                     }
@@ -247,7 +247,7 @@ class SpareRoomService : BaseService() {
                 it.click()
                 runCatching { driver.findElement(By.xpath("//input[@value='unsuitable']")) }.getOrNull()?.click()
                 runCatching { driver.findElement(By.className("submit")) }.getOrNull()?.click()
-                println("$id marked${index?.let { "($it)" } ?: ""}")
+                println("$id marked $description")
                 return
             }
         } else {
@@ -260,13 +260,13 @@ class SpareRoomService : BaseService() {
                         runCatching { driver.findElement(By.className("submit")) }.getOrNull()
                             ?.let {
                                 it.click()
-                                println("$id marked${index?.let { " ($it)" } ?: ""}")
+                                println("$id marked $description")
                                 return
                             }
                     }
             }
         }
-        println("Failed to mark $id${index?.let { " ($it)" } ?: ""}")
+        println("Failed to mark $id $description")
     }
 
     override fun getPropertyIdFromUrl(url: String): String {

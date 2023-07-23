@@ -1,12 +1,10 @@
 package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.data.domain.model.checkValid
 import app.gaborbiro.flathunt.repo.domain.InboxRepository
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.Service
@@ -19,7 +17,7 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
 
     private val store: Store by inject()
     private val service: Service by inject()
-    private val criteria: ValidationCriteria by inject()
+    private val validator: PropertyValidator by inject()
 
     override fun fetchMessages(): List<Message> {
         return service.fetchMessages(GlobalVariables.safeMode)
@@ -39,13 +37,13 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
                 }
                 if (property.isBuddyUp) {
                     if (!GlobalVariables.safeMode) service.tagMessage(message.messageLink, MessageTag.BUDDY_UP)
-                } else if (!property.checkValid(criteria)) {
+                } else if (!validator.checkValid(property)) {
                     if (!property.markedUnsuitable) { // not yet marked as unsuitable
-                        if (!GlobalVariables.safeMode) service.markAsUnsuitable(
-                            id,
-                            (property as? PersistedProperty)?.index,
-                            true
-                        )
+                        if (!GlobalVariables.safeMode) {
+                            val index = (property as? PersistedProperty)?.index
+                            val description = index?.let { "($it)" } ?: ""
+                            service.markAsUnsuitable(id, unsuitable = true, description)
+                        }
                     }
                     messageRejection[propertyLink] = true
                 } else {

@@ -4,7 +4,6 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.data.domain.model.checkValid
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
@@ -21,6 +20,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
     private val service: Service by inject()
     private val criteria: ValidationCriteria by inject()
     private val repository: PropertyRepository by inject()
+    private val validator: PropertyValidator by inject()
 
     /**
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
@@ -40,7 +40,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
             val routes = calculateRoutes(property.location, criteria.pointsOfInterest)
             val propertyWithRoutes = property.withRoutes(routes)
             println(propertyWithRoutes.prettyPrint())
-            if (propertyWithRoutes.checkValid(criteria)) {
+            if (validator.checkValid(propertyWithRoutes)) {
                 when (save) {
                     SaveType.FORCE_SAVE -> repository.addOrUpdateProperty(propertyWithRoutes)
                     SaveType.CHECK -> {}
@@ -49,7 +49,11 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
             } else if (save == SaveType.FORCE_SAVE) {
                 repository.addOrUpdateProperty(propertyWithRoutes)
             } else if (!propertyWithRoutes.markedUnsuitable) {
-                if (!safeMode) service.markAsUnsuitable(id, (propertyWithRoutes as? PersistedProperty)?.index, true)
+                if (!safeMode) {
+                    val index = (propertyWithRoutes as? PersistedProperty)?.index
+                    val description = index?.let { "($it)" } ?: ""
+                    service.markAsUnsuitable(id, unsuitable = true, description)
+                }
             } else {
                 println("\nAlready marked unsuitable")
             }

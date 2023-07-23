@@ -5,7 +5,6 @@ import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.data.domain.model.checkValid
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.RoutesRepository
@@ -20,6 +19,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
     private val store: Store by inject()
     private val service: Service by inject()
     private val criteria: ValidationCriteria by inject()
+    private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
 
     override fun validateByRoutes(): Pair<List<Property>, List<Property>> {
@@ -41,16 +41,20 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
             println("\n${property.id}: ${property.title}:\n${routes.joinToString(", ")}")
             val propertyWithRoutes = property.withRoutes(routes)
             propertyRepository.addOrUpdateProperty(propertyWithRoutes)
-            if (propertyWithRoutes.checkValid(criteria)) {
+            if (validator.checkValid(propertyWithRoutes)) {
                 println("Valid")
                 true
             } else {
                 if (!propertyWithRoutes.markedUnsuitable) {
-                    if (!GlobalVariables.safeMode) service.markAsUnsuitable(
-                        property.id,
-                        (propertyWithRoutes as? PersistedProperty)?.index,
-                        true
-                    )
+                    if (!GlobalVariables.safeMode) {
+                        val index = (propertyWithRoutes as? PersistedProperty)?.index
+                        val description = index?.let { "($it)" } ?: ""
+                        service.markAsUnsuitable(
+                            property.id,
+                            unsuitable = true,
+                            description
+                        )
+                    }
                 }
                 false
             }

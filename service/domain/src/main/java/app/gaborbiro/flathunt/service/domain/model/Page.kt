@@ -5,5 +5,5 @@ class Page(
     val page: Int,
     val pageCount: Int,
     var propertiesRemoved: Int = 0,
-    val nextPage: Page.() -> Page?,
+    val nextPage: Page.() -> String?,
 )

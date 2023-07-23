@@ -4,8 +4,6 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.data.domain.model.checkValid
-import app.gaborbiro.flathunt.data.domain.model.validate
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
@@ -22,6 +20,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val store: Store by inject()
     private val service: Service by inject()
     private val criteria: ValidationCriteria by inject()
+    private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
 
     override fun fetchSearchResults(searchUrl: String) {
@@ -48,7 +47,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
                     }
                 }
             }
-            page = page.nextPage(page)
+            page = page.nextPage(page)?.let { service.fetchLinksFromSearch(it) }
         }
         println("\nFinished")
         if (addedIds.isNotEmpty()) {
@@ -65,7 +64,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private fun processProperty(property: Property, page: Page): String? {
         println(property.title)
         // pre-validate to save on the Google Maps API call
-        if (!property.checkValid(criteria)) {
+        if (!validator.checkValid(property)) {
             if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
                 propertyRepository.markAsUnsuitable(property, unsuitable = true)
                 page.propertiesRemoved++
@@ -73,7 +72,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         } else {
             val routes = calculateRoutes(property.location, criteria.pointsOfInterest)
             val propertyWithRoutes = property.withRoutes(routes)
-            val errors = propertyWithRoutes.validate(criteria)
+            val errors = validator.validate(propertyWithRoutes)
             if (errors.isNotEmpty()) {
                 println(propertyWithRoutes.routes?.joinToString(""))
                 println("\nRejected: ${errors.joinToString()}")

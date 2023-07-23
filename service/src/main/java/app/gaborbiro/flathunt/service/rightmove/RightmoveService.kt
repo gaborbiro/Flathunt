@@ -65,7 +65,7 @@ class RightmoveService : BaseService() {
                 if (page < pageCount) {
                     var searchUrl = searchUrl.replace(Regex("&index=[\\d]+"), "")
                     searchUrl = searchUrl.replace(Regex("\\?index=[\\d]+"), "")
-                    fetchLinksFromSearch(searchUrl + "&index=${page * 24}")
+                    searchUrl + "&index=${page * 24}"
                 } else {
                     null
                 }
@@ -138,7 +138,7 @@ class RightmoveService : BaseService() {
         }
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
+    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
         store.getCookies()?.let { cookies ->
             if (GlobalVariables.safeMode || callPost(
                     url = "https://my.rightmove.co.uk/property/status",
@@ -146,7 +146,7 @@ class RightmoveService : BaseService() {
                     cookies = cookies.cookies.joinToString("; ")
                 )
             ) {
-                println("$id marked${index?.let { " ($it)" } ?: ""}")
+                println("$id marked $description")
             }
         } ?: run {
             println("Unable to mark property. We don't have any cookies.")

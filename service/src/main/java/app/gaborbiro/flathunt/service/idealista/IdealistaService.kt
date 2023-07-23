@@ -12,12 +12,15 @@ import org.openqa.selenium.Cookie
 import org.openqa.selenium.WebDriver
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.service.BaseService
+import java.net.URI
+import java.net.URL
+import java.util.regex.Pattern
 
 @Singleton(binds = [Service::class])
 @Named(Constants.idealista)
 class IdealistaService : BaseService() {
 
-    override val rootUrl = "https://www.idealista.pt/en/"
+    override val rootUrl = "https://www.idealista.pt/en"
     override val sessionCookieName = "SESSION"
     override val sessionCookieDomain = ".www.idealista.pt"
 
@@ -34,7 +37,7 @@ class IdealistaService : BaseService() {
             addCookie(
                 Cookie.Builder(
                     "datadome",
-                    "6Nn6khyJkunzjlUhb2TGTuul6fB3QAfv8MBblFz6xDJ4Mf0eDylfJqJ3DtGRKU-GudD~6EBBEH2MVi8nF_HGry1tCccX-YBxmCVS2yberuVPJ0GPtahQKGJTFLUXZpQI"
+                    "2cOpgbYsYEtCPr_6jw~9PunO-xWfwjwTJEBcnRNcHm0igEBpUpSxGjdgqDv8x-yrREQVUQH9zmmpG7A3l4FmOQK8RiR85pq1363Eo2_dmbbG55l-l3H-Xu3uOzCKaraM"
                 ).build()
             )
         }
@@ -50,13 +53,27 @@ class IdealistaService : BaseService() {
 
     override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
         ensurePageWithSession(searchUrl)
+        val pagerRegex = Pattern.compile("pagina-([\\d]+)")
+        val matcher = pagerRegex.matcher(searchUrl)
+        val page = if (matcher.find()) {
+            matcher.group(1).toInt()
+        } else {
+            1
+        }
+        val pageCount = driver.findElements(By.className("pagination"))[0].findElements(By.tagName("li")).size - 2
+
         return Page(
-            urls = emptyList(),
-            page = 0,
-            pageCount = 0,
-            propertiesRemoved = 0,
+            urls = driver.findElements(By.className("item-link")).map { it.getAttribute("href") },
+            page = page,
+            pageCount = pageCount,
             nextPage = {
-                null
+                val uri = URI.create(searchUrl)
+                val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
+                if (pathTokens.last().contains("pagina-")) {
+                    searchUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${this.page + 1}")
+                } else {
+                    searchUrl.replace("?", "pagina-${this.page + 1}?")
+                }
             }
         )
     }
@@ -66,7 +83,15 @@ class IdealistaService : BaseService() {
         return Property()
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, index: Int?, unsuitable: Boolean) {
+    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
+        ensurePageWithSession(getUrlFromId(id))
+        runCatching {
+            if (unsuitable) {
+                driver.findElement(By.className("icon-delete")).click()
+            } else {
+                driver.findElement(By.className("icon-recover")).click()
+            }
+        }
     }
 
     override fun getPropertyIdFromUrl(url: String): String {

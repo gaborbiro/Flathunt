@@ -21,7 +21,7 @@ interface Service {
 
     fun fetchProperty(id: String, newTab: Boolean = false): Property
 
-    fun markAsUnsuitable(id: String, index: Int?, unsuitable: Boolean)
+    fun markAsUnsuitable(id: String, unsuitable: Boolean, description: String)
 
     fun getPropertyIdFromUrl(url: String): String
 
