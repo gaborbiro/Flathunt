@@ -9,6 +9,7 @@ import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.domain.model.Page
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.openqa.selenium.Cookie
 import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver
@@ -145,8 +146,8 @@ abstract class BaseService : Service, KoinComponent {
             login()
             Thread.sleep(500)
             store.saveCookies(Cookies(driver.manage().cookies))
-            driver[finalUrls[0]]
         }
+        driver[finalUrls[0]]
     }
 
     private fun ensureSession(onSessionUnavailable: () -> Unit) {
@@ -234,5 +235,16 @@ abstract class BaseService : Service, KoinComponent {
 
     protected open fun tagMessage(driver: WebDriver, messageUrl: String, vararg tags: MessageTag) {
         throw NotImplementedError()
+    }
+
+    override fun clearCookies() {
+        driver.manage().deleteAllCookies()
+    }
+
+    override fun addOrUpdateCookies(cookies: List<Cookie>) {
+        driver.manage().run {
+            cookies.forEach(::addCookie)
+        }
+        driver[driver.currentUrl]
     }
 }

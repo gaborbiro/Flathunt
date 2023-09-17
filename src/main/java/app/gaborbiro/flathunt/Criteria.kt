@@ -2,7 +2,6 @@ package app.gaborbiro.flathunt
 
 import app.gaborbiro.flathunt.TravelMode.CYCLING
 import app.gaborbiro.flathunt.TravelMode.TRANSIT
-import java.time.LocalDate
 
 val poiCW = POI.Destination(
     description = "Schwann",
@@ -25,36 +24,21 @@ val poiSoho = POI.Destination(
     max = 45 minutes TRANSIT,
 )
 
-val EXP = ValidationCriteria(
-    pointsOfInterest = listOf(
-        poiSoho,
-        poiCW,
-        POI.NearestRailStation,
-    ),
-    maxPrice = 1300,
-    maxBedrooms = 2,
-    furnished = true,
-    canMoveEarliest = LocalDate.of(2021, 7, 1),
-    canMoveLatest = LocalDate.of(2021, 8, 20),
-    minRequiredMonths = 12,
-    noBedsit = true,
+val poiBaixaChiado = POI.Destination(
+    description = "Baixa-Chiado Metro Station",
+    name = "Baixa-Chiado",
+    coordinates = LatLon(latitude = "38.7108472", longitude = "-9.1430462"),
+    max = 20 minutes TRANSIT
 )
 
-val WITH_FLATMATE = ValidationCriteria(
+val EXP = ValidationCriteria(
     pointsOfInterest = listOf(
-        poiSoho,
-        poiCW,
-        poiMia,
-        POI.NearestRailStation,
+        poiBaixaChiado,
     ),
-    maxPrice = 2300,
-    minBedrooms = 2,
-    maxBedrooms = 2,
-    furnished = true,
-    canMoveEarliest = LocalDate.of(2021, 8, 1),
-    canMoveLatest = LocalDate.of(2021, 8, 20),
-    minRequiredMonths = 12,
-    noBedsit = true,
-    sharedLivingRoom = true,
-    maxFlatmates = 2,
+    maxPrice = 1600,
+//    maxBedrooms = 2,
+//    furnished = true,
+//    maxFlatmates = 0,
+//    airConditioning = true,
+//    heating = true,
 )

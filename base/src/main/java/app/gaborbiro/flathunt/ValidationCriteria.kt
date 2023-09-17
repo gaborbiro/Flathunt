@@ -1,6 +1,5 @@
 package app.gaborbiro.flathunt
 
-import app.gaborbiro.flathunt.POI
 import java.time.LocalDate
 
 class ValidationCriteria(
@@ -23,4 +22,6 @@ class ValidationCriteria(
      */
     val minRequiredMonths: Int? = null,
     val noBedsit: Boolean? = null,
+    val airConditioning: Boolean? = null,
+    val heating: Boolean? = null,
 )

@@ -1,19 +1,22 @@
 package app.gaborbiro.flathunt.service.idealista
 
+import app.gaborbiro.flathunt.LatLon
+import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.domain.model.Page
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.inject
 import org.openqa.selenium.By
-import org.openqa.selenium.Cookie
+import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
-import app.gaborbiro.flathunt.compileTimeConstant.Constants
-import app.gaborbiro.flathunt.service.BaseService
+import org.openqa.selenium.remote.RemoteWebElement
 import java.net.URI
-import java.net.URL
+import java.text.DecimalFormat
 import java.util.regex.Pattern
 
 @Singleton(binds = [Service::class])
@@ -21,27 +24,14 @@ import java.util.regex.Pattern
 class IdealistaService : BaseService() {
 
     override val rootUrl = "https://www.idealista.pt/en"
-    override val sessionCookieName = "SESSION"
-    override val sessionCookieDomain = ".www.idealista.pt"
+    override val sessionCookieName = "cc"
+    override val sessionCookieDomain = "www.idealista.pt"
 
     private val store: Store by inject<Store>()
 
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"
         private const val PASSWORD = "1qazse45rdxSW2"
-    }
-
-    override fun beforeSession(driver: WebDriver) {
-        with(driver.manage()) {
-            deleteAllCookies()
-            addCookie(
-                Cookie.Builder(
-                    "datadome",
-                    "2cOpgbYsYEtCPr_6jw~9PunO-xWfwjwTJEBcnRNcHm0igEBpUpSxGjdgqDv8x-yrREQVUQH9zmmpG7A3l4FmOQK8RiR85pq1363Eo2_dmbbG55l-l3H-Xu3uOzCKaraM"
-                ).build()
-            )
-        }
-        driver[rootUrl]
     }
 
     override fun login(driver: WebDriver) {
@@ -60,10 +50,31 @@ class IdealistaService : BaseService() {
         } else {
             1
         }
-        val pageCount = driver.findElements(By.className("pagination"))[0].findElements(By.tagName("li")).size - 2
+        val urls = driver.findElements(By.className("item-link")).map { it.getAttribute("href") }
+        var pageCount = 0
+        do {
+            val pagination = driver.findElements(By.className("pagination"))
+            if (pagination.isEmpty()) {
+                break
+            }
+            val pagingButtons = pagination[0].findElements(By.tagName("li"))
+            val lastVisiblePageBtn = pagingButtons.last { (it as RemoteWebElement).getAttribute("class") != "next" }
+            val r = lastVisiblePageBtn.findElements(By.tagName("a"))
+            if (r.isNotEmpty()) {
+                val maxPage = (lastVisiblePageBtn.findElement(By.tagName("a")) as RemoteWebElement).text.toInt()
+                if (maxPage > pageCount) {
+                    pageCount = maxPage
+                    lastVisiblePageBtn.click()
+                } else {
+                    break
+                }
+            } else {
+                break
+            }
+        } while (true)
 
         return Page(
-            urls = driver.findElements(By.className("item-link")).map { it.getAttribute("href") },
+            urls = urls,
             page = page,
             pageCount = pageCount,
             nextPage = {
@@ -79,8 +90,40 @@ class IdealistaService : BaseService() {
     }
 
     override fun fetchProperty(driver: WebDriver, id: String): Property {
-        ensurePageWithSession(getUrlFromId(id))
-        return Property()
+        val priceStr = driver.findElements(By.className("info-data-price"))[0].text
+        val priceRegex = Pattern.compile("([\\d,\\.]+)\\s€/month")
+        val matcher = priceRegex.matcher(priceStr)
+        if (!matcher.find()) throw IllegalArgumentException("Cannot parse price: $priceStr")
+        val price = DecimalFormat("#,###").parse(matcher.group(1)).toInt()
+        val features = driver.findElements(By.className("details-property_features"))
+            .map { it.findElements(By.tagName("li")).map { it.text } }.flatten().distinct()
+        var equipped = false
+        if (features.any { it.contains("unfurnished", ignoreCase = true) }.not()) {
+            if (features.any { it.contains("equipped kitchen", ignoreCase = true) }) {
+                equipped = true
+            }
+        }
+        val heating = features.any { it.contains("heating", ignoreCase = true) }
+        val airConditioning = features.any { it.contains("Air conditioning", ignoreCase = true) }
+        val mapURL = (driver as JavascriptExecutor)
+            .executeScript("return config['multimediaCarrousel']['map']['src'];") as String
+        val center: List<String> = URI.create(mapURL).query.split("&")
+            .filter { it.isNotBlank() }
+            .map { it.split("=") }.associateBy { it[0] }
+            .get("center")!!
+            .get(1)
+            .split(",")
+        val location = LatLon(center[0], center[1])
+        return Property(
+            id = id,
+            title = driver.findElement(By.className("main-info__title-main")).text,
+            prices = arrayOf(Price(priceStr, priceStr, price)),
+            furnished = equipped,
+            heating = heating,
+            airConditioning = airConditioning,
+            flatmates = 0,
+            location = location,
+        )
     }
 
     override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
@@ -96,14 +139,14 @@ class IdealistaService : BaseService() {
 
     override fun getPropertyIdFromUrl(url: String): String {
         return if (isValidUrl(url)) {
-            ""
+            URI.create(url).path.split("/").filter { it.isNotBlank() }.last()
         } else {
             throw IllegalArgumentException("Unable to get property id from $url (invalid url)")
         }
     }
 
     override fun getUrlFromId(id: String): String {
-        return ""
+        return "${rootUrl}/imovel/$id/"
     }
 
     override fun isValidUrl(url: String): Boolean {

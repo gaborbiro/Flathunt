@@ -2,7 +2,6 @@ package app.gaborbiro.flathunt.data.domain.model
 
 import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.google.Route
-import java.time.LocalDate
 
 open class Property(
     val id: String = "",
@@ -27,6 +26,8 @@ open class Property(
     val preferredGender: String = "",
     val occupation: String = "",
     val location: LatLon? = null,
+    val heating: Boolean? = null,
+    val airConditioning: Boolean? = null,
     val routes: List<Route>? = null,
 ) : Comparable<Property> {
 
@@ -53,6 +54,8 @@ open class Property(
         preferredGender = property.preferredGender,
         occupation = property.occupation,
         location = property.location,
+        heating = property.heating,
+        airConditioning = property.airConditioning,
         routes = property.routes,
     )
 
@@ -96,6 +99,8 @@ open class Property(
         preferredGender: String? = null,
         occupation: String? = null,
         location: LatLon? = null,
+        heating: Boolean? = null,
+        airConditioning: Boolean? = null,
     ): Property {
         return Property(
             id = id ?: this.id,
@@ -120,6 +125,8 @@ open class Property(
             preferredGender = preferredGender ?: this.preferredGender,
             occupation = occupation ?: this.occupation,
             location = location ?: this.location,
+            heating = heating ?: this.heating,
+            airConditioning = airConditioning ?: this.airConditioning,
             routes = this.routes,
         )
     }
@@ -148,6 +155,8 @@ open class Property(
             preferredGender = preferredGender,
             occupation = occupation,
             location = location ?: this.location,
+            heating = heating,
+            airConditioning = airConditioning,
             routes = routes,
         )
     }
@@ -187,6 +196,8 @@ class PersistedProperty private constructor(
     preferredGender: String,
     occupation: String,
     location: LatLon?,
+    heating: Boolean?,
+    airConditioning: Boolean?,
     routes: List<Route>?,
 ) : Property(
     id,
@@ -211,33 +222,37 @@ class PersistedProperty private constructor(
     preferredGender,
     occupation,
     location,
+    heating,
+    airConditioning,
     routes,
 ) {
     constructor(property: Property, index: Int) : this(
-        index,
-        property.id,
-        property.title,
-        property.comment,
-        property.markedUnsuitable,
-        property.isBuddyUp,
-        property.senderName,
-        property.messageUrl,
-        property.prices,
-        property.billsIncluded,
-        property.deposit,
-        property.availableFrom,
-        property.minTerm,
-        property.maxTerm,
-        property.furnished,
-        property.broadband,
-        property.livingRoom,
-        property.flatmates,
-        property.totalRooms,
-        property.householdGender,
-        property.preferredGender,
-        property.occupation,
-        property.location,
-        property.routes,
+        index = index,
+        id = property.id,
+        title = property.title,
+        comment = property.comment,
+        markedUnsuitable = property.markedUnsuitable,
+        isBuddyUp = property.isBuddyUp,
+        senderName = property.senderName,
+        messageUrl = property.messageUrl,
+        prices = property.prices,
+        billIncluded = property.billsIncluded,
+        deposit = property.deposit,
+        availableFrom = property.availableFrom,
+        minTerm = property.minTerm,
+        maxTerm = property.maxTerm,
+        furnished = property.furnished,
+        broadband = property.broadband,
+        livingRoom = property.livingRoom,
+        flatmates = property.flatmates,
+        totalRooms = property.totalRooms,
+        householdGender = property.householdGender,
+        preferredGender = property.preferredGender,
+        occupation = property.occupation,
+        location = property.location,
+        heating = property.heating,
+        airConditioning = property.airConditioning,
+        routes = property.routes,
     )
 
     override fun withRoutes(routes: List<Route>?): PersistedProperty {
@@ -265,6 +280,8 @@ class PersistedProperty private constructor(
             preferredGender = preferredGender,
             occupation = occupation,
             location = location ?: this.location,
+            heating = heating,
+            airConditioning = airConditioning,
             routes = routes,
         )
     }

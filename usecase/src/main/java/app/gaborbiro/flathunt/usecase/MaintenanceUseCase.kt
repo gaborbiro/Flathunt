@@ -15,9 +15,14 @@ class MaintenanceUseCase : UseCase, KoinComponent {
     override val commands: List<Command<*>>
         get() = listOf(
             command(
-                command = "clear session",
-                description = "Deletes session cookies (will re-login on next launch)",
+                command = "clear cookies",
+                description = "Deletes cookies (will re-login on next launch)",
                 exec = { repo.clearCookies() }
+            ),
+            command(
+                command = "import cookies",
+                description = "Add cookies from cookie-override.txt file. Requires open website.",
+                exec = { repo.importCookiesToBrowser("cookie-override.txt") }
             ),
             command<String>(
                 command = "export",

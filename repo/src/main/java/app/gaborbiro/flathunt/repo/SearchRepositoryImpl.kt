@@ -30,9 +30,9 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         var page: Page? = service.fetchLinksFromSearch(searchUrl)
         while (page != null) {
             val thePage = page
-            println("page ${thePage.page}/${thePage.pageCount}")
+            println("Fetching page ${thePage.page}/${thePage.pageCount}")
             val ids = thePage.urls.map { service.getPropertyIdFromUrl(it) }
-            val newIds: List<String> = ids - store.getBlacklist() - savedIds // we don't re-check known properties
+            val newIds: List<String> = ids - store.getBlacklist().toSet() - savedIds.toSet() // we don't re-check known properties
             if (newIds.isNotEmpty()) {
                 newIds.forEachIndexed { i, id ->
                     print("\n=======> Fetching property $id (${i + 1}/${newIds.size}; page ${thePage.page}/${thePage.pageCount}): ")

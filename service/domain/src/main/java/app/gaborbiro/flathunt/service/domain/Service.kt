@@ -4,6 +4,7 @@ import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.model.Page
+import org.openqa.selenium.Cookie
 
 interface Service {
 
@@ -44,4 +45,8 @@ interface Service {
     fun fetchMessages(safeMode: Boolean): List<Message>
 
     fun tagMessage(messageUrl: String, vararg tags: MessageTag)
+
+    fun clearCookies()
+
+    fun addOrUpdateCookies(cookies: List<Cookie>)
 }

@@ -14,12 +14,15 @@ import org.koin.dsl.module
 import org.koin.ksp.generated.module
 
 
-fun setupKoin(serviceName: String, criteria: String): KoinApplication {
+fun setupKoin(serviceConfig: String): KoinApplication {
+
+    val (serviceName, criteria) = serviceConfig.split("-")
+
     val appModule = module {
         single<String>(StringQualifier("serviceName")) { serviceName }
         single<String>(StringQualifier("criteria")) { criteria }
 
-        single<ValidationCriteria> { getValidationCriteria(get(StringQualifier("serviceConfig"))) }
+        single<ValidationCriteria> { getValidationCriteria(serviceConfig) }
     }
 
     val app = startKoin {

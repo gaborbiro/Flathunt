@@ -29,8 +29,7 @@ class FlatHunt {
 
         val serviceConfig = getServiceConfigFromArgs(args)
 
-        val (serviceName, criteria) = serviceConfig.split("-")
-        val app = setupKoin(serviceName, criteria)
+        val app = setupKoin(serviceConfig)
 
         val strictCommandStr = getStrictCommandFromArgs(args)
         if (strictCommandStr == null) {
@@ -128,6 +127,7 @@ class FlatHunt {
             Constants.`idealista-exp` -> setOf(
                 SearchUseCase(),
                 MaintenanceUseCase(),
+                ListUseCase()
             )
 
             Constants.`spareroom-exp` -> setOf(

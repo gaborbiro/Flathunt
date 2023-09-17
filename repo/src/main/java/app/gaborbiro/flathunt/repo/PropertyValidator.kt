@@ -98,12 +98,25 @@ class PropertyValidator : KoinComponent {
                 }
             }
         }
-        criteria.noBedsit?.let {
+        criteria.noBedsit?.also {
             if (it && property.title.contains("bedsit", ignoreCase = true)) {
                 errors.add("bedsit")
             } else if (!it && !property.title.contains("bedsit", ignoreCase = true)) {
-                errors.add("not bedsit")
-            } else {
+                errors.add("need bedsit")
+            }
+        }
+        criteria.airConditioning?.also {
+            if (it && property.airConditioning != true) {
+                errors.add("no A/C")
+            } else if (it.not() && property.airConditioning == true) {
+                errors.add("no need for A/C")
+            }
+        }
+        criteria.heating?.also {
+            if (it && property.heating != true) {
+                errors.add("no heating")
+            } else if (it.not() && property.heating == true) {
+                errors.add("no need for heating")
             }
         }
         return errors

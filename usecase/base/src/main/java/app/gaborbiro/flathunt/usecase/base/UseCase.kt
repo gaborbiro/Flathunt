@@ -8,15 +8,16 @@ interface UseCase {
 
 abstract class Command<T>(
     /**
-     * The thing the user has to type in to make stuff happen
+     * The phrase the user has to type in in order to run this command.
+     * The user can type in only part (beginning) of the phrase as long as it doesn't conflict with any other command.
      */
     val command: String,
     /**
-     * Print when user runs 'help'
+     * Printed when user runs 'help'
      */
     val description: String,
     /**
-     * Print when user runs 'help'
+     * Printed when user runs 'help'
      */
     val requiredArguments: List<String> = emptyList(),
 

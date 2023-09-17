@@ -7,6 +7,9 @@ Currently, three services are supported: rightmove-exp, spareroom-exp and zoopla
 
 Running ".\gradlew allJars" creates an executable jar file for all three services.
 
+To run the jar: "java -jar FlatHunt-idealista-exp.jar".
+You can run the jar with a one-off command by specifying the -c argument with the actual command in quote marks.
+
 Alternatively run app/gaborbiro/flathunt/FlatHunt.kt#main() with one of the services passed as argument.
 
 ### How to build:
