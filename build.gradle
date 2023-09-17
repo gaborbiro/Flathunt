@@ -1,5 +1,5 @@
 import com.anatawa12.compileTimeConstant.CreateConstantsTask
-import dev.gaborbiro.investments.Dependencies
+import app.gaborbiro.flathunt.Dependencies
 
 plugins {
     id("java")

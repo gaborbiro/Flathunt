@@ -1,4 +1,4 @@
-import dev.gaborbiro.investments.Dependencies
+import app.gaborbiro.flathunt.Dependencies
 
 plugins {
     kotlin("jvm")

@@ -1,4 +1,4 @@
-package dev.gaborbiro.investments
+package app.gaborbiro.flathunt
 
 object Dependencies {
 
