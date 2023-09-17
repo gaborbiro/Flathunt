@@ -1,10 +1,8 @@
-import com.anatawa12.compileTimeConstant.CreateConstantsTask
 import app.gaborbiro.flathunt.Dependencies
 
 plugins {
     kotlin("jvm")
     id("com.google.devtools.ksp")
-    id("com.anatawa12.compile-time-constant")
 }
 
 apply(from = "${project.rootDir}/service.gradle")
@@ -25,12 +23,4 @@ dependencies {
     implementation(Dependencies.Koin.core)
     implementation(Dependencies.Koin.annotations)
     ksp(Dependencies.Koin.ksp)
-}
-
-
-val createCompileTimeConstant = tasks.withType(CreateConstantsTask::class.java) {
-    constantsClass = "app.gaborbiro.flathunt.compileTimeConstant.Constants"
-    values(
-        (ext["SERVICE_CONSTANTS"] as ArrayList<String>).associateBy { it }
-    )
 }
