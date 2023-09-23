@@ -27,7 +27,7 @@ class ZooplaService : BaseService() {
     override val sessionCookieName = "_cs_s"
     override val sessionCookieDomain = ".zoopla.co.uk"
 
-    private val store: Store by inject<Store>()
+    private val store: Store by inject()
 
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"

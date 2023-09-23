@@ -9,6 +9,7 @@ import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.model.SaveType
+import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.domain.Service
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
@@ -21,6 +22,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
     private val criteria: ValidationCriteria by inject()
     private val repository: PropertyRepository by inject()
     private val validator: PropertyValidator by inject()
+    private val requestCaller: RequestCaller by inject()
 
     /**
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
@@ -37,7 +39,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                 println("\nBuddy up - skipping...")
                 return null
             }
-            val routes = calculateRoutes(property.location, criteria.pointsOfInterest)
+            val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
             val propertyWithRoutes = property.withRoutes(routes)
             println(propertyWithRoutes.prettyPrint())
             if (validator.checkValid(propertyWithRoutes)) {

@@ -5,6 +5,7 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
@@ -26,7 +27,8 @@ class RightmoveService : BaseService() {
     override val sessionCookieName = "rmsessionid"
     override val sessionCookieDomain = ".rightmove.co.uk"
 
-    private val store: Store by inject<Store>()
+    private val store: Store by inject()
+    private val requestCaller: RequestCaller by inject()
 
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"
@@ -140,7 +142,7 @@ class RightmoveService : BaseService() {
 
     override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
         store.getCookies()?.let { cookies ->
-            if (GlobalVariables.safeMode || callPost(
+            if (GlobalVariables.safeMode || requestCaller.post(
                     url = "https://my.rightmove.co.uk/property/status",
                     payload = "[{\"id\": \"$id\", \"action\": \"${if (unsuitable) "HIDE" else "UNHIDE"}\"}]",
                     cookies = cookies.cookies.joinToString("; ")

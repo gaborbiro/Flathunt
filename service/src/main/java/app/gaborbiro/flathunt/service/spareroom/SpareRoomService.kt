@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt.service.spareroom
 
 import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
@@ -34,7 +35,8 @@ class SpareRoomService : BaseService() {
     override val sessionCookieName = "session_id"
     override val sessionCookieDomain = ".spareroom.co.uk"
 
-    private val store: Store by inject<Store>()
+    private val store: Store by inject()
+    private val console: ConsoleWriter by inject()
 
     override fun afterSession(driver: WebDriver) {
         if (driver.findElements(By.className("show-user-auth-popup")).isNotEmpty()) {

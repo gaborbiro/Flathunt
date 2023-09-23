@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":service:domain"))
     implementation(project(":data:domain"))
     implementation(project(":google"))
+    implementation(project(":request:domain"))
 
     implementation(Dependencies.Google.gson)
     implementation(Dependencies.Selenium.java)

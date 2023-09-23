@@ -27,7 +27,7 @@ class IdealistaService : BaseService() {
     override val sessionCookieName = "cc"
     override val sessionCookieDomain = "www.idealista.pt"
 
-    private val store: Store by inject<Store>()
+    private val store: Store by inject()
 
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"

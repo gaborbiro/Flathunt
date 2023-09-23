@@ -1,52 +1,17 @@
 package app.gaborbiro.flathunt
 
-import okhttp3.FormBody
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 import java.io.UnsupportedEncodingException
 import java.lang.reflect.Field
 import java.lang.reflect.Type
-import java.net.HttpURLConnection
-import java.net.URL
 import java.net.URLDecoder
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 
-@Throws(Exception::class)
-fun callGet(url: String): String {
-    val connection = URL(url).openConnection()
-    return connection.inputStream.bufferedReader().use { it.readText() }.also {
-        (connection as HttpURLConnection).disconnect()
-    }
-}
-
-fun callPost(url: String, payload: String, cookies: String): Boolean {
-    val type = "application/json; charset=utf-8".toMediaType()
-    val body = payload.toRequestBody(type)
-    FormBody
-    val request: Request = Request.Builder()
-        .addHeader("Cookie", cookies)
-        .addHeader("Content-Type", "application/json")
-        .url(url)
-        .post(body)
-        .build()
-    if (GlobalVariables.debug) {
-        println(request.toString() + "\n" + payload)
-    }
-    val result = OkHttpClient().newCall(request).execute()
-    return if (result.code < 200 || result.code > 299) {
-        println("Error ${result.code}: " + result.message)
-        false
-    } else {
-        true
-    }
-}
 
 fun String.matcher(regex: String): Matcher = Pattern.compile(regex).matcher(this)
 

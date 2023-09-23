@@ -29,7 +29,7 @@ abstract class BaseService : Service, KoinComponent {
     protected abstract val sessionCookieName: String
     protected abstract val sessionCookieDomain: String
 
-    private val store: Store by inject<Store>()
+    private val store: Store by inject()
 
     protected open fun beforeSession(driver: WebDriver) {
 

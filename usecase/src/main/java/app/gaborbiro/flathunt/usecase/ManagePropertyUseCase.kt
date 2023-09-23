@@ -6,6 +6,7 @@ import app.gaborbiro.flathunt.google.getRoutesToNearestStations
 import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
+import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
@@ -14,6 +15,7 @@ import org.koin.core.component.inject
 class ManagePropertyUseCase : BaseUseCase() {
 
     private val propertyRepository: PropertyRepository by inject()
+    private val requestCaller: RequestCaller by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -138,7 +140,10 @@ class ManagePropertyUseCase : BaseUseCase() {
                 GlobalVariables.lastUsedIndexOrId = indexOrId
                 it.location
                     ?.let {
-                        println(getRoutesToNearestStations(it).orNull()?.joinToString("") ?: "No nearby stations found")
+                        println(
+                            getRoutesToNearestStations(it, requestCaller).orNull()?.joinToString("")
+                                ?: "No nearby stations found"
+                        )
                     } ?: run {
                     println("Property $indexOrId does not have a location")
                 }

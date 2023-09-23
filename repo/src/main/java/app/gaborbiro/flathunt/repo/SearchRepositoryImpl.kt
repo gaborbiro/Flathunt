@@ -8,6 +8,7 @@ import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
+import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.domain.model.Page
 import org.koin.core.annotation.Singleton
@@ -22,6 +23,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val criteria: ValidationCriteria by inject()
     private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
+    private val requestCaller: RequestCaller by inject()
 
     override fun fetchSearchResults(searchUrl: String) {
         val savedIds = store.getProperties().map { it.id }
@@ -32,7 +34,8 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
             val thePage = page
             println("Fetching page ${thePage.page}/${thePage.pageCount}")
             val ids = thePage.urls.map { service.getPropertyIdFromUrl(it) }
-            val newIds: List<String> = ids - store.getBlacklist().toSet() - savedIds.toSet() // we don't re-check known properties
+            val newIds: List<String> =
+                ids - store.getBlacklist().toSet() - savedIds.toSet() // we don't re-check known properties
             if (newIds.isNotEmpty()) {
                 newIds.forEachIndexed { i, id ->
                     print("\n=======> Fetching property $id (${i + 1}/${newIds.size}; page ${thePage.page}/${thePage.pageCount}): ")
@@ -70,7 +73,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
                 page.propertiesRemoved++
             }
         } else {
-            val routes = calculateRoutes(property.location, criteria.pointsOfInterest)
+            val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
             val propertyWithRoutes = property.withRoutes(routes)
             val errors = validator.validate(propertyWithRoutes)
             if (errors.isNotEmpty()) {

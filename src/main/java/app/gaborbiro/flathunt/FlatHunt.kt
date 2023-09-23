@@ -67,6 +67,9 @@ class FlatHunt {
             reader.readLine()
         }
         do {
+            val escapeCode = "\u001b[31m"
+            val resetCode = "\u001b[0m"
+//            System.console().writer().println("$escapeCode Hello, World! $resetCode ==========================================================================")
             println("==========================================================================")
             if (hintShown.not()) {
                 hintShown = true

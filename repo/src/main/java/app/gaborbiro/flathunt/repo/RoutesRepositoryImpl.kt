@@ -8,6 +8,7 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.RoutesRepository
+import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.domain.Service
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
@@ -21,6 +22,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
     private val criteria: ValidationCriteria by inject()
     private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
+    private val requestCaller: RequestCaller by inject()
 
     override fun validateByRoutes(): Pair<List<Property>, List<Property>> {
         return validateByRoutes(store.getProperties())
@@ -37,7 +39,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
             return Pair(emptyList(), emptyList())
         }
         val (toSave, unsuitable) = properties.partition { property ->
-            val routes = calculateRoutes(property.location, criteria.pointsOfInterest)
+            val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
             println("\n${property.id}: ${property.title}:\n${routes.joinToString(", ")}")
             val propertyWithRoutes = property.withRoutes(routes)
             propertyRepository.addOrUpdateProperty(propertyWithRoutes)

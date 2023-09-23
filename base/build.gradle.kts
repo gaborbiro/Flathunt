@@ -10,5 +10,4 @@ repositories {
 
 dependencies {
     implementation(Dependencies.Selenium.java)
-    implementation(Dependencies.OkHttp.okhttp)
 }

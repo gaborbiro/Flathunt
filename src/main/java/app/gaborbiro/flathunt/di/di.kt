@@ -5,6 +5,7 @@ import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.di.DataModule
 import app.gaborbiro.flathunt.repo.di.RepoModule
+import app.gaborbiro.flathunt.request.di.RequestModule
 import app.gaborbiro.flathunt.service.di.ServiceModule
 import app.gaborbiro.flathunt.service.domain.Service
 import org.koin.core.KoinApplication
@@ -30,7 +31,8 @@ fun setupKoin(serviceConfig: String): KoinApplication {
             appModule,
             DataModule().module,
             RepoModule().module,
-            ServiceModule().module
+            ServiceModule().module,
+            RequestModule().module,
         )
     }
     val serviceModule = module {
