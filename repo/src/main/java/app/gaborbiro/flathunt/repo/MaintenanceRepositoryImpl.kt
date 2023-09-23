@@ -37,7 +37,7 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
     }
 
     override fun clearCookies() {
-        store.clearCookies()
+//        store.clearCookies()
         service.clearCookies()
     }
 

@@ -142,44 +142,53 @@ abstract class BaseService : Service, KoinComponent {
         } else {
             // expected url already open
         }
-        ensureSession {
+        val refresh = ensureSession {
             login()
             Thread.sleep(500)
             store.saveCookies(Cookies(driver.manage().cookies))
         }
-        driver[finalUrls[0]]
+        if (refresh) {
+            driver[finalUrls[0]]
+        }
     }
 
-    private fun ensureSession(onSessionUnavailable: () -> Unit) {
+    private fun ensureSession(onSessionUnavailable: () -> Unit): Boolean {
         beforeSession(driver)
-        val storedCookies = store.getCookies()?.cookies
+        val storedCookies: Set<Cookie>? = store.getCookies()?.cookies
         val browserCookies = driver.manage().cookies
         var sessionAvailable = false
+        var needsLogin = true
         if (storedCookies != null) {
             runCatching {
-                if (browserCookies
-                        .firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
-                        ?.expiry
-                        ?.let { it < Date() } == true
-                ) {
+                if (browserCookies.hasSession()) {
                     // browser already has session cookies, nothing to do
                     sessionAvailable = true
+                    needsLogin = false
                 } else {
                     // browser has no session cookies
 
-                    if (storedCookies.any { it.name == sessionCookieName && it.domain == sessionCookieDomain }) {
+                    if (storedCookies.hasSession()) {
                         // we have session cookies stored
                         driver.manage().deleteAllCookies()
                         storedCookies.forEach { driver.manage().addCookie(it) }
-                        sessionAvailable = true
+                        sessionAvailable = false
+                        needsLogin = false
                     }
                 }
             }
         }
-        if (!sessionAvailable) {
+        if (needsLogin) {
             onSessionUnavailable()
         }
         afterSession(driver)
+        return sessionAvailable.not()
+    }
+
+    private fun Set<Cookie>?.hasSession(): Boolean {
+        return this
+            ?.firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
+            ?.let { it.expiry <= Date() }
+            ?: false
     }
 
     private fun ensureBrowser() {

@@ -51,7 +51,7 @@ class IdealistaService : BaseService() {
             1
         }
         val urls = driver.findElements(By.className("item-link")).map { it.getAttribute("href") }
-        var pageCount = 0
+        var pageCount = if(urls.isNotEmpty()) 1 else 0
         do {
             val pagination = driver.findElements(By.className("pagination"))
             if (pagination.isEmpty()) {
@@ -121,7 +121,6 @@ class IdealistaService : BaseService() {
             furnished = equipped,
             heating = heating,
             airConditioning = airConditioning,
-            flatmates = 0,
             location = location,
         )
     }
