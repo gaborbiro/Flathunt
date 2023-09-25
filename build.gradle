@@ -33,6 +33,8 @@ dependencies {
     implementation(project(":base"))
     implementation(project(":request"))
     implementation(project(":request:domain"))
+    implementation(project(":console"))
+    implementation(project(":console:domain"))
 
     implementation(Dependencies.Google.gson)
     implementation(Dependencies.Jcabi.mainfests)

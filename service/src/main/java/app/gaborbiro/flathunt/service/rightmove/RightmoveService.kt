@@ -4,9 +4,12 @@ import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.console.ConsoleWriter
+import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.PriceParseResult
 import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.koin.core.annotation.Named
@@ -29,6 +32,7 @@ class RightmoveService : BaseService() {
 
     private val store: Store by inject()
     private val requestCaller: RequestCaller by inject()
+    private val console: ConsoleWriter by inject()
 
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"
@@ -104,6 +108,27 @@ class RightmoveService : BaseService() {
                     )
                 }
             }
+            val rawPrice = findElement(By.className("_1gfnqJ3Vtd1z40MlC0MzXu")).findElement(
+                By.tagName(
+                    "span"
+                )
+            ).text
+            val price = when (val result = ensurePriceIsPerMonth(rawPrice)) {
+                is PriceParseResult.Price -> Price(
+                    rawPrice,
+                    result.pricePerMonth,
+                    result.pricePerMonthInt
+                )
+
+                is PriceParseResult.ParseError -> {
+                    console.e("Error parsing price $rawPrice")
+                    Price(
+                        rawPrice,
+                        result.pricePerMonth,
+                        -1
+                    )
+                }
+            }
             return Property(
                 id = id,
                 title = findElement(By.xpath("/html/body/div[4]/div/div[3]/main/div[1]/div[1]/div/h1")).text,
@@ -112,15 +137,7 @@ class RightmoveService : BaseService() {
                 isBuddyUp = false,
                 senderName = null,
                 messageUrl = null,
-                prices = arrayOf(
-                    ensurePriceIsPerMonth(
-                        findElement(By.className("_1gfnqJ3Vtd1z40MlC0MzXu")).findElement(
-                            By.tagName(
-                                "span"
-                            )
-                        ).text
-                    )
-                ),
+                prices = arrayOf(price),
                 location = location,
                 billsIncluded = null,
                 deposit = "",
@@ -148,10 +165,10 @@ class RightmoveService : BaseService() {
                     cookies = cookies.cookies.joinToString("; ")
                 )
             ) {
-                println("$id marked $description")
+                console.d("$id marked $description")
             }
         } ?: run {
-            println("Unable to mark property. We don't have any cookies.")
+            console.e("Unable to mark property. We don't have any cookies.")
         }
     }
 
@@ -191,7 +208,7 @@ class RightmoveService : BaseService() {
         return if (isValidUrl(cleanUrl)) {
             cleanUrl
         } else {
-            println("Invalid url: $cleanUrl")
+            console.e("Invalid url: $cleanUrl")
             null
         }
     }

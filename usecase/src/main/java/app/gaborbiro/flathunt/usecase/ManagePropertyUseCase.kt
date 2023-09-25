@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.google.getRoutesToNearestStations
 import app.gaborbiro.flathunt.orNull
@@ -16,6 +17,7 @@ class ManagePropertyUseCase : BaseUseCase() {
 
     private val propertyRepository: PropertyRepository by inject()
     private val requestCaller: RequestCaller by inject()
+    private val console: ConsoleWriter by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -40,7 +42,7 @@ class ManagePropertyUseCase : BaseUseCase() {
         GlobalVariables.lastUsedIndexOrId = property?.let { indexOrId }
         property
             ?.prettyPrint()?.let(::println)
-            ?: run { println("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or id $indexOrId") }
     }
 
     private val open = command<String>(
@@ -62,10 +64,10 @@ class ManagePropertyUseCase : BaseUseCase() {
             propertyRepository.deleteProperty(it.index, markAsUnsuitable = true, GlobalVariables.safeMode)
         }
         next?.let {
-            println("${it.index} - ${it.id}")
+            console.d("${it.index} - ${it.id}")
             GlobalVariables.lastUsedIndexOrId = it.id
             propertyRepository.openLinks(it)
-        } ?: run { println("Nothing to open") }
+        } ?: run { console.d("Nothing to open") }
     }
 
     private val delete = command<String, Boolean>(
@@ -105,7 +107,7 @@ class ManagePropertyUseCase : BaseUseCase() {
                 GlobalVariables.lastUsedIndexOrId = indexOrId
                 propertyRepository.addOrUpdateProperty(it.clone(comment = comment))
             }
-            ?: run { println("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or id $indexOrId") }
     }
 
     private val commentAppend = command<String, String>(
@@ -124,7 +126,7 @@ class ManagePropertyUseCase : BaseUseCase() {
                     propertyRepository.addOrUpdateProperty(it.clone(comment = it.comment + " " + comment))
                 }
             }
-            ?: run { println("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or id $indexOrId") }
     }
 
     private val stations = command<String>(
@@ -140,15 +142,15 @@ class ManagePropertyUseCase : BaseUseCase() {
                 GlobalVariables.lastUsedIndexOrId = indexOrId
                 it.location
                     ?.let {
-                        println(
+                        console.d(
                             getRoutesToNearestStations(it, requestCaller).orNull()?.joinToString("")
                                 ?: "No nearby stations found"
                         )
                     } ?: run {
-                    println("Property $indexOrId does not have a location")
+                    console.d("Property $indexOrId does not have a location")
                 }
             }
-            ?: run { println("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or id $indexOrId") }
     }
 
     private fun getPropertiesByIndexOrIdArray(arg: String): List<PersistedProperty> {
@@ -160,7 +162,7 @@ class ManagePropertyUseCase : BaseUseCase() {
             properties = tokens.map { getPropertiesByIndexOrIdArray(it) }.flatten()
             val notFound = tokens - properties.map { it.index.toString() } - properties.map { it.id }
             if (notFound.isNotEmpty()) {
-                println("The following properties were not found in database: ${notFound.joinToString(", ")}")
+                console.d("The following properties were not found in database: ${notFound.joinToString(", ")}")
             }
         }
         if (properties.size == 1) {

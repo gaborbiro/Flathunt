@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.UseCase
@@ -11,6 +12,7 @@ import org.koin.core.component.inject
 class MaintenanceUseCase : UseCase, KoinComponent {
 
     private val repo: MaintenanceRepository by inject()
+    private val console: ConsoleWriter by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -48,7 +50,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
             ) { (path) ->
                 try {
                     val size = repo.restore(path)
-                    println("Imported $size properties")
+                    console.d("Imported $size properties")
                 } catch (t: Throwable) {
                     t.printStackTrace()
                 }
@@ -76,7 +78,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
                 description = "No messages or properties will be altered (resets on app close)"
             ) {
                 GlobalVariables.safeMode = true
-                println(
+                console.d(
                     "Safe mode enabled. No web content will be altered. Warning: 'search' command might not work with " +
                             "safe mode, because it relies on invalid properties being marked as unsuitable/hidden."
                 )
@@ -86,7 +88,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
                 description = "Messages or properties will be labeled/marked as needed"
             ) {
                 GlobalVariables.safeMode = false
-                println("Safe mode disabled. Messages or properties will be labeled/marked as needed.")
+                console.d("Safe mode disabled. Messages or properties will be labeled/marked as needed.")
             }
         )
 }

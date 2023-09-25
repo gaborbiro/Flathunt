@@ -3,11 +3,12 @@ package app.gaborbiro.flathunt.service.spareroom
 import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
+import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.PriceParseResult
 import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.koin.core.annotation.Named
@@ -35,7 +36,6 @@ class SpareRoomService : BaseService() {
     override val sessionCookieName = "session_id"
     override val sessionCookieDomain = ".spareroom.co.uk"
 
-    private val store: Store by inject()
     private val console: ConsoleWriter by inject()
 
     override fun afterSession(driver: WebDriver) {
@@ -79,7 +79,7 @@ class SpareRoomService : BaseService() {
                 ?.getAttribute("href")
             currentAdLink?.let { links.add(it) }
         }
-        println(senderName + " (${links.size} links)")
+        console.d(senderName + " (${links.size} links)")
         return Message(senderName, driver.currentUrl, links)
     }
 
@@ -131,7 +131,7 @@ class SpareRoomService : BaseService() {
                 "//div[@class=\"property-details\"]/section[@class=\"feature feature--price_room_only\"]/ul/li"
             val wholePropertyPricesXpath =
                 "//div[@class=\"property-details\"]/section[@class=\"feature feature--price-whole-property\"]/h3"
-            val prices = mutableListOf<String>()
+            val rawPrices = mutableListOf<String>()
             runCatching {
                 findElements(By.xpath(roomOnlyPricesXpath))
             }.getOrNull()?.mapNotNull {
@@ -139,14 +139,14 @@ class SpareRoomService : BaseService() {
                 val comment = it.findElement(By.xpath("small")).text
                 if (!comment.contains("NOW LET")) price else null
             }?.apply {
-                prices.addAll(this)
+                rawPrices.addAll(this)
             }
 
-            if (prices.isEmpty()) {
+            if (rawPrices.isEmpty()) {
                 runCatching {
                     findElements(By.xpath(wholePropertyPricesXpath))
                 }.getOrNull()?.mapNotNull { it.text }?.toTypedArray()?.apply {
-                    prices.addAll(this)
+                    rawPrices.addAll(this)
                 }
             }
 
@@ -164,6 +164,24 @@ class SpareRoomService : BaseService() {
                 }
             }
 
+            val prices = rawPrices.map { rawPrice ->
+                when (val result = ensurePriceIsPerMonth(rawPrice)) {
+                    is PriceParseResult.Price -> Price(
+                        rawPrice,
+                        result.pricePerMonth,
+                        result.pricePerMonthInt
+                    )
+
+                    is PriceParseResult.ParseError -> {
+                        console.e("Error parsing price $rawPrice")
+                        Price(
+                            rawPrice,
+                            result.pricePerMonth,
+                            -1
+                        )
+                    }
+                }
+            }
             return Property(
                 id = id,
                 title = findSimpleText("//h1[1]") ?: MISSING_VALUE,
@@ -172,7 +190,7 @@ class SpareRoomService : BaseService() {
                 isBuddyUp = checkForBuddyUp(driver),
                 senderName = null,
                 messageUrl = null,
-                prices = prices.map { ensurePriceIsPerMonth(it) }.toTypedArray(),
+                prices = prices.toTypedArray(),
                 location = findRegex("latitude: \"(.*?)\",longitude: \"(.*?)\"")?.let {
                     if (it[0].isNotEmpty() && it[1].isNotEmpty())
                         LatLon(it[0], it[1])
@@ -230,7 +248,7 @@ class SpareRoomService : BaseService() {
             runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                 ?.let {
                     it.click()
-                    println("$id marked $description")
+                    console.d("$id marked $description")
                     driver.switchTo().alert().dismiss()
                     return
                 }
@@ -240,7 +258,7 @@ class SpareRoomService : BaseService() {
                 runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                     ?.let {
                         it.click()
-                        println("$id marked $description")
+                        console.d("$id marked $description")
                         driver.switchTo().alert().dismiss()
                         return
                     }
@@ -249,7 +267,7 @@ class SpareRoomService : BaseService() {
                 it.click()
                 runCatching { driver.findElement(By.xpath("//input[@value='unsuitable']")) }.getOrNull()?.click()
                 runCatching { driver.findElement(By.className("submit")) }.getOrNull()?.click()
-                println("$id marked $description")
+                console.d("$id marked $description")
                 return
             }
         } else {
@@ -262,13 +280,13 @@ class SpareRoomService : BaseService() {
                         runCatching { driver.findElement(By.className("submit")) }.getOrNull()
                             ?.let {
                                 it.click()
-                                println("$id marked $description")
+                                console.d("$id marked $description")
                                 return
                             }
                     }
             }
         }
-        println("Failed to mark $id $description")
+        console.e("Failed to mark $id $description")
     }
 
     override fun getPropertyIdFromUrl(url: String): String {
@@ -335,7 +353,7 @@ class SpareRoomService : BaseService() {
         return if (isValidUrl(cleanUrl)) {
             cleanUrl
         } else {
-            println("Invalid url: $cleanUrl")
+            console.e("Invalid url: $cleanUrl")
             null
         }
     }
@@ -359,7 +377,7 @@ class SpareRoomService : BaseService() {
             val rawMessages = driver.findElements(By.className("msg_row"))
 
             if (rawMessages.isEmpty()) {
-                println("no messages found")
+                console.e("no messages found")
             } else {
                 rawMessages[0].click()
                 do {
@@ -410,9 +428,9 @@ class SpareRoomService : BaseService() {
                         ?: run { driver.findElement(By.className("add-label__close")).click(); true }
                 } ?: false
             if (success) {
-                println("Message tagged $tag")
+                console.d("Message tagged $tag")
             } else {
-                println("Failed to tag message with $tag")
+                console.e("Failed to tag message with $tag")
             }
         }
     }

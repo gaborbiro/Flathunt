@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.GlobalVariables
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
@@ -18,6 +19,7 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
     private val store: Store by inject()
     private val service: Service by inject()
     private val validator: PropertyValidator by inject()
+    private val console: ConsoleWriter by inject()
 
     override fun fetchMessages(): List<Message> {
         return service.fetchMessages(GlobalVariables.safeMode)
@@ -32,7 +34,7 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
             if (service.isValidUrl(propertyLink)) {
                 val id = service.getPropertyIdFromUrl(propertyLink)
                 val property = savedProperties[id] ?: run {
-                    println("=======> Fetching property $propertyLink (sent by ${message.senderName})")
+                    console.d("=======> Fetching property $propertyLink (sent by ${message.senderName})")
                     service.fetchProperty(id).clone(senderName = message.senderName, messageUrl = message.messageLink)
                 }
                 if (property.isBuddyUp) {
@@ -48,14 +50,14 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
                     messageRejection[propertyLink] = true
                 } else {
                     if (property.prices.isEmpty()) {
-                        println("Price missing")
+                        console.d("Price missing")
                         if (!GlobalVariables.safeMode) service.tagMessage(message.messageLink, MessageTag.PRICE_MISSING)
                     } else {
                         newProperties.add(property)
                     }
                 }
             } else {
-                println("Not a spareroom url: $propertyLink (${message.senderName})")
+                console.d("Not a spareroom url: $propertyLink (${message.senderName})")
             }
         }
         if (messageRejection.values.any { it }) {
@@ -63,7 +65,7 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
                 if (!GlobalVariables.safeMode) service.tagMessage(message.messageLink, MessageTag.REJECTED)
             } else if (messageRejection.values.any { it }) {
                 if (!GlobalVariables.safeMode) service.tagMessage(message.messageLink, MessageTag.PARTIALLY_REJECTED)
-                println("Partial rejection:\n" + messageRejection.map { it.key + " -> " + if (it.value) "rejected" else "fine" }
+                console.d("Partial rejection:\n" + messageRejection.map { it.key + " -> " + if (it.value) "rejected" else "fine" }
                     .joinToString("\n"))
             }
         }

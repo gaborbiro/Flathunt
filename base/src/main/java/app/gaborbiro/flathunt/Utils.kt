@@ -109,7 +109,7 @@ fun Float.decimals(digits: Int = 2): String {
 
 fun Collection<*>.orNull() = if (this.isEmpty()) null else this
 
-fun strict(lambda: () -> Unit) {
+fun nostrict(lambda: () -> Unit) {
     if (!GlobalVariables.strict) {
         lambda()
     }

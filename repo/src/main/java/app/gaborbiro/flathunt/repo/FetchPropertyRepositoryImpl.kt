@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.ValidationCriteria
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.calculateRoutes
@@ -23,6 +24,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
     private val repository: PropertyRepository by inject()
     private val validator: PropertyValidator by inject()
     private val requestCaller: RequestCaller by inject()
+    private val console: ConsoleWriter by inject()
 
     /**
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
@@ -30,18 +32,18 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
     override fun fetchProperty(arg: String, save: SaveType, safeMode: Boolean): Property? {
         val cleanUrl = service.checkUrlOrId(arg)
         if (cleanUrl != null) {
-            println()
-            println(cleanUrl)
+            console.d()
+            console.d(cleanUrl)
             val id = service.getPropertyIdFromUrl(cleanUrl)
             GlobalVariables.lastUsedIndexOrId = id
             val property = service.fetchProperty(id, newTab = true)
             if (property.isBuddyUp && save != SaveType.FORCE_SAVE) {
-                println("\nBuddy up - skipping...")
+                console.d("\nBuddy up - skipping...")
                 return null
             }
             val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
             val propertyWithRoutes = property.withRoutes(routes)
-            println(propertyWithRoutes.prettyPrint())
+            console.d(propertyWithRoutes.prettyPrint())
             if (validator.checkValid(propertyWithRoutes)) {
                 when (save) {
                     SaveType.FORCE_SAVE -> repository.addOrUpdateProperty(propertyWithRoutes)
@@ -57,7 +59,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                     service.markAsUnsuitable(id, unsuitable = true, description)
                 }
             } else {
-                println("\nAlready marked unsuitable")
+                console.d("\nAlready marked unsuitable")
             }
             return propertyWithRoutes
         }

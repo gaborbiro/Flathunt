@@ -1,5 +1,6 @@
 package app.gaborbiro.flathunt.usecase
 
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.repo.domain.RoutesRepository
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
@@ -9,6 +10,7 @@ import org.koin.core.component.inject
 class RoutesUseCase : BaseUseCase() {
 
     private val routesRepository: RoutesRepository by inject()
+    private val console: ConsoleWriter by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(routes)
@@ -20,6 +22,6 @@ class RoutesUseCase : BaseUseCase() {
     )
     {
         routesRepository.validateByRoutes()
-        println("Finished calculating routes")
+        console.d("Finished calculating routes")
     }
 }

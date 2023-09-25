@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.ValidationCriteria
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
@@ -23,6 +24,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
     private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
     private val requestCaller: RequestCaller by inject()
+    private val console: ConsoleWriter by inject()
 
     override fun validateByRoutes(): Pair<List<Property>, List<Property>> {
         return validateByRoutes(store.getProperties())
@@ -35,16 +37,16 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
      */
     override fun validateByRoutes(properties: List<Property>): Pair<List<Property>, List<Property>> {
         if (properties.isEmpty()) {
-            println("No saved properties. Fetch some")
+            console.d("No saved properties. Fetch some")
             return Pair(emptyList(), emptyList())
         }
         val (toSave, unsuitable) = properties.partition { property ->
             val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
-            println("\n${property.id}: ${property.title}:\n${routes.joinToString(", ")}")
+            console.d("\n${property.id}: ${property.title}:\n${routes.joinToString(", ")}")
             val propertyWithRoutes = property.withRoutes(routes)
             propertyRepository.addOrUpdateProperty(propertyWithRoutes)
             if (validator.checkValid(propertyWithRoutes)) {
-                println("Valid")
+                console.d("Valid")
                 true
             } else {
                 if (!propertyWithRoutes.markedUnsuitable) {

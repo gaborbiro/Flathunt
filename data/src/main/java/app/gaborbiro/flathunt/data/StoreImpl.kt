@@ -1,18 +1,23 @@
 package app.gaborbiro.flathunt.data
 
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Cookies
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import com.google.gson.Gson
 import org.koin.core.annotation.Named
-import org.koin.core.annotation.Single
+import org.koin.core.annotation.Singleton
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-@Single
+@Singleton
 class StoreImpl(
     @Named("serviceName") serviceName: String,
     @Named("criteria") criteria: String,
-) : Store {
+) : Store, KoinComponent {
+
+    private val console: ConsoleWriter by inject()
 
     private val gson = Gson()
 
@@ -37,7 +42,7 @@ class StoreImpl(
             if (it is PersistedProperty) {
                 it
             } else {
-                PersistedProperty(it, nextIndex().also { index -> println("new index: $index") })
+                PersistedProperty(it, nextIndex().also { index -> console.i("new index: $index") })
             }
         }))
         overrideJsonProperties(jsonProperties)

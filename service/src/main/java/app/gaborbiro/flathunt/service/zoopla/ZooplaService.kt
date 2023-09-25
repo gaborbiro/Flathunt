@@ -2,10 +2,13 @@ package app.gaborbiro.flathunt.service.zoopla
 
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.PriceParseResult
 import app.gaborbiro.flathunt.service.domain.model.Page
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import app.gaborbiro.flathunt.splitQuery
@@ -27,7 +30,7 @@ class ZooplaService : BaseService() {
     override val sessionCookieName = "_cs_s"
     override val sessionCookieDomain = ".zoopla.co.uk"
 
-    private val store: Store by inject()
+    private val console: ConsoleWriter by inject()
 
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"
@@ -108,6 +111,23 @@ class ZooplaService : BaseService() {
                 null
             }
         }
+        val rawPrice = propertyData.pricing.label
+        val price = when (val result = ensurePriceIsPerMonth(rawPrice)) {
+            is PriceParseResult.Price -> Price(
+                rawPrice,
+                result.pricePerMonth,
+                result.pricePerMonthInt
+            )
+
+            is PriceParseResult.ParseError -> {
+                console.e("Error parsing price $rawPrice")
+                Price(
+                    rawPrice,
+                    result.pricePerMonth,
+                    -1
+                )
+            }
+        }
         return Property(
             id = id,
             title = propertyData.title,
@@ -116,7 +136,7 @@ class ZooplaService : BaseService() {
             isBuddyUp = false,
             senderName = null,
             messageUrl = null,
-            prices = arrayOf(ensurePriceIsPerMonth(propertyData.pricing.label)),
+            prices = arrayOf(price),
             billsIncluded = features?.contains("Bills Included"),
             deposit = "",
             availableFrom = availableFrom?.toEpochDay(),
@@ -176,7 +196,7 @@ class ZooplaService : BaseService() {
         return if (isValidUrl(cleanUrl)) {
             cleanUrl
         } else {
-            println("Invalid url: $cleanUrl")
+            console.e("Invalid url: $cleanUrl")
             null
         }
     }

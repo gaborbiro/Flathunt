@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt
 
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.di.setupKoin
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.spareroom.usecase.InboxUseCase
@@ -20,37 +21,38 @@ class FlatHunt {
     fun main(args: Array<String>) {
         java.util.logging.LogManager.getLogManager().reset() // disable all logging
 
+        val serviceConfig = getServiceConfigFromArgs(args)
+        val app = setupKoin(serviceConfig)
+
+        val console = app.koin.get<ConsoleWriter>()
+
         if (Manifests.exists("jar-build-timestamp")) {
-            println(
+            console.d(
                 "\n==========================================================================" +
                         "\nBuilt at:\t" + Manifests.read("jar-build-timestamp")
             )
         }
 
-        val serviceConfig = getServiceConfigFromArgs(args)
-
-        val app = setupKoin(serviceConfig)
-
         val strictCommandStr = getStrictCommandFromArgs(args)
         if (strictCommandStr == null) {
-            println("Service:\t$serviceConfig")
+            console.d("Service:\t$serviceConfig")
         }
 
         val useCases = getUseCases(serviceConfig)
-        val commands = CommandSetBuilder(serviceConfig, useCases).buildCommandSet()
+        val commands = CommandSetBuilder(serviceConfig, useCases, console).buildCommandSet()
 
         BufferedReader(InputStreamReader(System.`in`)).use { reader ->
-            val parseCommandUseCase = ParseCommandUseCase(commands)
-            val commandUseCase = CommandUseCase()
+            val parseCommandUseCase = ParseCommandUseCase(commands, console)
+            val commandUseCase = CommandUseCase(console)
 
             if (strictCommandStr != null) {
                 parseCommandUseCase.execute(strictCommandStr)?.let { command ->
                     GlobalVariables.strict = true
                     commandUseCase.execute(command)
-                } ?: run { println("Invalid command") }
+                } ?: run { console.d("Invalid command") }
             }
 
-            processInput(reader, parseCommandUseCase, commandUseCase)
+            processInput(reader, parseCommandUseCase, commandUseCase, console)
         }
 
         app.koin.get<Service>().cleanup()
@@ -59,7 +61,8 @@ class FlatHunt {
     private fun processInput(
         reader: BufferedReader,
         parseCommandUseCase: ParseCommandUseCase,
-        commandUseCase: CommandUseCase
+        commandUseCase: CommandUseCase,
+        console: ConsoleWriter,
     ) {
         var input: String?
         var hintShown = false
@@ -67,15 +70,12 @@ class FlatHunt {
             reader.readLine()
         }
         do {
-            val escapeCode = "\u001b[31m"
-            val resetCode = "\u001b[0m"
-//            System.console().writer().println("$escapeCode Hello, World! $resetCode ==========================================================================")
-            println("==========================================================================")
+            console.d("==========================================================================")
             if (hintShown.not()) {
                 hintShown = true
-                println("Type 'help' for a list of available commands")
+                console.d("Type 'help' for a list of available commands")
             }
-            print("> ")
+            console.d("> ", newLine = false)
             input = reader.readLine()
             if (input == CommandSetBuilder.EXIT_COMMAND_CODE) {
                 return
@@ -86,7 +86,7 @@ class FlatHunt {
                 command
                     ?.let(commandUseCase::execute)
                     ?: run {
-                        println("Invalid command")
+                        console.d("Invalid command")
                     }
             } catch (t: Throwable) {
                 t.printStackTrace()

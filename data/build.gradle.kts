@@ -12,6 +12,7 @@ repositories {
 dependencies {
     implementation(project(":base"))
     implementation(project(":data:domain"))
+    implementation(project(":console:domain"))
 
     implementation(Dependencies.Google.gson)
     implementation(Dependencies.Selenium.java)

@@ -12,9 +12,10 @@ repositories {
 dependencies {
     implementation(Dependencies.Koin.core)
     implementation(Dependencies.Koin.annotations)
-    implementation(Dependencies.OkHttp.okhttp)
     ksp(Dependencies.Koin.ksp)
+    implementation(Dependencies.OkHttp.okhttp)
 
+    implementation(project(":console:domain"))
     implementation(project(":request:domain"))
     implementation(project(":base"))
 }

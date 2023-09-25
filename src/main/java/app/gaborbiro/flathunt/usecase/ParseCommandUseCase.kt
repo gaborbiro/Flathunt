@@ -1,10 +1,14 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.CommandSet
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-class ParseCommandUseCase(private val commands: CommandSet) {
+class ParseCommandUseCase(
+    private val commands: CommandSet,
+    private val console: ConsoleWriter
+) {
 
     fun execute(input: String): CommandWithArgs? {
         val tokens = input.trim().split(Regex("[\\s]+"))
@@ -36,7 +40,7 @@ class ParseCommandUseCase(private val commands: CommandSet) {
                     input.removePrefix(exactMatch).trim().split(Regex("[\\s]+")).filter { it.isNotBlank() }
                 CommandWithArgs(commands.commands[exactMatch]!!, args)
             } else {
-                println("No exact match found. Type in more of the command.")
+                console.e("No exact match found. Type in more of the command.")
                 null
             }
         } else if (candidateCount == 1) {

@@ -1,9 +1,10 @@
 package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.ValidationCriteria
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
-import app.gaborbiro.flathunt.strict
+import app.gaborbiro.flathunt.nostrict
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
@@ -13,6 +14,7 @@ class ListUseCase : BaseUseCase() {
 
     private val criteria: ValidationCriteria by inject()
     private val propertyRepository: PropertyRepository by inject()
+    private val console: ConsoleWriter by inject()
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -34,10 +36,10 @@ class ListUseCase : BaseUseCase() {
     {
         val properties = propertyRepository.getProperties()
         if (properties.isNotEmpty()) {
-            strict { println("${properties.size} properties in database\n") }
-            println(properties.joinToString("\n\n\n") { it.prettyPrint() })
+            nostrict { console.d("${properties.size} properties in database\n") }
+            console.d(properties.joinToString("\n\n\n") { it.prettyPrint() })
         } else {
-            strict { println("No saved properties") }
+            nostrict { console.d("No saved properties") }
         }
     }
 
@@ -48,10 +50,10 @@ class ListUseCase : BaseUseCase() {
     {
         val properties = propertyRepository.getProperties()
         if (properties.isNotEmpty()) {
-            strict { println("${properties.size} properties in database\n") }
-            println(properties.joinToString("\n") { "${it.index}: ${it.id}" })
+            nostrict { console.d("${properties.size} properties in database\n") }
+            console.d(properties.joinToString("\n") { "${it.index}: ${it.id}" })
         } else {
-            strict { println("No saved properties") }
+            nostrict { console.d("No saved properties") }
         }
     }
 
@@ -62,8 +64,8 @@ class ListUseCase : BaseUseCase() {
     {
         val properties = propertyRepository.getProperties()
         if (properties.isNotEmpty()) {
-            strict { println("${properties.size} properties in database\n") }
-            println(properties.joinToString("\n") {
+            nostrict { console.d("${properties.size} properties in database\n") }
+            console.d(properties.joinToString("\n") {
                 "${it.index}" +
                         "\t${propertyRepository.getPropertyUrl(it.id)}" +
                         "\t${it.location}" +
@@ -71,7 +73,7 @@ class ListUseCase : BaseUseCase() {
                         "\t\t\t\t${it.title}"
             })
         } else {
-            strict { println("No saved properties") }
+            nostrict { console.d("No saved properties") }
         }
     }
 
@@ -93,7 +95,7 @@ class ListUseCase : BaseUseCase() {
         command = "list blacklist",
         description = "Print blacklisted ids"
     ) {
-        propertyRepository.getBlacklist().forEach { println(it) }
+        propertyRepository.getBlacklist().forEach { console.d(it) }
     }
 
     private val addBlacklist = command<String>(
@@ -110,7 +112,7 @@ class ListUseCase : BaseUseCase() {
     )
     {
         propertyRepository.reindex()
-        println("Done")
+        console.d("Done")
     }
 
     private val verifyAll = command(

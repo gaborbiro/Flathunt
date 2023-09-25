@@ -1,10 +1,9 @@
 package app.gaborbiro.flathunt.service
 
 import app.gaborbiro.flathunt.AVG_WEEKS_IN_MONTH
-import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.matcher
 
-fun ensurePriceIsPerMonth(price: String): Price {
+fun ensurePriceIsPerMonth(price: String): PriceParseResult {
     val pricePerMonth = if (price.contains("pw")) {
         val matcher = price.matcher("([^\\d])([\\d\\.,]+)[\\s]*pw")
         if (matcher.find()) {
@@ -16,9 +15,17 @@ fun ensurePriceIsPerMonth(price: String): Price {
     } else price
     val matcher = pricePerMonth.matcher("([^\\d])([\\d\\.,]+)[\\s]*pcm")
     return if (matcher.find()) {
-        Price(price, pricePerMonth, matcher.group(2).replace(",", "").toInt())
+        PriceParseResult.Price(pricePerMonth, matcher.group(2).replace(",", "").toInt())
     } else {
-        println("Error parsing price $price")
-        Price(price, pricePerMonth, -1)
+        PriceParseResult.ParseError(pricePerMonth)
     }
+}
+
+sealed class PriceParseResult(open val pricePerMonth: String) {
+    data class Price(
+        override val pricePerMonth: String,
+        val pricePerMonthInt: Int,
+    ) : PriceParseResult(pricePerMonth)
+
+    data class ParseError(override val pricePerMonth: String) : PriceParseResult(pricePerMonth)
 }

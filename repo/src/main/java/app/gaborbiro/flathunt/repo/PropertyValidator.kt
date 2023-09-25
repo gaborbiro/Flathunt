@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.POI
 import app.gaborbiro.flathunt.ValidationCriteria
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.Route
 import app.gaborbiro.flathunt.matcher
@@ -14,13 +15,14 @@ import java.time.LocalDate
 class PropertyValidator : KoinComponent {
 
     private val criteria: ValidationCriteria by inject()
+    private val console: ConsoleWriter by inject()
 
     fun checkValid(property: Property): Boolean {
         val errors = validate(property)
         return if (errors.isEmpty()) {
             true
         } else {
-            println("\nRejected: ${errors.joinToString()}")
+            console.d("\nRejected: ${errors.joinToString()}")
             false
         }
     }

@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.*
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
@@ -17,6 +18,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     private val service: Service by inject()
     private val criteria: ValidationCriteria by inject()
     private val validator: PropertyValidator by inject()
+    private val console: ConsoleWriter by inject()
 
     override fun getProperty(indexOrId: String): PersistedProperty? {
         val properties = store.getProperties()
@@ -36,11 +38,11 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         val index = properties.indexOfFirst { it.id == property.id }
         return if (index > -1) {
             properties[index] = PersistedProperty(property, index)
-            println("\nProperty updated")
+            console.d("\nProperty updated")
             false
         } else {
             properties.add(property)
-            println("\nProperty added")
+            console.d("\nProperty added")
             true
         }.also {
             store.overrideProperties(properties)
@@ -51,8 +53,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         val properties = getProperties()
         val validProperties = properties.filter { validator.validate(it).isEmpty() }
         val toDelete = (properties - validProperties.toSet()).joinToString("\n") { "#${it.index} ${it.id}" }
-        println("Deleting properties:")
-        println(toDelete)
+        console.d("Deleting properties:")
+        console.d(toDelete)
         if (!GlobalVariables.safeMode) {
             store.overrideProperties(validProperties)
         }
@@ -63,7 +65,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         return properties.firstOrNull { it.index == index }?.let { property ->
             properties.removeIf { it.id == property.id }
             store.overrideProperties(properties)
-            println("Property deleted")
+            console.d("Property deleted")
             if (markAsUnsuitable && !safeMode) {
                 service.markAsUnsuitable(property.id, unsuitable = true, description = "($index)")
             }

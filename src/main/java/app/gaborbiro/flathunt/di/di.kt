@@ -3,6 +3,9 @@ package app.gaborbiro.flathunt.di
 import app.gaborbiro.flathunt.EXP
 import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
+import app.gaborbiro.flathunt.console.ConsoleWriter
+import app.gaborbiro.flathunt.console.ConsoleWriterFactory
+import app.gaborbiro.flathunt.console.di.ConsoleModule
 import app.gaborbiro.flathunt.data.di.DataModule
 import app.gaborbiro.flathunt.repo.di.RepoModule
 import app.gaborbiro.flathunt.request.di.RequestModule
@@ -33,6 +36,7 @@ fun setupKoin(serviceConfig: String): KoinApplication {
             RepoModule().module,
             ServiceModule().module,
             RequestModule().module,
+            ConsoleModule().module,
         )
     }
     val serviceModule = module {
@@ -42,6 +46,12 @@ fun setupKoin(serviceConfig: String): KoinApplication {
         }
     }
     app.modules(serviceModule)
+    val consoleModule = module {
+        single<ConsoleWriter> {
+            app.koin.get<ConsoleWriterFactory>().getConsoleWriter()
+        }
+    }
+    app.modules(consoleModule)
 
     return app
 }

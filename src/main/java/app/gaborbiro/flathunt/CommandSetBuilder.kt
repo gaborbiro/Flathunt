@@ -1,12 +1,14 @@
 package app.gaborbiro.flathunt
 
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.UseCase
 import app.gaborbiro.flathunt.usecase.base.command
 
 class CommandSetBuilder(
     private val serviceConfig: String,
-    private val useCases: Set<UseCase>
+    private val useCases: Set<UseCase>,
+    private val console: ConsoleWriter,
 ) {
 
     companion object {
@@ -40,9 +42,9 @@ class CommandSetBuilder(
     }
 
     private fun printInfo(serviceConfig: String, commands: Map<String, Command<*>>) {
-        println("\nAvailable commands:")
-        println(commands.mapKeys { "- ${it.key}" }.mapValues { it.value.description }.prettyPrint())
-        println()
-        println("Service:\t\t$serviceConfig")
+        console.d("\nAvailable commands:")
+        console.d(commands.mapKeys { "- ${it.key}" }.mapValues { it.value.description }.prettyPrint())
+        console.d()
+        console.d("Service:\t\t$serviceConfig")
     }
 }
