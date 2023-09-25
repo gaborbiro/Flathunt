@@ -38,11 +38,11 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         val index = properties.indexOfFirst { it.id == property.id }
         return if (index > -1) {
             properties[index] = PersistedProperty(property, index)
-            console.d("\nProperty updated")
+            console.d("Property updated")
             false
         } else {
             properties.add(property)
-            console.d("\nProperty added")
+            console.d("Property added")
             true
         }.also {
             store.overrideProperties(properties)
@@ -98,6 +98,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
 
     override fun openLinks(property: Property) {
         service.closeUnpinnedTabs()
+        service.pinCurrentTabs()
         val urls = mutableListOf<String>()
         property.messageUrl?.let(urls::add)
         if (property.routes?.isNotEmpty() != true) {
@@ -115,7 +116,6 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         property.location?.let {
             urls.add("https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${it.toGoogleCoords()}&heading=13&pitch=0&fov=80")
         }
-        service.pinCurrentTabs()
 
         val staticMapUrl = property.location?.let {
             val nearestStations =
@@ -123,7 +123,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
                     "&markers=size:mid|color:green|${it.coordinates.toGoogleCoords()}"
                 }
             val pois = criteria.pointsOfInterest.filterIsInstance<POI.Destination>().map {
-                "&markers=size:mid|color:blue|${escapeHTML(it.name)} London"
+                "&markers=size:mid|color:blue|${escapeHTML(it.name)} Lisbon"
             }
             "http://maps.googleapis.com/maps/api/staticmap?" +
                     "&size=600x400" +
@@ -133,14 +133,17 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
                     "&key=${LocalProperties.googleApiKey}"
         }?.replace(",", "%2C")
 
+        service.openTabs(*urls.toTypedArray())
+
         val photoUrls = mutableListOf<String>()
         staticMapUrl?.let { photoUrls.add(it) }
         photoUrls.addAll(service.getPhotoUrls(property.id))
         if (photoUrls.isNotEmpty()) {
-            val url = "http://127.0.0.1:8000/photos/" + photoUrls.joinToString(",")
-            urls.add(url)
+            val html = photoUrls.joinToString("") {
+                "<img src=\"$it\" width=\"500\" align=\"top\">"
+            }
+            service.openHTML(html)
         }
-        service.openTabs(*urls.toTypedArray())
     }
 
     override fun markAsUnsuitable(property: Property, unsuitable: Boolean) {

@@ -130,7 +130,8 @@ class FlatHunt {
             Constants.`idealista-exp` -> setOf(
                 SearchUseCase(),
                 MaintenanceUseCase(),
-                ListUseCase()
+                ListUseCase(),
+                FetchPropertyUseCase(),
             )
 
             Constants.`spareroom-exp` -> setOf(

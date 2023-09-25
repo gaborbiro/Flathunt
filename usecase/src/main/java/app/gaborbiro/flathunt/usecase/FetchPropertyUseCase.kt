@@ -24,7 +24,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     private val fetch = command<String>(
         command = "fetch",
         description = "Fetches property (by id or url), validates it and labels it as needed. " +
-                "(same as check, but also saves or marks the property)",
+                "(same as peek, but also saves or marks the property)",
         argumentName = "id or url",
     )
     { (arg) ->
@@ -38,7 +38,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     private val fetchAndOpen = command<String>(
         command = "fetch open",
         description = "Fetches property (by id or url), validates it and labels it as needed. If valid, opens it in a browser. " +
-                "(same as check, but also saves or marks the property)",
+                "(same as peek, but also saves or marks the property)",
         argumentName = "id or url",
     )
     { (arg) ->

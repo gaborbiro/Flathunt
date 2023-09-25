@@ -9,4 +9,6 @@ interface MaintenanceRepository {
     fun clearCookies()
 
     fun importCookiesToBrowser(path: String)
+
+    fun saveCookies()
 }

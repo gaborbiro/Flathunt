@@ -197,22 +197,6 @@ class RightmoveService : BaseService() {
         return url
     }
 
-    override fun checkUrlOrId(arg: String): String? {
-        var cleanUrl = cleanUrl(arg)
-        if (!isValidUrl(cleanUrl)) {
-            val matcher = cleanUrl.matcher("^([\\d]+)$")
-            if (matcher.find()) {
-                cleanUrl = "$rootUrl/properties/$arg"
-            }
-        }
-        return if (isValidUrl(cleanUrl)) {
-            cleanUrl
-        } else {
-            console.e("Invalid url: $cleanUrl")
-            null
-        }
-    }
-
     override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
         ensurePageWithSession(getUrlFromId(id))
         return driver.findElements(By.className("_2zqynvtIxFMCq18pu-g8d_"))

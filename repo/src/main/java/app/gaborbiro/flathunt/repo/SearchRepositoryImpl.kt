@@ -40,7 +40,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
                 ids - store.getBlacklist().toSet() - savedIds.toSet() // we don't re-check known properties
             if (newIds.isNotEmpty()) {
                 newIds.forEachIndexed { i, id ->
-                    console.d("\n=======> Fetching property $id (${i + 1}/${newIds.size}; page ${thePage.page}/${thePage.pageCount}): ")
+                    console.d("\n=======> Fetching property $id (${i + 1}/${newIds.size} from page ${thePage.page}/${thePage.pageCount}): ")
                     try {
                         val property = service.fetchProperty(id)
                         processProperty(property, thePage)?.let {

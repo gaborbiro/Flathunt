@@ -15,6 +15,8 @@ interface Service {
 
     fun openTabs(vararg urls: String): List<String>
 
+    fun openHTML(html: String)
+
     /**
      * Starting from a page other than the first one is supported.
      */
@@ -49,4 +51,6 @@ interface Service {
     fun clearCookies()
 
     fun addOrUpdateCookies(cookies: List<Cookie>)
+
+    fun saveCookies()
 }

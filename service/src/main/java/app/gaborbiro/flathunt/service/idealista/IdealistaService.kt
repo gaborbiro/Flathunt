@@ -27,8 +27,6 @@ class IdealistaService : BaseService() {
     override val sessionCookieName = "cc"
     override val sessionCookieDomain = "www.idealista.pt"
 
-    private val store: Store by inject()
-
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"
         private const val PASSWORD = "1qazse45rdxSW2"
@@ -51,7 +49,7 @@ class IdealistaService : BaseService() {
             1
         }
         val urls = driver.findElements(By.className("item-link")).map { it.getAttribute("href") }
-        var pageCount = if(urls.isNotEmpty()) 1 else 0
+        var pageCount = if (urls.isNotEmpty()) 1 else 0
         do {
             val pagination = driver.findElements(By.className("pagination"))
             if (pagination.isEmpty()) {
@@ -78,12 +76,16 @@ class IdealistaService : BaseService() {
             page = page,
             pageCount = pageCount,
             nextPage = {
-                val uri = URI.create(searchUrl)
-                val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
-                if (pathTokens.last().contains("pagina-")) {
-                    searchUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${this.page + 1}")
+                if (this.page == this.pageCount) {
+                    null
                 } else {
-                    searchUrl.replace("?", "pagina-${this.page + 1}?")
+                    val uri = URI.create(searchUrl)
+                    val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
+                    if (pathTokens.last().contains("pagina-")) {
+                        searchUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${this.page + 1}")
+                    } else {
+                        searchUrl.replace("?", "pagina-${this.page + 1}?")
+                    }
                 }
             }
         )
@@ -138,7 +140,7 @@ class IdealistaService : BaseService() {
 
     override fun getPropertyIdFromUrl(url: String): String {
         return if (isValidUrl(url)) {
-            URI.create(url).path.split("/").filter { it.isNotBlank() }.last()
+            URI.create(url).path.split("/").last { it.isNotBlank() }
         } else {
             throw IllegalArgumentException("Unable to get property id from $url (invalid url)")
         }
@@ -156,13 +158,8 @@ class IdealistaService : BaseService() {
         return url
     }
 
-    override fun checkUrlOrId(arg: String): String? {
-        var cleanUrl = cleanUrl(arg)
-        return null
-    }
-
     override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
         ensurePageWithSession(getUrlFromId(id))
-        return emptyList()
+        return driver.findElements(By.className("detail-image-gallery")).map { it.getAttribute("data-ondemand-img") }
     }
 }

@@ -26,6 +26,11 @@ class MaintenanceUseCase : UseCase, KoinComponent {
                 description = "Add cookies from cookie-override.txt file. Requires open website.",
                 exec = { repo.importCookiesToBrowser("cookie-override.txt") }
             ),
+            command(
+                command = "save cookies",
+                description = "Overrides currently stored cookies with the ones from the browser",
+                exec = { repo.saveCookies() }
+            ),
             command<String>(
                 command = "export",
                 description = "Exports saved properties to the specified path",

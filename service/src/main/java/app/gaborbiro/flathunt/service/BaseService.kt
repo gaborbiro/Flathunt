@@ -1,9 +1,11 @@
 package app.gaborbiro.flathunt.service
 
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Cookies
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.domain.model.Page
@@ -30,6 +32,7 @@ abstract class BaseService : Service, KoinComponent {
     protected abstract val sessionCookieDomain: String
 
     private val store: Store by inject()
+    private val console: ConsoleWriter by inject()
 
     protected open fun beforeSession(driver: WebDriver) {
 
@@ -54,11 +57,18 @@ abstract class BaseService : Service, KoinComponent {
 
     override fun openTabs(vararg urls: String): List<String> {
         ensureBrowser()
+        driver.switchTo().window("")
         val oldWindowHandles = driver.windowHandles
         urls.mapNotNull { url ->
             (driver as RemoteWebDriver).executeScript("window.open('$url')")
         }
         return driver.windowHandles.filter { it !in oldWindowHandles }
+    }
+
+    override fun openHTML(html: String) {
+        ensureBrowser()
+        openNewTab()
+        driver["data:text/html;charset=utf-8,${String(html.toByteArray())}"]
     }
 
     /**
@@ -116,6 +126,22 @@ abstract class BaseService : Service, KoinComponent {
     }
 
     protected abstract fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String)
+
+    override fun checkUrlOrId(arg: String): String? {
+        var cleanUrl = cleanUrl(arg)
+        if (!isValidUrl(cleanUrl)) {
+            val matcher = cleanUrl.matcher("^([\\d]+)$")
+            if (matcher.find()) {
+                cleanUrl = getUrlFromId(arg)
+            }
+        }
+        return if (isValidUrl(cleanUrl)) {
+            cleanUrl
+        } else {
+            console.e("Invalid url: $cleanUrl")
+            null
+        }
+    }
 
     override fun cleanup() {
         if (::driver.isInitialized) {
@@ -187,7 +213,7 @@ abstract class BaseService : Service, KoinComponent {
     private fun Set<Cookie>?.hasSession(): Boolean {
         return this
             ?.firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
-            ?.let { it.expiry <= Date() }
+            ?.let { it.expiry > Date() }
             ?: false
     }
 
@@ -255,5 +281,9 @@ abstract class BaseService : Service, KoinComponent {
             cookies.forEach(::addCookie)
         }
         driver[driver.currentUrl]
+    }
+
+    override fun saveCookies() {
+        store.saveCookies(Cookies(driver.manage().cookies))
     }
 }
