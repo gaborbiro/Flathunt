@@ -10,7 +10,7 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.PriceParseResult
-import app.gaborbiro.flathunt.service.domain.model.Page
+import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
@@ -48,8 +48,7 @@ class RightmoveService : BaseService() {
         driver.findElement(By.id("submit")).click()
     }
 
-    override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
-        ensurePageWithSession(searchUrl)
+    override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
         var page = splitQuery(searchUrl)["index"]?.let { it.toInt() / 24 } ?: 0
         val totalSize = driver.findElement(By.className("searchHeader-resultCount")).text.toInt()
         val listItems = driver.findElements(By.className("is-list"))
@@ -57,30 +56,32 @@ class RightmoveService : BaseService() {
         val urls = listItems.mapNotNull {
             if (it.findElements(By.className("property-hidden-container")).isEmpty()) {
                 val id = (it as RemoteWebElement).getAttribute("id")
-                getUrlFromId(id)
+                getUrlFromWebId(id)
             } else {
                 null
             }
         }
         page++
-        return Page(
-            urls = urls,
+        return PageInfo(
+            pageUrl = searchUrl,
+            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
-            nextPage = {
-                if (page < pageCount) {
-                    var searchUrl = searchUrl.replace(Regex("&index=[\\d]+"), "")
-                    searchUrl = searchUrl.replace(Regex("\\?index=[\\d]+"), "")
-                    searchUrl + "&index=${page * 24}"
-                } else {
-                    null
-                }
-            }
         )
     }
 
-    override fun fetchProperty(driver: WebDriver, id: String): Property {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+        return if (page.page < page.pageCount) {
+            var searchUrl = page.pageUrl.replace(Regex("&index=[\\d]+"), "")
+            searchUrl = searchUrl.replace(Regex("\\?index=[\\d]+"), "")
+            searchUrl + "&index=${page.page * 24}"
+        } else {
+            null
+        }
+    }
+
+    override fun fetchProperty(driver: WebDriver, webId: String): Property {
+        ensurePageWithSession(getUrlFromWebId(webId))
         with(driver) {
             val location = findElement(By.className("_1kck3jRw2PGQSOEy3Lihgp"))
                 .findElement(By.tagName("img"))
@@ -130,7 +131,7 @@ class RightmoveService : BaseService() {
                 }
             }
             return Property(
-                id = id,
+                webId = webId,
                 title = findElement(By.xpath("/html/body/div[4]/div/div[3]/main/div[1]/div[1]/div/h1")).text,
                 comment = null,
                 markedUnsuitable = false,
@@ -157,15 +158,15 @@ class RightmoveService : BaseService() {
         }
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
+    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
         store.getCookies()?.let { cookies ->
             if (GlobalVariables.safeMode || requestCaller.post(
                     url = "https://my.rightmove.co.uk/property/status",
-                    payload = "[{\"id\": \"$id\", \"action\": \"${if (unsuitable) "HIDE" else "UNHIDE"}\"}]",
+                    payload = "[{\"id\": \"$webId\", \"action\": \"${if (unsuitable) "HIDE" else "UNHIDE"}\"}]",
                     cookies = cookies.cookies.joinToString("; ")
                 )
             ) {
-                console.d("$id marked $description")
+                console.d("$webId marked as unsuitable=$unsuitable $description")
             }
         } ?: run {
             console.e("Unable to mark property. We don't have any cookies.")
@@ -185,20 +186,12 @@ class RightmoveService : BaseService() {
         }
     }
 
-    override fun getUrlFromId(id: String): String {
-        return "$rootUrl/properties/$id#/"
+    override fun getUrlFromWebId(webId: String): String {
+        return "$rootUrl/properties/$webId#/"
     }
 
-    override fun isValidUrl(url: String): Boolean {
-        return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
-    }
-
-    override fun cleanUrl(url: String): String {
-        return url
-    }
-
-    override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
+        ensurePageWithSession(getUrlFromWebId(webId))
         return driver.findElements(By.className("_2zqynvtIxFMCq18pu-g8d_"))
             .mapNotNull {
                 kotlin.runCatching { (it.findElement(By.tagName("meta")) as RemoteWebElement).getAttribute("content") }

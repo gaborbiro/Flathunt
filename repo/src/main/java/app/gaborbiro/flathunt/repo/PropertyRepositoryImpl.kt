@@ -20,10 +20,10 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     private val validator: PropertyValidator by inject()
     private val console: ConsoleWriter by inject()
 
-    override fun getProperty(indexOrId: String): PersistedProperty? {
+    override fun getProperty(indexOrWebId: String): PersistedProperty? {
         val properties = store.getProperties()
-        return properties.firstOrNull { it.index.toString() == indexOrId }
-            ?: properties.firstOrNull { it.id == indexOrId }
+        return properties.firstOrNull { it.index.toString() == indexOrWebId }
+            ?: properties.firstOrNull { it.webId == indexOrWebId }
     }
 
     override fun getProperties(): List<PersistedProperty> {
@@ -35,7 +35,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
      */
     override fun addOrUpdateProperty(property: Property): Boolean {
         val properties: MutableList<Property> = store.getProperties().toMutableList()
-        val index = properties.indexOfFirst { it.id == property.id }
+        val index = properties.indexOfFirst { it.webId == property.webId }
         return if (index > -1) {
             properties[index] = PersistedProperty(property, index)
             console.d("Property updated")
@@ -52,7 +52,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     override fun verifyAll() {
         val properties = getProperties()
         val validProperties = properties.filter { validator.validate(it).isEmpty() }
-        val toDelete = (properties - validProperties.toSet()).joinToString("\n") { "#${it.index} ${it.id}" }
+        val toDelete = (properties - validProperties.toSet()).joinToString("\n") { "#${it.index} ${it.webId}" }
         console.d("Deleting properties:")
         console.d(toDelete)
         if (!GlobalVariables.safeMode) {
@@ -63,11 +63,11 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     override fun deleteProperty(index: Int, markAsUnsuitable: Boolean, safeMode: Boolean): Boolean {
         val properties = store.getProperties().toMutableList()
         return properties.firstOrNull { it.index == index }?.let { property ->
-            properties.removeIf { it.id == property.id }
+            properties.removeIf { it.webId == property.webId }
             store.overrideProperties(properties)
             console.d("Property deleted")
             if (markAsUnsuitable && !safeMode) {
-                service.markAsUnsuitable(property.id, unsuitable = true, description = "($index)")
+                service.markAsUnsuitable(property.webId, unsuitable = true)
             }
             true
         } ?: run {
@@ -75,8 +75,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         }
     }
 
-    override fun getPropertyUrl(id: String): String {
-        return service.getUrlFromId(id)
+    override fun getPropertyUrl(webId: String): String {
+        return service.getUrlFromWebId(webId)
     }
 
     override fun clearProperties() {
@@ -84,12 +84,12 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     }
 
     override fun getBlacklist(): List<String> {
-        return store.getBlacklist()
+        return store.getBlacklistWebIds()
     }
 
-    override fun addToBlacklist(ids: List<String>) {
+    override fun addToBlacklist(webIds: List<String>) {
         val blacklist = getBlacklist()
-        store.saveBlacklist(ids - blacklist + blacklist)
+        store.saveBlacklistWebIds(webIds - blacklist + blacklist)
     }
 
     override fun clearBlacklist() {
@@ -137,7 +137,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
 
         val photoUrls = mutableListOf<String>()
         staticMapUrl?.let { photoUrls.add(it) }
-        photoUrls.addAll(service.getPhotoUrls(property.id))
+        photoUrls.addAll(service.getPhotoUrls(property.webId))
         if (photoUrls.isNotEmpty()) {
             val html = photoUrls.joinToString("") {
                 "<img src=\"$it\" width=\"500\" align=\"top\">"
@@ -146,14 +146,12 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         }
     }
 
-    override fun markAsUnsuitable(property: Property, unsuitable: Boolean) {
-        val index = (property as? PersistedProperty)?.index
-        val description = index?.let { "($it)" } ?: ""
-        service.markAsUnsuitable(property.id, unsuitable, description)
+    override fun markAsUnsuitable(webId: String, unsuitable: Boolean) {
+        service.markAsUnsuitable(webId, unsuitable)
     }
 
-    override fun getNextProperty(indexOrId: String): PersistedProperty? {
-        return getProperty(indexOrId)?.let { currentProperty ->
+    override fun getNextProperty(indexOrWebId: String): PersistedProperty? {
+        return getProperty(indexOrWebId)?.let { currentProperty ->
             store.getProperties().sortedBy { it.index }.firstOrNull { it.index > currentProperty.index }
         }
     }

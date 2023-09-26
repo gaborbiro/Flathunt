@@ -51,7 +51,7 @@ class ListUseCase : BaseUseCase() {
         val properties = propertyRepository.getProperties()
         if (properties.isNotEmpty()) {
             nostrict { console.d("${properties.size} properties in database\n") }
-            console.d(properties.joinToString("\n") { "${it.index}: ${it.id}" })
+            console.d(properties.joinToString("\n") { "${it.index}: ${it.webId}" })
         } else {
             nostrict { console.d("No saved properties") }
         }
@@ -67,7 +67,7 @@ class ListUseCase : BaseUseCase() {
             nostrict { console.d("${properties.size} properties in database\n") }
             console.d(properties.joinToString("\n") {
                 "${it.index}" +
-                        "\t${propertyRepository.getPropertyUrl(it.id)}" +
+                        "\t${propertyRepository.getPropertyUrl(it.webId)}" +
                         "\t${it.location}" +
                         "\t\t\t${it.prices[0].pricePerMonthInt}" +
                         "\t\t\t\t${it.title}"

@@ -3,13 +3,12 @@ package app.gaborbiro.flathunt.service.zoopla
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.PriceParseResult
-import app.gaborbiro.flathunt.service.domain.model.Page
+import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import app.gaborbiro.flathunt.splitQuery
 import com.google.gson.Gson
@@ -55,8 +54,7 @@ class ZooplaService : BaseService() {
         driver.findElement(By.className("e1oiir0n4")).click()
     }
 
-    override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
-        ensurePageWithSession(searchUrl)
+    override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
         var page = splitQuery(searchUrl)["pn"]?.toInt() ?: 0
         val urls = driver.findElement(By.className("css-kdnpqc-ListingsContainer"))
             .findElements(By.className("e2uk8e3")).map { it.getAttribute("href") }
@@ -64,24 +62,26 @@ class ZooplaService : BaseService() {
             .text.split(" result")[0].toInt()
         val pageCount = ceil(totalSize.toDouble() / 25).toInt()
         page++
-        return Page(
-            urls = urls,
+        return PageInfo(
+            pageUrl = searchUrl,
+            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
-            nextPage = {
-                if (page < pageCount) {
-                    var searchUrl = searchUrl.replace(Regex("&pn=[\\d]+"), "")
-                    searchUrl = searchUrl.replace(Regex("\\?pn=[\\d]+"), "")
-                    "$searchUrl&pn=$page"
-                } else {
-                    null
-                }
-            }
         )
     }
 
-    override fun fetchProperty(driver: WebDriver, id: String): Property {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+        return if (page.page < page.pageCount) {
+            var searchUrl = page.pageUrl.replace(Regex("&pn=[\\d]+"), "")
+            searchUrl = searchUrl.replace(Regex("\\?pn=[\\d]+"), "")
+            "$searchUrl&pn=$page"
+        } else {
+            null
+        }
+    }
+
+    override fun fetchProperty(driver: WebDriver, webId: String): Property {
+        ensurePageWithSession(getUrlFromWebId(webId))
 
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
         val propertyData = Gson().fromJson(json, ZooplaResponse::class.java)
@@ -129,7 +129,7 @@ class ZooplaService : BaseService() {
             }
         }
         return Property(
-            id = id,
+            webId = webId,
             title = propertyData.title,
             comment = null,
             markedUnsuitable = false,
@@ -173,20 +173,12 @@ class ZooplaService : BaseService() {
         }
     }
 
-    override fun getUrlFromId(id: String): String {
-        return "$rootUrl/to-rent/details/$id/"
+    override fun getUrlFromWebId(webId: String): String {
+        return "$rootUrl/to-rent/details/$webId/"
     }
 
-    override fun isValidUrl(url: String): Boolean {
-        return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
-    }
-
-    override fun cleanUrl(url: String): String {
-        return url
-    }
-
-    override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
+        ensurePageWithSession(getUrlFromWebId(webId))
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
         val propertyData = Gson().fromJson(json, ZooplaResponse::class.java).props.initialProps.pageProps.data.listing
         val images = mutableListOf<String>()
@@ -204,7 +196,7 @@ class ZooplaService : BaseService() {
         return images
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
+    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
         throw NotImplementedError()
     }
 }

@@ -29,22 +29,20 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
         val propertyUrl = message.propertyUrls
         val messageRejection = propertyUrl.associateWith { false }.toMutableMap()
         val newProperties = mutableListOf<Property>()
-        val savedProperties = store.getProperties().associateBy { it.id }
+        val savedProperties = store.getProperties().associateBy { it.webId }
         propertyUrl.forEach { propertyLink ->
             if (service.isValidUrl(propertyLink)) {
-                val id = service.getPropertyIdFromUrl(propertyLink)
-                val property = savedProperties[id] ?: run {
+                val webId = service.getPropertyIdFromUrl(propertyLink)
+                val property = savedProperties[webId] ?: run {
                     console.d("=======> Fetching property $propertyLink (sent by ${message.senderName})")
-                    service.fetchProperty(id).clone(senderName = message.senderName, messageUrl = message.messageLink)
+                    service.fetchProperty(webId).clone(senderName = message.senderName, messageUrl = message.messageLink)
                 }
                 if (property.isBuddyUp) {
                     if (!GlobalVariables.safeMode) service.tagMessage(message.messageLink, MessageTag.BUDDY_UP)
                 } else if (!validator.checkValid(property)) {
                     if (!property.markedUnsuitable) { // not yet marked as unsuitable
                         if (!GlobalVariables.safeMode) {
-                            val index = (property as? PersistedProperty)?.index
-                            val description = index?.let { "($it)" } ?: ""
-                            service.markAsUnsuitable(id, unsuitable = true, description)
+                            service.markAsUnsuitable(webId, unsuitable = true)
                         }
                     }
                     messageRejection[propertyLink] = true

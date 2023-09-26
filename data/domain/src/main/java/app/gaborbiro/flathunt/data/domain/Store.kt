@@ -15,9 +15,9 @@ interface Store {
 
     fun clearProperties()
 
-    fun getBlacklist(): List<String>
+    fun getBlacklistWebIds(): List<String>
 
-    fun saveBlacklist(ids: List<String>)
+    fun saveBlacklistWebIds (webIds: List<String>)
 
     fun clearBlacklist()
 

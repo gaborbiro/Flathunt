@@ -18,6 +18,6 @@ class SearchUseCase : BaseUseCase() {
         argumentName = "search url",
     )
     { (searchUrl) ->
-        searchRepository.fetchSearchResults(searchUrl)
+        searchRepository.fetchPropertiesFromAllPages(searchUrl)
     }
 }

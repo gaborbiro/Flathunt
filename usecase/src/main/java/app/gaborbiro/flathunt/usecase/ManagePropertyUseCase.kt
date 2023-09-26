@@ -33,25 +33,25 @@ class ManagePropertyUseCase : BaseUseCase() {
 
     private val print = command<String>(
         command = "print",
-        description = "Print a saved property by index or id",
-        argumentName = "index or id",
+        description = "Print a saved property by index or web id",
+        argumentName = "index or web id",
     )
-    { (indexOrId) ->
-        val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val property = propertyRepository.getProperty(indexOrId)
-        GlobalVariables.lastUsedIndexOrId = property?.let { indexOrId }
+    { (indexOrWebId) ->
+        val indexOrWebId = indexOrWebId.checkLastUsedIndexOrWebId()
+        val property = propertyRepository.getProperty(indexOrWebId)
+        GlobalVariables.lastUsedIndexOrWebId = property?.let { indexOrWebId }
         property
             ?.prettyPrint()?.let(::println)
-            ?: run { console.d("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or web id $indexOrWebId") }
     }
 
     private val open = command<String>(
         command = "open",
-        description = "Opens property in browser (by index or id)",
-        argumentName = "index(es) or id(s)",
+        description = "Opens property in browser (by index or web id)",
+        argumentName = "index(es) or web id(s)",
     )
     { (arg) ->
-        getPropertiesByIndexOrIdArray(arg).forEach(propertyRepository::openLinks)
+        getPropertiesByIndexOrWebIdArray(arg).forEach(propertyRepository::openLinks)
     }
 
     private val tyn = command(
@@ -59,87 +59,87 @@ class ManagePropertyUseCase : BaseUseCase() {
         description = "(Thank You Next) Deletes last viewed property, marks it as unsuitable/hidden and opens next index in browser",
     )
     {
-        val next = GlobalVariables.lastUsedIndexOrId?.let { propertyRepository.getNextProperty(it) }
-        getPropertiesByIndexOrIdArray("$").forEach {
+        val next = GlobalVariables.lastUsedIndexOrWebId?.let { propertyRepository.getNextProperty(it) }
+        getPropertiesByIndexOrWebIdArray("$").forEach {
             propertyRepository.deleteProperty(it.index, markAsUnsuitable = true, GlobalVariables.safeMode)
         }
         next?.let {
-            console.d("${it.index} - ${it.id}")
-            GlobalVariables.lastUsedIndexOrId = it.id
+            console.d("${it.index} - ${it.webId}")
+            GlobalVariables.lastUsedIndexOrWebId = it.webId
             propertyRepository.openLinks(it)
         } ?: run { console.d("Nothing to open") }
     }
 
     private val delete = command<String, Boolean>(
         command = "delete",
-        description = "Deletes one or more properties from the database, by indexes or ids (comma separated). " +
+        description = "Deletes one or more properties from the database, by indexes or web ids (comma separated). " +
                 "Pass '-u' after the index to also mark the property as unsuitable.",
-        argumentName1 = "indexes or ids (comma separated)",
+        argumentName1 = "indexes or web ids (comma separated)",
         argumentName2 = "mark as unsuitable (true/false)",
     )
     { (arg, mark) ->
-        getPropertiesByIndexOrIdArray(arg).forEach {
+        getPropertiesByIndexOrWebIdArray(arg).forEach {
             propertyRepository.deleteProperty(it.index, markAsUnsuitable = mark, GlobalVariables.safeMode)
         }
     }
 
     private val mark = command<String, Boolean>(
         command = "mark",
-        description = "Marks one or more properties as unsuitable/hidden or removes such mark, by indexes or ids (comma separated)",
-        argumentName1 = "indexes or ids (comma separated)",
+        description = "Marks one or more properties as unsuitable/hidden or removes such mark, by indexes or web ids (comma separated)",
+        argumentName1 = "indexes or web ids (comma separated)",
         argumentName2 = "unsuitable"
     )
     { (arg, unsuitable) ->
-        getPropertiesByIndexOrIdArray(arg).forEach { propertyRepository.markAsUnsuitable(it, unsuitable) }
+        getPropertiesByIndexOrWebIdArray(arg).forEach { propertyRepository.markAsUnsuitable(it.webId, unsuitable) }
     }
 
     private val comment = command<String, String>(
         command = "comment",
-        description = "Set the comment field of a property, by index or id",
-        argumentName1 = "index or id",
+        description = "Set the comment field of a property, by index or web id",
+        argumentName1 = "index or web id",
         argumentName2 = "comment",
     )
-    { (indexOrId, comment) ->
-        val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val property = propertyRepository.getProperty(indexOrId)
+    { (indexOrWebId, comment) ->
+        val indexOrWebId = indexOrWebId.checkLastUsedIndexOrWebId()
+        val property = propertyRepository.getProperty(indexOrWebId)
         property
             ?.let {
-                GlobalVariables.lastUsedIndexOrId = indexOrId
+                GlobalVariables.lastUsedIndexOrWebId = indexOrWebId
                 propertyRepository.addOrUpdateProperty(it.clone(comment = comment))
             }
-            ?: run { console.d("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or web id $indexOrWebId") }
     }
 
     private val commentAppend = command<String, String>(
         command = "comment+",
-        description = "Append comment to a property, by index or id",
-        argumentName1 = "index or id",
+        description = "Append comment to a property, by index or web id",
+        argumentName1 = "index or web id",
         argumentName2 = "comment",
     )
-    { (indexOrId, comment) ->
-        val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val property = propertyRepository.getProperty(indexOrId)
+    { (indexOrWebId, comment) ->
+        val indexOrWebId = indexOrWebId.checkLastUsedIndexOrWebId()
+        val property = propertyRepository.getProperty(indexOrWebId)
         property
             ?.let {
-                GlobalVariables.lastUsedIndexOrId = indexOrId
+                GlobalVariables.lastUsedIndexOrWebId = indexOrWebId
                 if (comment.isNotBlank()) {
                     propertyRepository.addOrUpdateProperty(it.clone(comment = it.comment + " " + comment))
                 }
             }
-            ?: run { console.d("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or web id $indexOrWebId") }
     }
 
     private val stations = command<String>(
         command = "stations",
-        description = "Find nearest stations, by index or id",
-        argumentName = "index or id",
+        description = "Find nearest stations, by index or web id",
+        argumentName = "index or web id",
     )
-    { (indexOrId) ->
-        val indexOrId = indexOrId.checkLastUsedIndexOrId()
-        val property = propertyRepository.getProperty(indexOrId)
+    { (indexOrWebId) ->
+        val indexOrWebId = indexOrWebId.checkLastUsedIndexOrWebId()
+        val property = propertyRepository.getProperty(indexOrWebId)
         property
             ?.let {
-                GlobalVariables.lastUsedIndexOrId = indexOrId
+                GlobalVariables.lastUsedIndexOrWebId = indexOrWebId
                 it.location
                     ?.let {
                         console.d(
@@ -147,26 +147,26 @@ class ManagePropertyUseCase : BaseUseCase() {
                                 ?: "No nearby stations found"
                         )
                     } ?: run {
-                    console.d("Property $indexOrId does not have a location")
+                    console.d("Property $indexOrWebId does not have a location")
                 }
             }
-            ?: run { console.d("Cannot find property with index or id $indexOrId") }
+            ?: run { console.d("Cannot find property with index or web id $indexOrWebId") }
     }
 
-    private fun getPropertiesByIndexOrIdArray(arg: String): List<PersistedProperty> {
-        val arg = arg.checkLastUsedIndexOrId()
+    private fun getPropertiesByIndexOrWebIdArray(arg: String): List<PersistedProperty> {
+        val arg = arg.checkLastUsedIndexOrWebId()
         var properties = propertyRepository.getProperty(arg)?.let { listOf(it) }
 
         if (properties == null) {
             val tokens = arg.split(Regex("[,\\s]+"))
-            properties = tokens.map { getPropertiesByIndexOrIdArray(it) }.flatten()
-            val notFound = tokens - properties.map { it.index.toString() } - properties.map { it.id }
+            properties = tokens.map { getPropertiesByIndexOrWebIdArray(it) }.flatten()
+            val notFound = tokens - properties.map { it.index.toString() } - properties.map { it.webId }
             if (notFound.isNotEmpty()) {
                 console.d("The following properties were not found in database: ${notFound.joinToString(", ")}")
             }
         }
         if (properties.size == 1) {
-            GlobalVariables.lastUsedIndexOrId = arg
+            GlobalVariables.lastUsedIndexOrWebId = arg
         }
         return properties
     }

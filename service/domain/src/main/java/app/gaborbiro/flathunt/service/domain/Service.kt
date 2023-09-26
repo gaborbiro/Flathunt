@@ -3,7 +3,7 @@ package app.gaborbiro.flathunt.service.domain
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
-import app.gaborbiro.flathunt.service.domain.model.Page
+import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.openqa.selenium.Cookie
 
 interface Service {
@@ -20,25 +20,27 @@ interface Service {
     /**
      * Starting from a page other than the first one is supported.
      */
-    fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int = 0): Page
+    fun getPageInfo(searchUrl: String, propertiesRemoved: Int = 0): PageInfo
 
-    fun fetchProperty(id: String, newTab: Boolean = false): Property
+    fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String?
 
-    fun markAsUnsuitable(id: String, unsuitable: Boolean, description: String)
+    fun fetchProperty(webId: String, newTab: Boolean = false): Property
+
+    fun markAsUnsuitable(webId: String, unsuitable: Boolean)
 
     fun getPropertyIdFromUrl(url: String): String
 
-    fun getUrlFromId(id: String): String
+    fun getUrlFromWebId(webId: String): String
 
     fun isValidUrl(url: String): Boolean
 
     fun cleanUrl(url: String): String
 
-    fun checkUrlOrId(arg: String): String?
+    fun parseUrlOrWebId(arg: String): String?
 
     fun cleanup()
 
-    fun getPhotoUrls(id: String): List<String>
+    fun getPhotoUrls(webId: String): List<String>
 
     fun pinCurrentTabs()
 

@@ -2,15 +2,13 @@ package app.gaborbiro.flathunt.service.idealista
 
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
-import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.domain.Service
-import app.gaborbiro.flathunt.service.domain.model.Page
+import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
-import org.koin.core.component.inject
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
@@ -39,8 +37,7 @@ class IdealistaService : BaseService() {
         driver.findElement(By.id("doLogin")).click()
     }
 
-    override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
-        ensurePageWithSession(searchUrl)
+    override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
         val pagerRegex = Pattern.compile("pagina-([\\d]+)")
         val matcher = pagerRegex.matcher(searchUrl)
         val page = if (matcher.find()) {
@@ -71,27 +68,29 @@ class IdealistaService : BaseService() {
             }
         } while (true)
 
-        return Page(
-            urls = urls,
+        return PageInfo(
+            pageUrl = searchUrl,
+            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
-            nextPage = {
-                if (this.page == this.pageCount) {
-                    null
-                } else {
-                    val uri = URI.create(searchUrl)
-                    val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
-                    if (pathTokens.last().contains("pagina-")) {
-                        searchUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${this.page + 1}")
-                    } else {
-                        searchUrl.replace("?", "pagina-${this.page + 1}?")
-                    }
-                }
-            }
         )
     }
 
-    override fun fetchProperty(driver: WebDriver, id: String): Property {
+    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+        return if (page.page < page.pageCount) {
+            val uri = URI.create(page.pageUrl)
+            val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
+            if (pathTokens.last().contains("pagina-")) {
+                page.pageUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${page.page + 1}")
+            } else {
+                page.pageUrl.replace("?", "pagina-${page.page + 1}?")
+            }
+        } else {
+            null
+        }
+    }
+
+    override fun fetchProperty(driver: WebDriver, webId: String): Property {
         val priceStr = driver.findElements(By.className("info-data-price"))[0].text
         val priceRegex = Pattern.compile("([\\d,\\.]+)\\s€/month")
         val matcher = priceRegex.matcher(priceStr)
@@ -117,7 +116,7 @@ class IdealistaService : BaseService() {
             .split(",")
         val location = LatLon(center[0], center[1])
         return Property(
-            id = id,
+            webId = webId,
             title = driver.findElement(By.className("main-info__title-main")).text,
             prices = arrayOf(Price(priceStr, priceStr, price)),
             furnished = equipped,
@@ -127,8 +126,8 @@ class IdealistaService : BaseService() {
         )
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
+        ensurePageWithSession(getUrlFromWebId(webId))
         runCatching {
             if (unsuitable) {
                 driver.findElement(By.className("icon-delete")).click()
@@ -146,20 +145,12 @@ class IdealistaService : BaseService() {
         }
     }
 
-    override fun getUrlFromId(id: String): String {
-        return "${rootUrl}/imovel/$id/"
+    override fun getUrlFromWebId(webId: String): String {
+        return "${rootUrl}/imovel/$webId/"
     }
 
-    override fun isValidUrl(url: String): Boolean {
-        return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
-    }
-
-    override fun cleanUrl(url: String): String {
-        return url
-    }
-
-    override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
+        ensurePageWithSession(getUrlFromWebId(webId))
         return driver.findElements(By.className("detail-image-gallery")).map { it.getAttribute("data-ondemand-img") }
     }
 }

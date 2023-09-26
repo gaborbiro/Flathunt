@@ -42,7 +42,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
         }
         val (toSave, unsuitable) = properties.partition { property ->
             val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
-            console.d("\n${property.id}: ${property.title}:\n${routes.joinToString(", ")}")
+            console.d("\n${property.webId}: ${property.title}:\n${routes.joinToString(", ")}")
             val propertyWithRoutes = property.withRoutes(routes)
             propertyRepository.addOrUpdateProperty(propertyWithRoutes)
             if (validator.checkValid(propertyWithRoutes)) {
@@ -51,13 +51,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
             } else {
                 if (!propertyWithRoutes.markedUnsuitable) {
                     if (!GlobalVariables.safeMode) {
-                        val index = (propertyWithRoutes as? PersistedProperty)?.index
-                        val description = index?.let { "($it)" } ?: ""
-                        service.markAsUnsuitable(
-                            property.id,
-                            unsuitable = true,
-                            description
-                        )
+                        service.markAsUnsuitable(property.webId, unsuitable = true)
                     }
                 }
                 false

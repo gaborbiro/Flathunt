@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.google.Route
 
 open class Property(
-    val id: String = "",
+    val webId: String,
     val title: String = "",
     val comment: String? = null,
     val markedUnsuitable: Boolean = false,
@@ -32,7 +32,7 @@ open class Property(
 ) : Comparable<Property> {
 
     constructor(property: PersistedProperty) : this(
-        id = property.id,
+        webId = property.webId,
         title = property.title,
         comment = property.comment,
         markedUnsuitable = property.markedUnsuitable,
@@ -60,7 +60,7 @@ open class Property(
     )
 
     override fun compareTo(other: Property): Int {
-        if (id == other.id) return 0
+        if (webId == other.webId) return 0
         return averageScore().compareTo(other.averageScore())
     }
 
@@ -77,7 +77,7 @@ open class Property(
      * Use empty string or empty list.
      */
     fun clone(
-        id: String? = null,
+        webId: String? = null,
         title: String? = null,
         comment: String? = null,
         markedUnsuitable: Boolean? = null,
@@ -103,7 +103,7 @@ open class Property(
         airConditioning: Boolean? = null,
     ): Property {
         return Property(
-            id = id ?: this.id,
+            webId = webId ?: this.webId,
             title = title ?: this.title,
             comment = comment ?: this.comment,
             markedUnsuitable = markedUnsuitable ?: this.markedUnsuitable,
@@ -133,7 +133,7 @@ open class Property(
 
     open fun withRoutes(routes: List<Route>?): Property {
         return Property(
-            id = id,
+            webId = webId,
             title = title,
             comment = comment,
             markedUnsuitable = markedUnsuitable,
@@ -174,7 +174,7 @@ class Price(
 
 class PersistedProperty private constructor(
     val index: Int,
-    id: String,
+    webId: String,
     title: String,
     comment: String?,
     markedUnsuitable: Boolean,
@@ -200,7 +200,7 @@ class PersistedProperty private constructor(
     airConditioning: Boolean?,
     routes: List<Route>?,
 ) : Property(
-    id,
+    webId,
     title,
     comment,
     markedUnsuitable,
@@ -228,7 +228,7 @@ class PersistedProperty private constructor(
 ) {
     constructor(property: Property, index: Int) : this(
         index = index,
-        id = property.id,
+        webId = property.webId,
         title = property.title,
         comment = property.comment,
         markedUnsuitable = property.markedUnsuitable,
@@ -258,7 +258,7 @@ class PersistedProperty private constructor(
     override fun withRoutes(routes: List<Route>?): PersistedProperty {
         return PersistedProperty(
             index = index,
-            id = id,
+            webId = webId,
             title = title,
             comment = comment,
             markedUnsuitable = markedUnsuitable,

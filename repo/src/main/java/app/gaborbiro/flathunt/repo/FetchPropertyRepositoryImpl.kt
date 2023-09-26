@@ -3,7 +3,6 @@ package app.gaborbiro.flathunt.repo
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.prettyPrint
@@ -30,39 +29,37 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
      */
     override fun fetchProperty(arg: String, save: SaveType, safeMode: Boolean): Property? {
-        val cleanUrl = service.checkUrlOrId(arg)
-        if (cleanUrl != null) {
+        val cleanUrl = service.parseUrlOrWebId(arg)
+        return if (cleanUrl != null) {
             console.d()
             console.d(cleanUrl)
-            val id = service.getPropertyIdFromUrl(cleanUrl)
-            GlobalVariables.lastUsedIndexOrId = id
-            val property = service.fetchProperty(id, newTab = true)
+            val webId = service.getPropertyIdFromUrl(cleanUrl)
+            GlobalVariables.lastUsedIndexOrWebId = webId
+            val property = service.fetchProperty(webId, newTab = true)
             if (property.isBuddyUp && save != SaveType.FORCE_SAVE) {
                 console.d("\nBuddy up - skipping...")
                 return null
             }
             val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
             val propertyWithRoutes = property.withRoutes(routes)
-            console.d(propertyWithRoutes.prettyPrint())
+            console.i(propertyWithRoutes.prettyPrint())
             if (validator.checkValid(propertyWithRoutes)) {
                 when (save) {
-                    SaveType.FORCE_SAVE -> repository.addOrUpdateProperty(propertyWithRoutes)
+                    SaveType.SAVE, SaveType.FORCE_SAVE -> repository.addOrUpdateProperty(propertyWithRoutes)
                     SaveType.CHECK -> {}
-                    SaveType.SAVE -> repository.addOrUpdateProperty(propertyWithRoutes)
                 }
             } else if (save == SaveType.FORCE_SAVE) {
                 repository.addOrUpdateProperty(propertyWithRoutes)
             } else if (!propertyWithRoutes.markedUnsuitable) {
                 if (!safeMode) {
-                    val index = (propertyWithRoutes as? PersistedProperty)?.index
-                    val description = index?.let { "($it)" } ?: ""
-                    service.markAsUnsuitable(id, unsuitable = true, description)
+                    service.markAsUnsuitable(webId, unsuitable = true)
                 }
             } else {
                 console.d("\nAlready marked unsuitable")
             }
-            return propertyWithRoutes
+            propertyWithRoutes
+        } else {
+            null
         }
-        return null
     }
 }

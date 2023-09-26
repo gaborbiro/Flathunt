@@ -29,7 +29,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     )
     { (arg) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrId(),
+            arg = arg.checkLastUsedIndexOrWebId(),
             save = SaveType.SAVE,
             safeMode = GlobalVariables.safeMode
         )
@@ -43,7 +43,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     )
     { (arg) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrId(),
+            arg = arg.checkLastUsedIndexOrWebId(),
             save = SaveType.SAVE,
             safeMode = GlobalVariables.safeMode
         )?.let(propertyRepository::openLinks)
@@ -57,7 +57,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     )
     { (arg) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrId(),
+            arg = arg.checkLastUsedIndexOrWebId(),
             save = SaveType.CHECK,
             safeMode = true
         )
@@ -71,7 +71,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     )
     { (arg) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrId(),
+            arg = arg.checkLastUsedIndexOrWebId(),
             save = SaveType.CHECK,
             safeMode = true
         )?.let(propertyRepository::openLinks)
@@ -85,7 +85,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     )
     { (arg) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrId(),
+            arg = arg.checkLastUsedIndexOrWebId(),
             save = SaveType.FORCE_SAVE,
             safeMode = true
         )?.let(propertyRepository::openLinks)

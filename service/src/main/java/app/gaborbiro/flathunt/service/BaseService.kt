@@ -8,7 +8,7 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.Service
-import app.gaborbiro.flathunt.service.domain.model.Page
+import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openqa.selenium.Cookie
@@ -48,12 +48,13 @@ abstract class BaseService : Service, KoinComponent {
 
     protected abstract fun login(driver: WebDriver)
 
-    final override fun fetchLinksFromSearch(searchUrl: String, propertiesRemoved: Int): Page {
+    final override fun getPageInfo(searchUrl: String, propertiesRemoved: Int): PageInfo {
         ensureBrowser()
-        return fetchLinksFromSearch(driver, searchUrl, propertiesRemoved)
+        ensurePageWithSession(searchUrl)
+        return getPageInfo(driver, searchUrl)
     }
 
-    protected abstract fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page
+    protected abstract fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo
 
     override fun openTabs(vararg urls: String): List<String> {
         ensureBrowser()
@@ -80,12 +81,12 @@ abstract class BaseService : Service, KoinComponent {
         }
     }
 
-    final override fun getPhotoUrls(id: String): List<String> {
+    final override fun getPhotoUrls(webId: String): List<String> {
         ensureBrowser()
-        return getPhotoUrls(driver, id)
+        return getPhotoUrls(driver, webId)
     }
 
-    protected abstract fun getPhotoUrls(driver: WebDriver, id: String): List<String>
+    protected abstract fun getPhotoUrls(driver: WebDriver, webId: String): List<String>
 
     override fun closeUnpinnedTabs() {
         val handles: Set<String> = if (tabHandleStack.isNotEmpty()) {
@@ -103,36 +104,45 @@ abstract class BaseService : Service, KoinComponent {
         }
     }
 
-    final override fun fetchProperty(id: String, newTab: Boolean): Property {
+    final override fun fetchProperty(webId: String, newTab: Boolean): Property {
         if (newTab && ::driver.isInitialized) {
             openNewTab()
-            driver[getUrlFromId(id)]
+            driver[getUrlFromWebId(webId)]
         } else {
             ensureBrowser()
-            ensurePageWithSession(getUrlFromId(id))
+            ensurePageWithSession(getUrlFromWebId(webId))
         }
-        return fetchProperty(driver, id)
+        return fetchProperty(driver, webId)
     }
 
-    protected abstract fun fetchProperty(driver: WebDriver, id: String): Property
+    protected abstract fun fetchProperty(driver: WebDriver, webId: String): Property
 
-    final override fun markAsUnsuitable(id: String, unsuitable: Boolean, description: String) {
-        val blacklist = store.getBlacklist().toMutableList().also {
-            it.add(id)
+    final override fun markAsUnsuitable(webId: String, unsuitable: Boolean) {
+        val description = store.getProperties().firstOrNull { it.webId == webId }?.index?.let { "($it)" } ?: "()"
+        val blacklist = store.getBlacklistWebIds().toMutableList().also {
+            it.add(webId)
         }
-        store.saveBlacklist(blacklist)
+        store.saveBlacklistWebIds(blacklist)
         ensureBrowser()
-        markAsUnsuitable(driver, id, unsuitable, description)
+        markAsUnsuitable(driver, webId, unsuitable, description)
     }
 
-    protected abstract fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String)
+    protected abstract fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String)
 
-    override fun checkUrlOrId(arg: String): String? {
+    override fun isValidUrl(url: String): Boolean {
+        return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
+    }
+
+    override fun cleanUrl(url: String): String {
+        return url
+    }
+
+    override fun parseUrlOrWebId(arg: String): String? {
         var cleanUrl = cleanUrl(arg)
         if (!isValidUrl(cleanUrl)) {
             val matcher = cleanUrl.matcher("^([\\d]+)$")
             if (matcher.find()) {
-                cleanUrl = getUrlFromId(arg)
+                cleanUrl = getUrlFromWebId(arg)
             }
         }
         return if (isValidUrl(cleanUrl)) {

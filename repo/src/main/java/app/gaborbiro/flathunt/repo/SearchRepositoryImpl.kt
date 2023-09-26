@@ -11,7 +11,6 @@ import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
 import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.domain.Service
-import app.gaborbiro.flathunt.service.domain.model.Page
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -27,33 +26,27 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val requestCaller: RequestCaller by inject()
     private val console: ConsoleWriter by inject()
 
-    override fun fetchSearchResults(searchUrl: String) {
-        val savedIds = store.getProperties().map { it.id }
+    override fun fetchPropertiesFromAllPages(searchUrl: String) {
+        val storedIds = store.getProperties().map { it.webId }.toSet()
         val addedIds = mutableListOf<String>()
         val failedIds = mutableListOf<String>()
-        var page: Page? = service.fetchLinksFromSearch(searchUrl)
-        while (page != null) {
-            val thePage = page
-            console.d("Fetching page ${thePage.page}/${thePage.pageCount}")
-            val ids = thePage.urls.map { service.getPropertyIdFromUrl(it) }
-            val newIds: List<String> =
-                ids - store.getBlacklist().toSet() - savedIds.toSet() // we don't re-check known properties
-            if (newIds.isNotEmpty()) {
-                newIds.forEachIndexed { i, id ->
-                    console.d("\n=======> Fetching property $id (${i + 1}/${newIds.size} from page ${thePage.page}/${thePage.pageCount}): ")
-                    try {
-                        val property = service.fetchProperty(id)
-                        processProperty(property, thePage)?.let {
-                            addedIds.add(it)
-                        }
-                    } catch (t: Throwable) {
-                        t.printStackTrace()
-                        failedIds.add(id)
-                    }
-                }
+        var currentSearchUrl: String? = searchUrl
+        var markedAsUnsuitableCount = 0
+        do {
+            val pageInfo = service.getPageInfo(currentSearchUrl!!)
+            console.d("Fetching page ${pageInfo.page}/${pageInfo.pageCount}")
+            val blacklistedWebIds = store.getBlacklistWebIds().toSet()
+            val newIds: List<String> = pageInfo.propertyWebIds - blacklistedWebIds - storedIds
+            newIds.forEachIndexed { i, webId ->
+                console.d(
+                    "\n=======> Fetching $webId (${i + 1}/${newIds.size}, page ${pageInfo.page}/${pageInfo.pageCount}): ",
+                    newLine = false
+                )
+                fetchAndProcessProperty(webId, addedIds, failedIds, onMarkedAsUnsuitable = { markedAsUnsuitableCount++ })
             }
-            page = page.nextPage(page)?.let { service.fetchLinksFromSearch(it) }
-        }
+            currentSearchUrl = service.getNextPageUrl(pageInfo, markedAsUnsuitableCount)
+        } while (currentSearchUrl != null)
+
         console.d("\nFinished")
         if (addedIds.isNotEmpty()) {
             console.i("New ids: ${addedIds.joinToString(",")}")
@@ -63,42 +56,54 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         }
     }
 
+    private fun fetchAndProcessProperty(
+        webId: String,
+        addedIds: MutableList<String>,
+        failedIds: MutableList<String>,
+        onMarkedAsUnsuitable: () -> Unit
+    ) {
+        try {
+            val rawProperty = service.fetchProperty(webId)
+            console.d(rawProperty.title)
+            val propertyWithRoutes = processProperty(rawProperty)
+            propertyWithRoutes
+                ?.let {
+                    addedIds.add(webId)
+                    console.i(propertyWithRoutes.prettyPrint())
+                }
+                ?: run {
+                    if (!rawProperty.markedUnsuitable && !GlobalVariables.safeMode) {
+                        propertyRepository.markAsUnsuitable(webId, unsuitable = true)
+                    }
+                    onMarkedAsUnsuitable()
+                    failedIds.add(webId)
+                }
+        } catch (t: Throwable) {
+            console.d()
+            t.printStackTrace()
+            failedIds.add(webId)
+        }
+    }
+
     /**
-     * @return valid id if property was added, null otherwise (rejected or updated only)
+     * @return property with fresh routes if property is valid, null otherwise
      */
-    private fun processProperty(property: Property, page: Page): String? {
-        console.d(property.title)
+    private fun processProperty(property: Property): Property? {
         // pre-validate to save on the Google Maps API call
-        if (!validator.checkValid(property)) {
-            if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
-                propertyRepository.markAsUnsuitable(property, unsuitable = true)
-                page.propertiesRemoved++
-            }
-        } else {
+        val rawPropertyValid = validator.checkValid(property)
+        return if (rawPropertyValid) {
             val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
             val propertyWithRoutes = property.withRoutes(routes)
-            val errors = validator.validate(propertyWithRoutes)
-            if (errors.isNotEmpty()) {
-                console.d(propertyWithRoutes.routes?.joinToString(""))
-                console.d("\nRejected: ${errors.joinToString()}")
-                if (!GlobalVariables.safeMode) {
-                    propertyRepository.markAsUnsuitable(propertyWithRoutes, unsuitable = true)
-                    page.propertiesRemoved++
-                }
+            val propertyWithRoutesValid = validator.checkValid(propertyWithRoutes)
+            if (propertyWithRoutesValid) {
+                console.d(routes.joinToString(""))
+                propertyRepository.addOrUpdateProperty(propertyWithRoutes)
+                propertyWithRoutes
             } else {
-                if (propertyRepository.addOrUpdateProperty(propertyWithRoutes)) {
-                    return propertyWithRoutes.id
-                }
-                propertyRepository.getProperty(propertyWithRoutes.id)
-                    ?.let {
-                        console.d(it.prettyPrint())
-                    }
-                    ?: run {
-                        console.e("Oops. Couldn't find property we just saved (${propertyWithRoutes.id})")
-                    }
-
+                null
             }
+        } else {
+            null
         }
-        return null
     }
 }

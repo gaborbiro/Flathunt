@@ -5,10 +5,10 @@ import org.koin.core.component.KoinComponent
 
 abstract class BaseUseCase : UseCase, KoinComponent {
 
-    protected fun String.checkLastUsedIndexOrId(): String {
-        return GlobalVariables.lastUsedIndexOrId?.let {
+    protected fun String.checkLastUsedIndexOrWebId(): String {
+        return GlobalVariables.lastUsedIndexOrWebId?.let {
             if (this == "$") {
-                GlobalVariables.lastUsedIndexOrId
+                GlobalVariables.lastUsedIndexOrWebId
             } else {
                 this
             }

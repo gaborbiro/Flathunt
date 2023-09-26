@@ -9,7 +9,7 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.BaseService
 import app.gaborbiro.flathunt.service.PriceParseResult
-import app.gaborbiro.flathunt.service.domain.model.Page
+import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
@@ -93,8 +93,7 @@ class SpareRoomService : BaseService() {
         }
     }
 
-    override fun fetchLinksFromSearch(driver: WebDriver, searchUrl: String, propertiesRemoved: Int): Page {
-        ensurePageWithSession(searchUrl)
+    override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
         var page = splitQuery(searchUrl)["offset"]?.let { it.toInt() / 10 } ?: 0
         val urls = driver.findElements(By.className("listing-result")).mapNotNull {
             if (runCatching { it.findElement(By.linkText("Unsuitable")) }.getOrNull() != null) {
@@ -107,25 +106,26 @@ class SpareRoomService : BaseService() {
         val totalSize = driver.findElement(By.id("results_header")).text.split(" of ")[1].split(" ")[0].toInt()
         val pageCount = ceil(totalSize / 10.0).toInt()
         page++
-        return Page(
-            urls = urls,
+        return PageInfo(
+            pageUrl = searchUrl,
+            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
-            propertiesRemoved = propertiesRemoved,
-            nextPage = {
-                if (page < pageCount) {
-                    var searchUrl = searchUrl.replace(Regex("&offset=[\\d]+"), "")
-                    searchUrl = searchUrl.replace(Regex("\\?offset=[\\d]+"), "")
-                    searchUrl + "&offset=${page * 10 - this.propertiesRemoved}"
-                } else {
-                    null
-                }
-            }
         )
     }
 
-    override fun fetchProperty(driver: WebDriver, id: String): Property {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+        return if (page.page < page.pageCount) {
+            var searchUrl = page.pageUrl.replace(Regex("&offset=[\\d]+"), "")
+            searchUrl = searchUrl.replace(Regex("\\?offset=[\\d]+"), "")
+            searchUrl + "&offset=${page.page * 10 - markedAsUnsuitableCount}"
+        } else {
+            null
+        }
+    }
+
+    override fun fetchProperty(driver: WebDriver, webId: String): Property {
+        ensurePageWithSession(getUrlFromWebId(webId))
         with(driver) {
             val roomOnlyPricesXpath =
                 "//div[@class=\"property-details\"]/section[@class=\"feature feature--price_room_only\"]/ul/li"
@@ -183,7 +183,7 @@ class SpareRoomService : BaseService() {
                 }
             }
             return Property(
-                id = id,
+                webId = webId,
                 title = findSimpleText("//h1[1]") ?: MISSING_VALUE,
                 comment = null,
                 markedUnsuitable = linkExists("Marked as unsuitable"),
@@ -242,23 +242,23 @@ class SpareRoomService : BaseService() {
         }
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, id: String, unsuitable: Boolean, description: String) {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
+        ensurePageWithSession(getUrlFromWebId(webId))
         if (unsuitable) {
             runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                 ?.let {
                     it.click()
-                    console.d("$id marked $description")
+                    console.d("$webId marked $description")
                     driver.switchTo().alert().dismiss()
                     return
                 }
             runCatching { driver.findElement(By.linkText("Saved - remove ad")) }.getOrNull()?.let {
                 it.click()
-                ensurePageWithSession(getUrlFromId(id))
+                ensurePageWithSession(getUrlFromWebId(webId))
                 runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                     ?.let {
                         it.click()
-                        console.d("$id marked $description")
+                        console.d("$webId marked $description")
                         driver.switchTo().alert().dismiss()
                         return
                     }
@@ -267,26 +267,26 @@ class SpareRoomService : BaseService() {
                 it.click()
                 runCatching { driver.findElement(By.xpath("//input[@value='unsuitable']")) }.getOrNull()?.click()
                 runCatching { driver.findElement(By.className("submit")) }.getOrNull()?.click()
-                console.d("$id marked $description")
+                console.d("$webId marked $description")
                 return
             }
         } else {
             runCatching { driver.findElement(By.linkText("Marked as Unsuitable")) }.getOrNull()?.let {
                 it.click()
-                ensurePageWithSession(getUrlFromId(id))
+                ensurePageWithSession(getUrlFromWebId(webId))
                 runCatching { driver.findElement(By.linkText("Remove from saved")) }.getOrNull()
                     ?.let {
                         it.click()
                         runCatching { driver.findElement(By.className("submit")) }.getOrNull()
                             ?.let {
                                 it.click()
-                                console.d("$id marked $description")
+                                console.d("$webId marked $description")
                                 return
                             }
                     }
             }
         }
-        console.e("Failed to mark $id $description")
+        console.e("Failed to mark $webId $description")
     }
 
     override fun getPropertyIdFromUrl(url: String): String {
@@ -312,7 +312,7 @@ class SpareRoomService : BaseService() {
         }
     }
 
-    override fun getUrlFromId(id: String) = "$rootUrl/$id"
+    override fun getUrlFromWebId(webId: String) = "$rootUrl/$webId"
 
     override fun isValidUrl(url: String) = url.startsWith(rootUrl) && url.split(rootUrl).size == 2
 
@@ -342,8 +342,8 @@ class SpareRoomService : BaseService() {
         return cleanUrl
     }
 
-    override fun getPhotoUrls(driver: WebDriver, id: String): List<String> {
-        ensurePageWithSession(getUrlFromId(id))
+    override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
+        ensurePageWithSession(getUrlFromWebId(webId))
         return driver.findElements(By.className("photoswipe_me")).map {
             it.findElement(By.tagName("img")).getAttribute("src").replace("square", "large")
         }

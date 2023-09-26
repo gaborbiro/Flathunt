@@ -4,5 +4,5 @@ object GlobalVariables {
     var safeMode = false
     var debug = false
     var strict = false
-    var lastUsedIndexOrId: String? = null
+    var lastUsedIndexOrWebId: String? = null
 }
