@@ -39,13 +39,14 @@ class RightmoveService : BaseService() {
         private const val PASSWORD = "FA2x2+zh+/zD9Gc"
     }
 
-    override fun login(driver: WebDriver) {
+    override fun login(driver: WebDriver): Boolean {
         driver.findElement(By.className("sign-in-link")).click()
         driver.findElement(By.id("email-input")).click()
         driver.findElement(By.id("email-input")).sendKeys(USERNAME)
         driver.findElement(By.id("password-input")).click()
         driver.findElement(By.id("password-input")).sendKeys(PASSWORD)
         driver.findElement(By.id("submit")).click()
+        return true
     }
 
     override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {

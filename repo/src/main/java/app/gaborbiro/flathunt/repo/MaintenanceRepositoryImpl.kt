@@ -2,7 +2,6 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
-import app.gaborbiro.flathunt.data.domain.model.Cookies
 import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.service.domain.Service
 import org.koin.core.annotation.Singleton

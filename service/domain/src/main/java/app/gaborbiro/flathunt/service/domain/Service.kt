@@ -8,11 +8,6 @@ import org.openqa.selenium.Cookie
 
 interface Service {
 
-    /**
-     * Assumes root url is open
-     */
-    fun login()
-
     fun openTabs(vararg urls: String): List<String>
 
     fun openHTML(html: String)
@@ -22,11 +17,17 @@ interface Service {
      */
     fun getPageInfo(searchUrl: String, propertiesRemoved: Int = 0): PageInfo
 
-    fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String?
-
     fun fetchProperty(webId: String, newTab: Boolean = false): Property
 
     fun markAsUnsuitable(webId: String, unsuitable: Boolean)
+
+    fun getPhotoUrls(webId: String): List<String>
+
+    fun fetchMessages(safeMode: Boolean): List<Message>
+
+    fun tagMessage(messageUrl: String, vararg tags: MessageTag)
+
+    fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String?
 
     fun getPropertyIdFromUrl(url: String): String
 
@@ -40,15 +41,9 @@ interface Service {
 
     fun cleanup()
 
-    fun getPhotoUrls(webId: String): List<String>
-
     fun pinCurrentTabs()
 
     fun closeUnpinnedTabs()
-
-    fun fetchMessages(safeMode: Boolean): List<Message>
-
-    fun tagMessage(messageUrl: String, vararg tags: MessageTag)
 
     fun clearCookies()
 

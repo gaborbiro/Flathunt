@@ -36,7 +36,7 @@ class ZooplaService : BaseService() {
         private const val PASSWORD = "PS3em?jyK6y&s\$\$"
     }
 
-    override fun beforeSession(driver: WebDriver) {
+    override fun beforeEnsureSession(driver: WebDriver) {
         Thread.sleep(500)
         runCatching {
             driver.switchTo().frame("gdpr-consent-notice")
@@ -45,13 +45,14 @@ class ZooplaService : BaseService() {
         }
     }
 
-    override fun login(driver: WebDriver) {
+    override fun login(driver: WebDriver): Boolean {
         driver.findElement(By.className("css-1rwrl3a")).click()
         driver.findElement(By.id("input-email-address")).click()
         driver.findElement(By.id("input-email-address")).sendKeys(USERNAME)
         driver.findElement(By.id("input-password")).click()
         driver.findElement(By.id("input-password")).sendKeys(PASSWORD)
         driver.findElement(By.className("e1oiir0n4")).click()
+        return true
     }
 
     override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {

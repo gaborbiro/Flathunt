@@ -30,11 +30,8 @@ class IdealistaService : BaseService() {
         private const val PASSWORD = "1qazse45rdxSW2"
     }
 
-    override fun login(driver: WebDriver) {
-        driver.findElement(By.className("icon-user-no-logged")).click()
-        driver.findElement(By.className("js-email-field")).sendKeys(USERNAME)
-        driver.findElement(By.className("js-password-field")).sendKeys(PASSWORD)
-        driver.findElement(By.id("doLogin")).click()
+    override fun login(driver: WebDriver): Boolean {
+        return false
     }
 
     override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {

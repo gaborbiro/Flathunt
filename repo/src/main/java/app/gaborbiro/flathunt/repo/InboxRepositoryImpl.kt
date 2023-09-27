@@ -4,7 +4,6 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
-import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.InboxRepository
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag

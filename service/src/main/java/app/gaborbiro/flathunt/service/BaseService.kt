@@ -34,19 +34,7 @@ abstract class BaseService : Service, KoinComponent {
     private val store: Store by inject()
     private val console: ConsoleWriter by inject()
 
-    protected open fun beforeSession(driver: WebDriver) {
-
-    }
-
-    protected open fun afterSession(driver: WebDriver) {
-
-    }
-
-    final override fun login() {
-        login(driver)
-    }
-
-    protected abstract fun login(driver: WebDriver)
+    protected abstract fun login(driver: WebDriver): Boolean
 
     final override fun getPageInfo(searchUrl: String, propertiesRemoved: Int): PageInfo {
         ensureBrowser()
@@ -159,111 +147,6 @@ abstract class BaseService : Service, KoinComponent {
         }
     }
 
-    fun ensurePageWithSession(vararg expectedUrls: String) {
-        runCatching { driver.currentUrl }.exceptionOrNull()?.let {
-            driver.switchTo().window("")
-        }
-        val finalUrls = if (expectedUrls.isEmpty()) {
-            arrayOf(rootUrl)
-        } else expectedUrls
-
-        if (finalUrls.none { url -> driver.currentUrl.startsWith(url) }) {
-            // none of the expected urls are open
-            try {
-                driver[finalUrls[0]]
-            } catch (e: NoSuchWindowException) {
-                openNewTab()
-                driver[finalUrls[0]]
-            }
-        } else {
-            // expected url already open
-        }
-        val refresh = ensureSession {
-            login()
-            Thread.sleep(500)
-            store.saveCookies(Cookies(driver.manage().cookies))
-        }
-        if (refresh) {
-            driver[finalUrls[0]]
-        }
-    }
-
-    private fun ensureSession(onSessionUnavailable: () -> Unit): Boolean {
-        beforeSession(driver)
-        val storedCookies: Set<Cookie>? = store.getCookies()?.cookies
-        val browserCookies = driver.manage().cookies
-        var sessionAvailable = false
-        var needsLogin = true
-        if (storedCookies != null) {
-            runCatching {
-                if (browserCookies.hasSession()) {
-                    // browser already has session cookies, nothing to do
-                    sessionAvailable = true
-                    needsLogin = false
-                } else {
-                    // browser has no session cookies
-
-                    if (storedCookies.hasSession()) {
-                        // we have session cookies stored
-                        driver.manage().deleteAllCookies()
-                        storedCookies.forEach { driver.manage().addCookie(it) }
-                        sessionAvailable = false
-                        needsLogin = false
-                    }
-                }
-            }
-        }
-        if (needsLogin) {
-            onSessionUnavailable()
-        }
-        afterSession(driver)
-        return sessionAvailable.not()
-    }
-
-    private fun Set<Cookie>?.hasSession(): Boolean {
-        return this
-            ?.firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
-            ?.let { it.expiry > Date() }
-            ?: false
-    }
-
-    private fun ensureBrowser() {
-        if (!::driver.isInitialized) {
-            System.setProperty("webdriver.chrome.driver", Paths.get("chromedriver.exe").toString())
-            driver = ChromeDriver(
-                ChromeOptions().apply {
-                    // https://peter.sh/experiments/chromium-command-line-switches/
-                    // start-maximized
-                    // window-position=0,0", "window-size=1,1
-                    addArguments("start-maximized")
-                    setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
-                }
-            )
-        }
-    }
-
-    /**
-     * The window handle of the new tab is the last item in driver.windowHandles
-     */
-    private fun openNewTab(retry: Boolean = true): String? {
-        val oldWindowHandles = driver.windowHandles
-        return try {
-            (driver as RemoteWebDriver).executeScript("window.open()")
-            // selenium doesn't tell us the handle of the newly opened tab
-            val newWindowHandles = driver.windowHandles
-            val newHandle = newWindowHandles.first { it !in oldWindowHandles }
-            driver.switchTo().window(newHandle)
-            newHandle
-        } catch (e: NoSuchWindowException) { // user can close main tab any time, pick a new one as main
-            if (retry) {
-                driver.switchTo().window("")
-                openNewTab(retry = false)
-            } else {
-                null
-            }
-        }
-    }
-
     final override fun fetchMessages(safeMode: Boolean): List<Message> {
         ensureBrowser()
         return fetchMessages(driver, safeMode)
@@ -295,5 +178,120 @@ abstract class BaseService : Service, KoinComponent {
 
     override fun saveCookies() {
         store.saveCookies(Cookies(driver.manage().cookies))
+    }
+
+    private fun ensureBrowser() {
+        if (!::driver.isInitialized) {
+            System.setProperty("webdriver.chrome.driver", Paths.get("chromedriver.exe").toString())
+            driver = ChromeDriver(
+                ChromeOptions().apply {
+                    // https://peter.sh/experiments/chromium-command-line-switches/
+                    // start-maximized
+                    // window-position=0,0", "window-size=1,1
+                    addArguments("start-maximized")
+                    setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
+                }
+            )
+        }
+    }
+
+    protected fun ensurePageWithSession(vararg expectedUrls: String) {
+        runCatching { driver.currentUrl }.exceptionOrNull()?.let {
+            driver.switchTo().window("")
+        }
+        val finalUrls = if (expectedUrls.isEmpty()) {
+            arrayOf(rootUrl)
+        } else expectedUrls
+
+        if (finalUrls.none { url -> driver.currentUrl.startsWith(url) }) {
+            // none of the expected urls are open
+            try {
+                driver[finalUrls[0]]
+            } catch (e: NoSuchWindowException) {
+                openNewTab()
+                driver[finalUrls[0]]
+            }
+        } else {
+            // at least one expected url already open
+        }
+
+        val refresh = ensureSession()
+
+        if (refresh) {
+            driver[finalUrls[0]]
+        }
+    }
+
+    private fun ensureSession(): Boolean {
+        beforeEnsureSession(driver)
+
+        var needsRefresh = false
+        var sessionAvailable = false
+        val storedCookies: Set<Cookie>? = store.getCookies()?.cookies
+
+        if (storedCookies != null) {
+            runCatching {
+                if (driver.manage().cookies.hasSession()) {
+                    // browser already has valid session cookies, nothing to do
+                    sessionAvailable = true
+                } else {
+                    // browser has no session cookies
+                    if (storedCookies.hasSession()) {
+                        // we have session cookies stored
+                        driver.manage().deleteAllCookies()
+                        storedCookies.forEach { driver.manage().addCookie(it) }
+                        sessionAvailable = true
+                        needsRefresh = true
+                    }
+                }
+            }
+        }
+
+        if (sessionAvailable.not() && login(driver)) {
+            Thread.sleep(500)
+            saveCookies()
+        }
+
+        afterEnsureSession(driver)
+
+        return needsRefresh
+    }
+
+    protected open fun beforeEnsureSession(driver: WebDriver) {
+        // override in subclass
+    }
+
+
+    protected open fun afterEnsureSession(driver: WebDriver) {
+        // override in subclass
+    }
+
+    private fun Set<Cookie>?.hasSession(): Boolean {
+        return this
+            ?.firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
+            ?.let { it.expiry > Date() }
+            ?: false
+    }
+
+    /**
+     * The window handle of the new tab is the last item in driver.windowHandles
+     */
+    private fun openNewTab(retry: Boolean = true): String? {
+        val oldWindowHandles = driver.windowHandles
+        return try {
+            (driver as RemoteWebDriver).executeScript("window.open()")
+            // selenium doesn't tell us the handle of the newly opened tab
+            val newWindowHandles = driver.windowHandles
+            val newHandle = newWindowHandles.first { it !in oldWindowHandles }
+            driver.switchTo().window(newHandle)
+            newHandle
+        } catch (e: NoSuchWindowException) { // user can close main tab any time, pick a new one as main
+            if (retry) {
+                driver.switchTo().window("")
+                openNewTab(retry = false)
+            } else {
+                null
+            }
+        }
     }
 }

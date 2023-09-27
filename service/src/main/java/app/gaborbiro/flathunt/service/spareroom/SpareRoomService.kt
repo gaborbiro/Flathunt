@@ -38,20 +38,21 @@ class SpareRoomService : BaseService() {
 
     private val console: ConsoleWriter by inject()
 
-    override fun afterSession(driver: WebDriver) {
+    override fun afterEnsureSession(driver: WebDriver) {
         if (driver.findElements(By.className("show-user-auth-popup")).isNotEmpty()) {
             // old session
-            login()
+            login(driver)
         }
     }
 
-    override fun login(driver: WebDriver) {
+    override fun login(driver: WebDriver): Boolean {
         driver.findElement(By.className("show-user-auth-popup")).click()
         driver.findElement(By.id("loginemail")).click()
         driver.findElement(By.id("loginemail")).sendKeys(USERNAME)
         driver.findElement(By.id("loginpass")).click()
         driver.findElement(By.id("loginpass")).sendKeys(PASSWORD)
         driver.findElement(By.id("sign-in-button")).click()
+        return true
     }
 
     /**
