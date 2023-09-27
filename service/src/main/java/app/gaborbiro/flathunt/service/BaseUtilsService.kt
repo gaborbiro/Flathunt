@@ -39,4 +39,6 @@ abstract class BaseUtilsService : UtilsService, KoinComponent {
             null
         }
     }
+
+    override fun domain() = sessionCookieDomain
 }

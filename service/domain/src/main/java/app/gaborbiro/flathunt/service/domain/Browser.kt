@@ -12,7 +12,7 @@ interface Browser {
 
     fun cleanup()
 
-    fun pinCurrentTabs()
+    fun pinTabs()
 
     fun closeUnpinnedTabs()
 

@@ -4,6 +4,7 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.service.domain.Browser
+import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
@@ -17,7 +18,7 @@ import java.util.stream.Stream
 class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
 
     private val store: Store by inject()
-    private val webService: WebService by inject()
+    private val utilsService: UtilsService by inject()
     private val browser: Browser by inject()
     private val console: ConsoleWriter by inject()
 
@@ -65,7 +66,7 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
                     }
                 }
                 .map { (key, value) ->
-                    Cookie.Builder(key, value).build()
+                    Cookie.Builder(key, value).domain(utilsService.domain()).build()
                 }
                 .collect(Collectors.toList())
             if (cookies.isNotEmpty()) {

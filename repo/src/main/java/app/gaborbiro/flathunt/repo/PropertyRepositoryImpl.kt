@@ -102,7 +102,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
 
     override fun openLinks(property: Property) {
         browser.closeUnpinnedTabs()
-        browser.pinCurrentTabs()
+        browser.pinTabs()
         val urls = mutableListOf<String>()
         property.messageUrl?.let(urls::add)
         if (property.routes?.isNotEmpty() != true) {

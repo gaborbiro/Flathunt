@@ -5,6 +5,9 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 
+/**
+ * All calls in this interface require session and an open webpage
+ */
 interface WebService {
 
     fun getPageInfo(searchUrl: String, propertiesRemoved: Int = 0): PageInfo

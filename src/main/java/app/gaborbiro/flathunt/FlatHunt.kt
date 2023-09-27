@@ -132,6 +132,7 @@ class FlatHunt {
                 MaintenanceUseCase(),
                 ListUseCase(),
                 FetchPropertyUseCase(),
+                ManagePropertyUseCase(),
             )
 
             Constants.`spareroom-exp` -> setOf(

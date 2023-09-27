@@ -15,4 +15,6 @@ interface UtilsService {
     fun cleanUrl(url: String): String
 
     fun parseUrlOrWebId(arg: String): String?
+
+    fun domain(): String
 }

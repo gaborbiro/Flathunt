@@ -104,7 +104,7 @@ class IdealistaWebService : BaseWebService() {
 
     override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
         ensurePageWithSession(utilsService.getUrlFromWebId(webId))
-
+        driver.findElements(By.className("discard-btn"))[1].click()
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {

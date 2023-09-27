@@ -75,7 +75,7 @@ class BrowserImpl : Browser, KoinComponent {
     /**
      * Tabs opened after calling this method can be al closed by calling a popTabHandles
      */
-    override fun pinCurrentTabs() {
+    override fun pinTabs() {
         runCatching {
             tabHandleStack.push(driver.windowHandles)
         }

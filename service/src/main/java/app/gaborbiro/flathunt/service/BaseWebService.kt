@@ -1,5 +1,6 @@
 package app.gaborbiro.flathunt.service
 
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
@@ -22,6 +23,7 @@ abstract class BaseWebService : WebService, KoinComponent {
     protected abstract val sessionCookieDomain: String
 
     private val store: Store by inject()
+    private val console: ConsoleWriter by inject()
     protected val utilsService: UtilsService by inject()
     private var browserLaunched: Boolean = false
 
@@ -55,6 +57,7 @@ abstract class BaseWebService : WebService, KoinComponent {
         }
         store.saveBlacklistWebIds(blacklist)
         markAsUnsuitable(driver, webId, unsuitable, description)
+        console.d("Marked as unsuitable")
     }
 
     protected abstract fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String)
@@ -113,9 +116,9 @@ abstract class BaseWebService : WebService, KoinComponent {
             Thread.sleep(500)
             browser.saveCookies()
         }
-//        if (refresh) {
-//            driver[finalUrls[0]]
-//        }
+        if (refresh) {
+            driver[finalUrls[0]]
+        }
     }
 
     protected abstract fun login(driver: WebDriver): Boolean
