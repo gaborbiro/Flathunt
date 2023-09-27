@@ -10,12 +10,12 @@ import app.gaborbiro.flathunt.data.di.DataModule
 import app.gaborbiro.flathunt.repo.di.RepoModule
 import app.gaborbiro.flathunt.request.di.RequestModule
 import app.gaborbiro.flathunt.service.di.ServiceModule
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.UtilsService
+import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.StringQualifier
 import org.koin.dsl.module
-import org.koin.dsl.single
 import org.koin.ksp.generated.module
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver
@@ -62,9 +62,12 @@ fun setupKoin(serviceConfig: String): KoinApplication {
     }
     app.modules(serviceModule)
     val serviceNameModule = module {
-        single<Service> {
-            val serviceName: String = app.koin.get(StringQualifier("serviceName"))
-            app.koin.get(StringQualifier(serviceName))
+        val serviceName: String = app.koin.get(StringQualifier("serviceName"))
+        single<WebService> {
+            app.koin.get(StringQualifier(serviceName + "_web"))
+        }
+        single<UtilsService> {
+            app.koin.get(StringQualifier(serviceName + "_utils"))
         }
     }
     app.modules(serviceNameModule)

@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.repo.domain.InboxRepository
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.RoutesRepository
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
@@ -12,7 +12,7 @@ import org.koin.core.component.inject
 
 class InboxUseCase : BaseUseCase() {
 
-    private val service: Service by inject()
+    private val webService: WebService by inject()
     private val routesRepository: RoutesRepository by inject()
     private val inboxRepository: InboxRepository by inject()
     private val propertyRepository: PropertyRepository by inject()

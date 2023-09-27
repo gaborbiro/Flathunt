@@ -1,17 +1,18 @@
 package app.gaborbiro.flathunt.service.rightmove
 
-import app.gaborbiro.flathunt.*
-import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.request.RequestCaller
-import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.PriceParseResult
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
+import app.gaborbiro.flathunt.splitQuery
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.inject
@@ -23,8 +24,8 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Singleton
-@Named(Constants.rightmove)
-class RightmoveService : BaseService() {
+@Named(Constants.rightmove + "_web")
+class RightmoveWebService : BaseWebService() {
 
     override val rootUrl = "https://www.rightmove.co.uk"
     override val sessionCookieName = "rmsessionid"
@@ -57,7 +58,7 @@ class RightmoveService : BaseService() {
         val urls = listItems.mapNotNull {
             if (it.findElements(By.className("property-hidden-container")).isEmpty()) {
                 val id = (it as RemoteWebElement).getAttribute("id")
-                getUrlFromWebId(id)
+                utilsService.getUrlFromWebId(id)
             } else {
                 null
             }
@@ -65,24 +66,14 @@ class RightmoveService : BaseService() {
         page++
         return PageInfo(
             pageUrl = searchUrl,
-            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
+            propertyWebIds = urls.map { utilsService.getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
         )
     }
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
-        return if (page.page < page.pageCount) {
-            var searchUrl = page.pageUrl.replace(Regex("&index=[\\d]+"), "")
-            searchUrl = searchUrl.replace(Regex("\\?index=[\\d]+"), "")
-            searchUrl + "&index=${page.page * 24}"
-        } else {
-            null
-        }
-    }
-
     override fun fetchProperty(driver: WebDriver, webId: String): Property {
-        ensurePageWithSession(getUrlFromWebId(webId))
+        ensurePageWithSession(utilsService.getUrlFromWebId(webId))
         with(driver) {
             val location = findElement(By.className("_1kck3jRw2PGQSOEy3Lihgp"))
                 .findElement(By.tagName("img"))
@@ -172,23 +163,6 @@ class RightmoveService : BaseService() {
         } ?: run {
             console.e("Unable to mark property. We don't have any cookies.")
         }
-    }
-
-    override fun getPropertyIdFromUrl(url: String): String {
-        return if (isValidUrl(url)) {
-            val matcher = url.matcher("(?<id>[\\d]+)")
-            if (matcher.find()) {
-                matcher.group("id")
-            } else {
-                throw IllegalArgumentException("Unable to get property id from $url (missing id)")
-            }
-        } else {
-            throw IllegalArgumentException("Unable to get property id from $url (invalid url)")
-        }
-    }
-
-    override fun getUrlFromWebId(webId: String): String {
-        return "$rootUrl/properties/$webId#/"
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {

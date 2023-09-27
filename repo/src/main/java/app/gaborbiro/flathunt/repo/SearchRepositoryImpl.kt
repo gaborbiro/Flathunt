@@ -10,7 +10,8 @@ import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
 import app.gaborbiro.flathunt.request.RequestCaller
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.UtilsService
+import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -19,7 +20,8 @@ import org.koin.core.component.inject
 class SearchRepositoryImpl : SearchRepository, KoinComponent {
 
     private val store: Store by inject()
-    private val service: Service by inject()
+    private val webService: WebService by inject()
+    private val utilsService: UtilsService by inject()
     private val criteria: ValidationCriteria by inject()
     private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
@@ -33,7 +35,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         var currentSearchUrl: String? = searchUrl
         var markedAsUnsuitableCount = 0
         do {
-            val pageInfo = service.getPageInfo(currentSearchUrl!!)
+            val pageInfo = webService.getPageInfo(currentSearchUrl!!)
             console.d("Fetching page ${pageInfo.page}/${pageInfo.pageCount}")
             val blacklistedWebIds = store.getBlacklistWebIds().toSet()
             val newIds: List<String> = pageInfo.propertyWebIds - blacklistedWebIds - storedIds
@@ -42,9 +44,13 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
                     "\n=======> Fetching $webId (${i + 1}/${newIds.size}, page ${pageInfo.page}/${pageInfo.pageCount}): ",
                     newLine = false
                 )
-                fetchAndProcessProperty(webId, addedIds, failedIds, onMarkedAsUnsuitable = { markedAsUnsuitableCount++ })
+                fetchAndProcessProperty(
+                    webId,
+                    addedIds,
+                    failedIds,
+                    onMarkedAsUnsuitable = { markedAsUnsuitableCount++ })
             }
-            currentSearchUrl = service.getNextPageUrl(pageInfo, markedAsUnsuitableCount)
+            currentSearchUrl = utilsService.getNextPageUrl(pageInfo, markedAsUnsuitableCount)
         } while (currentSearchUrl != null)
 
         console.d("\nFinished")
@@ -63,7 +69,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         onMarkedAsUnsuitable: () -> Unit
     ) {
         try {
-            val rawProperty = service.fetchProperty(webId)
+            val rawProperty = webService.fetchProperty(webId)
             console.d(rawProperty.title)
             val propertyWithRoutes = processProperty(rawProperty)
             propertyWithRoutes

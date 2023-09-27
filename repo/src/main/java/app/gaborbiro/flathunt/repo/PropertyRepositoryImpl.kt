@@ -6,7 +6,9 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.Browser
+import app.gaborbiro.flathunt.service.domain.UtilsService
+import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -15,7 +17,9 @@ import org.koin.core.component.inject
 class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
 
     private val store: Store by inject()
-    private val service: Service by inject()
+    private val webService: WebService by inject()
+    private val utilsService: UtilsService by inject()
+    private val browser: Browser by inject()
     private val criteria: ValidationCriteria by inject()
     private val validator: PropertyValidator by inject()
     private val console: ConsoleWriter by inject()
@@ -67,7 +71,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
             store.overrideProperties(properties)
             console.d("Property deleted")
             if (markAsUnsuitable && !safeMode) {
-                service.markAsUnsuitable(property.webId, unsuitable = true)
+                webService.markAsUnsuitable(property.webId, unsuitable = true)
             }
             true
         } ?: run {
@@ -76,7 +80,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     }
 
     override fun getPropertyUrl(webId: String): String {
-        return service.getUrlFromWebId(webId)
+        return utilsService.getUrlFromWebId(webId)
     }
 
     override fun clearProperties() {
@@ -97,8 +101,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     }
 
     override fun openLinks(property: Property) {
-        service.closeUnpinnedTabs()
-        service.pinCurrentTabs()
+        browser.closeUnpinnedTabs()
+        browser.pinCurrentTabs()
         val urls = mutableListOf<String>()
         property.messageUrl?.let(urls::add)
         if (property.routes?.isNotEmpty() != true) {
@@ -133,21 +137,21 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
                     "&key=${LocalProperties.googleApiKey}"
         }?.replace(",", "%2C")
 
-        service.openTabs(*urls.toTypedArray())
+        browser.openTabs(*urls.toTypedArray())
 
         val photoUrls = mutableListOf<String>()
         staticMapUrl?.let { photoUrls.add(it) }
-        photoUrls.addAll(service.getPhotoUrls(property.webId))
+        photoUrls.addAll(webService.getPhotoUrls(property.webId))
         if (photoUrls.isNotEmpty()) {
             val html = photoUrls.joinToString("") {
                 "<img src=\"$it\" width=\"500\" align=\"top\">"
             }
-            service.openHTML(html)
+            browser.openHTML(html)
         }
     }
 
     override fun markAsUnsuitable(webId: String, unsuitable: Boolean) {
-        service.markAsUnsuitable(webId, unsuitable)
+        webService.markAsUnsuitable(webId, unsuitable)
     }
 
     override fun getNextProperty(indexOrWebId: String): PersistedProperty? {

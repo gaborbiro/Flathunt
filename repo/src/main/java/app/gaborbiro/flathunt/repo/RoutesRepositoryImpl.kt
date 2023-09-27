@@ -9,7 +9,7 @@ import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.RoutesRepository
 import app.gaborbiro.flathunt.request.RequestCaller
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -18,7 +18,7 @@ import org.koin.core.component.inject
 class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
 
     private val store: Store by inject()
-    private val service: Service by inject()
+    private val webService: WebService by inject()
     private val criteria: ValidationCriteria by inject()
     private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
@@ -50,7 +50,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
             } else {
                 if (!propertyWithRoutes.markedUnsuitable) {
                     if (!GlobalVariables.safeMode) {
-                        service.markAsUnsuitable(property.webId, unsuitable = true)
+                        webService.markAsUnsuitable(property.webId, unsuitable = true)
                     }
                 }
                 false

@@ -10,7 +10,8 @@ import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.model.SaveType
 import app.gaborbiro.flathunt.request.RequestCaller
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.UtilsService
+import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -18,7 +19,8 @@ import org.koin.core.component.inject
 @Singleton
 class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
 
-    private val service: Service by inject()
+    private val webService: WebService by inject()
+    private val utilsService: UtilsService by inject()
     private val criteria: ValidationCriteria by inject()
     private val repository: PropertyRepository by inject()
     private val validator: PropertyValidator by inject()
@@ -29,14 +31,14 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
      */
     override fun fetchProperty(arg: String, save: SaveType, safeMode: Boolean): Property? {
-        val cleanUrl = service.parseUrlOrWebId(arg)
+        val cleanUrl = utilsService.parseUrlOrWebId(arg)
 
         return if (cleanUrl != null) {
             console.d()
             console.d(cleanUrl)
-            val webId = service.getPropertyIdFromUrl(cleanUrl)
+            val webId = utilsService.getPropertyIdFromUrl(cleanUrl)
             GlobalVariables.lastUsedIndexOrWebId = webId
-            val property = service.fetchProperty(webId)
+            val property = webService.fetchProperty(webId)
             if (property.isBuddyUp && save != SaveType.FORCE_SAVE) {
                 console.d("\nBuddy up - skipping...")
                 return null
@@ -53,7 +55,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                 repository.addOrUpdateProperty(propertyWithRoutes)
             } else if (!propertyWithRoutes.markedUnsuitable) {
                 if (!safeMode) {
-                    service.markAsUnsuitable(webId, unsuitable = true)
+                    webService.markAsUnsuitable(webId, unsuitable = true)
                 }
             } else {
                 console.d("\nAlready marked unsuitable")

@@ -3,7 +3,8 @@ package app.gaborbiro.flathunt.repo
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.Browser
+import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -16,7 +17,8 @@ import java.util.stream.Stream
 class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
 
     private val store: Store by inject()
-    private val service: Service by inject()
+    private val webService: WebService by inject()
+    private val browser: Browser by inject()
     private val console: ConsoleWriter by inject()
 
     override fun backup(path: String) {
@@ -40,7 +42,7 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
 
     override fun clearCookies() {
 //        store.clearCookies()
-        service.clearCookies()
+        browser.clearCookies()
     }
 
     override fun importCookiesToBrowser(path: String) {
@@ -67,12 +69,12 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
                 }
                 .collect(Collectors.toList())
             if (cookies.isNotEmpty()) {
-                service.addOrUpdateCookies(cookies)
+                browser.addOrUpdateCookies(cookies)
             }
         }
     }
 
     override fun saveCookies() {
-        service.saveCookies()
+        browser.saveCookies()
     }
 }

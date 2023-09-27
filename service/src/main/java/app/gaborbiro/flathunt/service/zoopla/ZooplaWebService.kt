@@ -5,8 +5,7 @@ import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.matcher
-import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.PriceParseResult
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
@@ -22,8 +21,8 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Singleton
-@Named(Constants.zoopla)
-class ZooplaService : BaseService() {
+@Named(Constants.zoopla + "_web")
+class ZooplaWebService : BaseWebService() {
 
     override val rootUrl = "https://www.zoopla.co.uk"
     override val sessionCookieName = "_cs_s"
@@ -65,24 +64,14 @@ class ZooplaService : BaseService() {
         page++
         return PageInfo(
             pageUrl = searchUrl,
-            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
+            propertyWebIds = urls.map { utilsService.getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
         )
     }
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
-        return if (page.page < page.pageCount) {
-            var searchUrl = page.pageUrl.replace(Regex("&pn=[\\d]+"), "")
-            searchUrl = searchUrl.replace(Regex("\\?pn=[\\d]+"), "")
-            "$searchUrl&pn=$page"
-        } else {
-            null
-        }
-    }
-
     override fun fetchProperty(driver: WebDriver, webId: String): Property {
-        ensurePageWithSession(getUrlFromWebId(webId))
+        ensurePageWithSession(utilsService.getUrlFromWebId(webId))
 
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
         val propertyData = Gson().fromJson(json, ZooplaResponse::class.java)
@@ -159,23 +148,6 @@ class ZooplaService : BaseService() {
             },
             routes = null
         )
-    }
-
-    override fun getPropertyIdFromUrl(url: String): String {
-        return if (isValidUrl(url)) {
-            val matcher = url.matcher("(?<id>[\\d]+)")
-            if (matcher.find()) {
-                matcher.group("id")
-            } else {
-                throw IllegalArgumentException("Unable to get property id from $url (missing id)")
-            }
-        } else {
-            throw IllegalArgumentException("Unable to get property id from $url (invalid url)")
-        }
-    }
-
-    override fun getUrlFromWebId(webId: String): String {
-        return "$rootUrl/to-rent/details/$webId/"
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {

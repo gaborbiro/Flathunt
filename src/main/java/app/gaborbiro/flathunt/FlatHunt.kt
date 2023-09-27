@@ -3,7 +3,7 @@ package app.gaborbiro.flathunt
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.di.setupKoin
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.domain.Browser
 import app.gaborbiro.flathunt.service.spareroom.usecase.InboxUseCase
 import app.gaborbiro.flathunt.usecase.*
 import app.gaborbiro.flathunt.usecase.base.UseCase
@@ -55,7 +55,7 @@ class FlatHunt {
             processInput(reader, parseCommandUseCase, commandUseCase, console)
         }
 
-        app.koin.get<Service>().cleanup()
+        app.koin.get<Browser>().cleanup()
     }
 
     private fun processInput(

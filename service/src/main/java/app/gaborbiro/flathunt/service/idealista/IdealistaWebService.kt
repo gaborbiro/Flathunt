@@ -4,11 +4,13 @@ import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.service.BaseService
-import app.gaborbiro.flathunt.service.domain.Service
+import app.gaborbiro.flathunt.service.BaseWebService
+import app.gaborbiro.flathunt.service.domain.UtilsService
+import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
+import org.koin.core.component.inject
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
@@ -17,20 +19,13 @@ import java.net.URI
 import java.text.DecimalFormat
 import java.util.regex.Pattern
 
-@Singleton(binds = [Service::class])
-@Named(Constants.idealista)
-class IdealistaService : BaseService() {
+@Singleton(binds = [WebService::class])
+@Named(Constants.idealista + "_web")
+class IdealistaWebService : BaseWebService() {
 
     override val rootUrl = "https://www.idealista.pt/en"
     override val sessionCookieName = "cc"
     override val sessionCookieDomain = "www.idealista.pt"
-
-    companion object {
-        private const val USERNAME = "gabor.biro@yahoo.com"
-        private const val PASSWORD = "1qazse45rdxSW2"
-    }
-
-    ///// Functions that require an open webpage
 
     override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
         val pagerRegex = Pattern.compile("pagina-([\\d]+)")
@@ -65,7 +60,7 @@ class IdealistaService : BaseService() {
 
         return PageInfo(
             pageUrl = searchUrl,
-            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
+            propertyWebIds = urls.map { utilsService.getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
         )
@@ -108,40 +103,12 @@ class IdealistaService : BaseService() {
     }
 
     override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
-        ensurePageWithSession(getUrlFromWebId(webId))
+        ensurePageWithSession(utilsService.getUrlFromWebId(webId))
 
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
         return driver.findElements(By.className("detail-image-gallery")).map { it.getAttribute("data-ondemand-img") }
-    }
-
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
-        return if (page.page < page.pageCount) {
-            val uri = URI.create(page.pageUrl)
-            val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
-            if (pathTokens.last().contains("pagina-")) {
-                page.pageUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${page.page + 1}")
-            } else {
-                page.pageUrl.replace("?", "pagina-${page.page + 1}?")
-            }
-        } else {
-            null
-        }
-    }
-
-    ///// Functions that are service dependent, but do not require a browser instance
-
-    override fun getPropertyIdFromUrl(url: String): String {
-        return if (isValidUrl(url)) {
-            URI.create(url).path.split("/").last { it.isNotBlank() }
-        } else {
-            throw IllegalArgumentException("Unable to get property id from $url (invalid url)")
-        }
-    }
-
-    override fun getUrlFromWebId(webId: String): String {
-        return "${rootUrl}/imovel/$webId/"
     }
 
     override fun login(driver: WebDriver): Boolean {

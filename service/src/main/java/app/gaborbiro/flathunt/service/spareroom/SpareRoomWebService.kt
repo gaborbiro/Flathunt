@@ -7,7 +7,7 @@ import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
-import app.gaborbiro.flathunt.service.BaseService
+import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.PriceParseResult
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
@@ -22,8 +22,8 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Singleton
-@Named(Constants.spareroom)
-class SpareRoomService : BaseService() {
+@Named(Constants.spareroom + "_web")
+class SpareRoomWebService : BaseWebService() {
 
     companion object {
         const val MISSING_VALUE = "missing"
@@ -88,7 +88,7 @@ class SpareRoomService : BaseService() {
         element.findElements(By.xpath("*")).forEach {
             val href = it.getAttribute("href")
             if (!href.isNullOrBlank()) {
-                output.add(cleanUrl(href))
+                output.add(utilsService.cleanUrl(href))
             }
             getLinksFromMessage(it, output)
         }
@@ -109,24 +109,14 @@ class SpareRoomService : BaseService() {
         page++
         return PageInfo(
             pageUrl = searchUrl,
-            propertyWebIds = urls.map { getPropertyIdFromUrl(it) },
+            propertyWebIds = urls.map { utilsService.getPropertyIdFromUrl(it) },
             page = page,
             pageCount = pageCount,
         )
     }
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
-        return if (page.page < page.pageCount) {
-            var searchUrl = page.pageUrl.replace(Regex("&offset=[\\d]+"), "")
-            searchUrl = searchUrl.replace(Regex("\\?offset=[\\d]+"), "")
-            searchUrl + "&offset=${page.page * 10 - markedAsUnsuitableCount}"
-        } else {
-            null
-        }
-    }
-
     override fun fetchProperty(driver: WebDriver, webId: String): Property {
-        ensurePageWithSession(getUrlFromWebId(webId))
+        ensurePageWithSession(utilsService.getUrlFromWebId(webId))
         with(driver) {
             val roomOnlyPricesXpath =
                 "//div[@class=\"property-details\"]/section[@class=\"feature feature--price_room_only\"]/ul/li"
@@ -244,7 +234,7 @@ class SpareRoomService : BaseService() {
     }
 
     override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
-        ensurePageWithSession(getUrlFromWebId(webId))
+        ensurePageWithSession(utilsService.getUrlFromWebId(webId))
         if (unsuitable) {
             runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                 ?.let {
@@ -255,7 +245,7 @@ class SpareRoomService : BaseService() {
                 }
             runCatching { driver.findElement(By.linkText("Saved - remove ad")) }.getOrNull()?.let {
                 it.click()
-                ensurePageWithSession(getUrlFromWebId(webId))
+                ensurePageWithSession(utilsService.getUrlFromWebId(webId))
                 runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                     ?.let {
                         it.click()
@@ -274,7 +264,7 @@ class SpareRoomService : BaseService() {
         } else {
             runCatching { driver.findElement(By.linkText("Marked as Unsuitable")) }.getOrNull()?.let {
                 it.click()
-                ensurePageWithSession(getUrlFromWebId(webId))
+                ensurePageWithSession(utilsService.getUrlFromWebId(webId))
                 runCatching { driver.findElement(By.linkText("Remove from saved")) }.getOrNull()
                     ?.let {
                         it.click()
@@ -288,59 +278,6 @@ class SpareRoomService : BaseService() {
             }
         }
         console.e("Failed to mark $webId $description")
-    }
-
-    override fun getPropertyIdFromUrl(url: String): String {
-        return if (isValidUrl(url)) {
-            var matcher = url.matcher("flatshare_id=(?<id>[\\d]+)\\&")
-            if (matcher.find()) {
-                matcher.group("id")
-            } else {
-                matcher = url.matcher("$rootUrl/(?<id>[\\d]+)")
-                if (matcher.find()) {
-                    matcher.group("id")
-                } else {
-                    matcher = url.matcher("fad_id=(?<id>[\\d]+)\\&")
-                    if (matcher.find()) {
-                        matcher.group("id")
-                    } else {
-                        throw IllegalArgumentException("Unable to get property id from $url (missing id)")
-                    }
-                }
-            }
-        } else {
-            throw IllegalArgumentException("Unable to get property id from $url (invalid url)")
-        }
-    }
-
-    override fun getUrlFromWebId(webId: String) = "$rootUrl/$webId"
-
-    override fun isValidUrl(url: String) = url.startsWith(rootUrl) && url.split(rootUrl).size == 2
-
-    override fun cleanUrl(url: String): String {
-        val ROOT_URL_2 = "www.spareroom.co.uk"
-        val ROOT_URL_3 = "http://www.spareroom.co.uk"
-        val ROOT_URL_MOBILE = "https://m.spareroom.co.uk"
-        val ROOT_URL_MOBILE_2 = "m.spareroom.co.uk"
-        val ROOT_URL_MOBILE_3 = "http://m.spareroom.co.uk"
-
-        var cleanUrl = url.trim()
-        if (cleanUrl.startsWith(ROOT_URL_2)) { // www.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(ROOT_URL_2, rootUrl)
-        }
-        if (cleanUrl.startsWith(ROOT_URL_3)) { // http://www.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(ROOT_URL_3, rootUrl)
-        }
-        if (cleanUrl.startsWith(ROOT_URL_MOBILE_2)) { // m.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(ROOT_URL_MOBILE_2, rootUrl)
-        }
-        if (cleanUrl.startsWith(ROOT_URL_MOBILE_3)) { // http://m.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(ROOT_URL_MOBILE_3, rootUrl)
-        }
-        if (cleanUrl.startsWith(ROOT_URL_MOBILE)) { // https://m.spareroom.co.uk
-            cleanUrl = cleanUrl.replace(ROOT_URL_MOBILE, rootUrl)
-        }
-        return cleanUrl
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
