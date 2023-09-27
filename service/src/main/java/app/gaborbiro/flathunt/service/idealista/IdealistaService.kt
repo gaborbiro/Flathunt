@@ -30,9 +30,7 @@ class IdealistaService : BaseService() {
         private const val PASSWORD = "1qazse45rdxSW2"
     }
 
-    override fun login(driver: WebDriver): Boolean {
-        return false
-    }
+    ///// Functions that require an open webpage
 
     override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
         val pagerRegex = Pattern.compile("pagina-([\\d]+)")
@@ -73,20 +71,6 @@ class IdealistaService : BaseService() {
         )
     }
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
-        return if (page.page < page.pageCount) {
-            val uri = URI.create(page.pageUrl)
-            val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
-            if (pathTokens.last().contains("pagina-")) {
-                page.pageUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${page.page + 1}")
-            } else {
-                page.pageUrl.replace("?", "pagina-${page.page + 1}?")
-            }
-        } else {
-            null
-        }
-    }
-
     override fun fetchProperty(driver: WebDriver, webId: String): Property {
         val priceStr = driver.findElements(By.className("info-data-price"))[0].text
         val priceRegex = Pattern.compile("([\\d,\\.]+)\\s€/month")
@@ -125,14 +109,28 @@ class IdealistaService : BaseService() {
 
     override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
         ensurePageWithSession(getUrlFromWebId(webId))
-        runCatching {
-            if (unsuitable) {
-                driver.findElement(By.className("icon-delete")).click()
+
+    }
+
+    override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
+        return driver.findElements(By.className("detail-image-gallery")).map { it.getAttribute("data-ondemand-img") }
+    }
+
+    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+        return if (page.page < page.pageCount) {
+            val uri = URI.create(page.pageUrl)
+            val pathTokens = uri.path.split("/").filter { it.isNotBlank() }
+            if (pathTokens.last().contains("pagina-")) {
+                page.pageUrl.replace(Regex("pagina-([\\d]+)"), "pagina-${page.page + 1}")
             } else {
-                driver.findElement(By.className("icon-recover")).click()
+                page.pageUrl.replace("?", "pagina-${page.page + 1}?")
             }
+        } else {
+            null
         }
     }
+
+    ///// Functions that are service dependent, but do not require a browser instance
 
     override fun getPropertyIdFromUrl(url: String): String {
         return if (isValidUrl(url)) {
@@ -146,8 +144,7 @@ class IdealistaService : BaseService() {
         return "${rootUrl}/imovel/$webId/"
     }
 
-    override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
-        ensurePageWithSession(getUrlFromWebId(webId))
-        return driver.findElements(By.className("detail-image-gallery")).map { it.getAttribute("data-ondemand-img") }
+    override fun login(driver: WebDriver): Boolean {
+        return false
     }
 }

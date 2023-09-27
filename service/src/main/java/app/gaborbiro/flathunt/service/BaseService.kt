@@ -1,6 +1,5 @@
 package app.gaborbiro.flathunt.service
 
-import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Cookies
 import app.gaborbiro.flathunt.data.domain.model.Message
@@ -10,6 +9,7 @@ import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.Service
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.openqa.selenium.Cookie
 import org.openqa.selenium.NoSuchWindowException
@@ -24,7 +24,6 @@ import java.util.*
 
 abstract class BaseService : Service, KoinComponent {
 
-    private lateinit var driver: WebDriver
     private val tabHandleStack = Stack<Set<String>>()
 
     protected abstract val rootUrl: String
@@ -32,20 +31,66 @@ abstract class BaseService : Service, KoinComponent {
     protected abstract val sessionCookieDomain: String
 
     private val store: Store by inject()
-    private val console: ConsoleWriter by inject()
+    private var browserLaunched: Boolean = false
+    private val driver: WebDriver by lazy {
+        browserLaunched = true
+        get()
+    }
 
-    protected abstract fun login(driver: WebDriver): Boolean
+    ///// Functions that require an open webpage
 
     final override fun getPageInfo(searchUrl: String, propertiesRemoved: Int): PageInfo {
-        ensureBrowser()
         ensurePageWithSession(searchUrl)
         return getPageInfo(driver, searchUrl)
     }
 
     protected abstract fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo
 
+    final override fun fetchProperty(webId: String): Property {
+        ensurePageWithSession(getUrlFromWebId(webId))
+        return fetchProperty(driver, webId)
+    }
+
+    protected abstract fun fetchProperty(driver: WebDriver, webId: String): Property
+
+    final override fun markAsUnsuitable(webId: String, unsuitable: Boolean) {
+        val description = store.getProperties().firstOrNull { it.webId == webId }?.index?.let { "($it)" } ?: "()"
+        val blacklist = store.getBlacklistWebIds().toMutableList().also {
+            it.add(webId)
+        }
+        store.saveBlacklistWebIds(blacklist)
+        markAsUnsuitable(driver, webId, unsuitable, description)
+    }
+
+    protected abstract fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String)
+
+    final override fun getPhotoUrls(webId: String): List<String> {
+        ensurePageWithSession(getUrlFromWebId(webId))
+        return getPhotoUrls(driver, webId)
+    }
+
+    protected abstract fun getPhotoUrls(driver: WebDriver, webId: String): List<String>
+
+
+    final override fun fetchMessages(safeMode: Boolean): List<Message> {
+        return fetchMessages(driver, safeMode)
+    }
+
+    protected open fun fetchMessages(driver: WebDriver, safeMode: Boolean): List<Message> {
+        throw NotImplementedError()
+    }
+
+    final override fun tagMessage(messageUrl: String, vararg tags: MessageTag) {
+        tagMessage(driver, messageUrl, *tags)
+    }
+
+    protected open fun tagMessage(driver: WebDriver, messageUrl: String, vararg tags: MessageTag) {
+        throw NotImplementedError()
+    }
+
+    ///// Functions that require a browser instance but not an open webpage
+
     override fun openTabs(vararg urls: String): List<String> {
-        ensureBrowser()
         driver.switchTo().window("")
         val oldWindowHandles = driver.windowHandles
         urls.mapNotNull { url ->
@@ -55,9 +100,14 @@ abstract class BaseService : Service, KoinComponent {
     }
 
     override fun openHTML(html: String) {
-        ensureBrowser()
         openNewTab()
         driver["data:text/html;charset=utf-8,${String(html.toByteArray())}"]
+    }
+
+    override fun cleanup() {
+        if (browserLaunched) {
+            driver.quit()
+        }
     }
 
     /**
@@ -68,13 +118,6 @@ abstract class BaseService : Service, KoinComponent {
             tabHandleStack.push(driver.windowHandles)
         }
     }
-
-    final override fun getPhotoUrls(webId: String): List<String> {
-        ensureBrowser()
-        return getPhotoUrls(driver, webId)
-    }
-
-    protected abstract fun getPhotoUrls(driver: WebDriver, webId: String): List<String>
 
     override fun closeUnpinnedTabs() {
         val handles: Set<String> = if (tabHandleStack.isNotEmpty()) {
@@ -92,30 +135,22 @@ abstract class BaseService : Service, KoinComponent {
         }
     }
 
-    final override fun fetchProperty(webId: String, newTab: Boolean): Property {
-        if (newTab && ::driver.isInitialized) {
-            openNewTab()
-            driver[getUrlFromWebId(webId)]
-        } else {
-            ensureBrowser()
-            ensurePageWithSession(getUrlFromWebId(webId))
-        }
-        return fetchProperty(driver, webId)
+    override fun clearCookies() {
+        driver.manage().deleteAllCookies()
     }
 
-    protected abstract fun fetchProperty(driver: WebDriver, webId: String): Property
-
-    final override fun markAsUnsuitable(webId: String, unsuitable: Boolean) {
-        val description = store.getProperties().firstOrNull { it.webId == webId }?.index?.let { "($it)" } ?: "()"
-        val blacklist = store.getBlacklistWebIds().toMutableList().also {
-            it.add(webId)
+    override fun addOrUpdateCookies(cookies: List<Cookie>) {
+        driver.manage().run {
+            cookies.forEach(::addCookie)
         }
-        store.saveBlacklistWebIds(blacklist)
-        ensureBrowser()
-        markAsUnsuitable(driver, webId, unsuitable, description)
+        driver[driver.currentUrl]
     }
 
-    protected abstract fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String)
+    override fun saveCookies() {
+        store.saveCookies(Cookies(driver.manage().cookies))
+    }
+
+    ///// Functions that are service dependent, but do not require a browser instance
 
     override fun isValidUrl(url: String): Boolean {
         return url.startsWith("$rootUrl/") && url.split("$rootUrl/").size == 2
@@ -136,64 +171,11 @@ abstract class BaseService : Service, KoinComponent {
         return if (isValidUrl(cleanUrl)) {
             cleanUrl
         } else {
-            console.e("Invalid url: $cleanUrl")
             null
         }
     }
 
-    override fun cleanup() {
-        if (::driver.isInitialized) {
-            driver.quit()
-        }
-    }
-
-    final override fun fetchMessages(safeMode: Boolean): List<Message> {
-        ensureBrowser()
-        return fetchMessages(driver, safeMode)
-    }
-
-    protected open fun fetchMessages(driver: WebDriver, safeMode: Boolean): List<Message> {
-        throw NotImplementedError()
-    }
-
-    final override fun tagMessage(messageUrl: String, vararg tags: MessageTag) {
-        ensureBrowser()
-        tagMessage(driver, messageUrl, *tags)
-    }
-
-    protected open fun tagMessage(driver: WebDriver, messageUrl: String, vararg tags: MessageTag) {
-        throw NotImplementedError()
-    }
-
-    override fun clearCookies() {
-        driver.manage().deleteAllCookies()
-    }
-
-    override fun addOrUpdateCookies(cookies: List<Cookie>) {
-        driver.manage().run {
-            cookies.forEach(::addCookie)
-        }
-        driver[driver.currentUrl]
-    }
-
-    override fun saveCookies() {
-        store.saveCookies(Cookies(driver.manage().cookies))
-    }
-
-    private fun ensureBrowser() {
-        if (!::driver.isInitialized) {
-            System.setProperty("webdriver.chrome.driver", Paths.get("chromedriver.exe").toString())
-            driver = ChromeDriver(
-                ChromeOptions().apply {
-                    // https://peter.sh/experiments/chromium-command-line-switches/
-                    // start-maximized
-                    // window-position=0,0", "window-size=1,1
-                    addArguments("start-maximized")
-                    setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
-                }
-            )
-        }
-    }
+    ///// Functions that are not service dependent
 
     protected fun ensurePageWithSession(vararg expectedUrls: String) {
         runCatching { driver.currentUrl }.exceptionOrNull()?.let {
@@ -215,16 +197,16 @@ abstract class BaseService : Service, KoinComponent {
             // at least one expected url already open
         }
 
+        beforeEnsureSession(driver)
         val refresh = ensureSession()
+        afterEnsureSession(driver)
 
-        if (refresh) {
-            driver[finalUrls[0]]
-        }
+//        if (refresh) {
+//            driver[finalUrls[0]]
+//        }
     }
 
     private fun ensureSession(): Boolean {
-        beforeEnsureSession(driver)
-
         var needsRefresh = false
         var sessionAvailable = false
         val storedCookies: Set<Cookie>? = store.getCookies()?.cookies
@@ -252,10 +234,10 @@ abstract class BaseService : Service, KoinComponent {
             saveCookies()
         }
 
-        afterEnsureSession(driver)
-
         return needsRefresh
     }
+
+    protected abstract fun login(driver: WebDriver): Boolean
 
     protected open fun beforeEnsureSession(driver: WebDriver) {
         // override in subclass

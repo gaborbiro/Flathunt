@@ -344,7 +344,6 @@ class SpareRoomService : BaseService() {
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
-        ensurePageWithSession(getUrlFromWebId(webId))
         return driver.findElements(By.className("photoswipe_me")).map {
             it.findElement(By.tagName("img")).getAttribute("src").replace("square", "large")
         }

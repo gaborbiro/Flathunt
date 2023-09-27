@@ -15,7 +15,14 @@ import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.StringQualifier
 import org.koin.dsl.module
+import org.koin.dsl.single
 import org.koin.ksp.generated.module
+import org.openqa.selenium.UnexpectedAlertBehaviour
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.remote.CapabilityType
+import java.nio.file.Paths
 
 
 fun setupKoin(serviceConfig: String): KoinApplication {
@@ -34,18 +41,33 @@ fun setupKoin(serviceConfig: String): KoinApplication {
             appModule,
             DataModule().module,
             RepoModule().module,
-            ServiceModule().module,
             RequestModule().module,
             ConsoleModule().module,
+            ServiceModule().module
         )
     }
     val serviceModule = module {
+        single<WebDriver> {
+            System.setProperty("webdriver.chrome.driver", Paths.get("chromedriver.exe").toString())
+            ChromeDriver(
+                ChromeOptions().apply {
+                    // https://peter.sh/experiments/chromium-command-line-switches/
+                    // start-maximized
+                    // window-position=0,0", "window-size=1,1
+                    addArguments("start-maximized")
+                    setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
+                }
+            )
+        }
+    }
+    app.modules(serviceModule)
+    val serviceNameModule = module {
         single<Service> {
             val serviceName: String = app.koin.get(StringQualifier("serviceName"))
             app.koin.get(StringQualifier(serviceName))
         }
     }
-    app.modules(serviceModule)
+    app.modules(serviceNameModule)
     val consoleModule = module {
         single<ConsoleWriter> {
             app.koin.get<ConsoleWriterFactory>().getConsoleWriter()

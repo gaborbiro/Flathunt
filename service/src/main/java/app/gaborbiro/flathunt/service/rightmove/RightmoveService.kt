@@ -192,7 +192,6 @@ class RightmoveService : BaseService() {
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
-        ensurePageWithSession(getUrlFromWebId(webId))
         return driver.findElements(By.className("_2zqynvtIxFMCq18pu-g8d_"))
             .mapNotNull {
                 kotlin.runCatching { (it.findElement(By.tagName("meta")) as RemoteWebElement).getAttribute("content") }

@@ -179,7 +179,6 @@ class ZooplaService : BaseService() {
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
-        ensurePageWithSession(getUrlFromWebId(webId))
         val json = driver.findElement(By.id("__NEXT_DATA__")).getAttribute("innerHTML")
         val propertyData = Gson().fromJson(json, ZooplaResponse::class.java).props.initialProps.pageProps.data.listing
         val images = mutableListOf<String>()

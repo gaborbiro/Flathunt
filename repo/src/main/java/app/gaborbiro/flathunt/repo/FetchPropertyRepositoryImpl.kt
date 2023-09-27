@@ -30,12 +30,13 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
      */
     override fun fetchProperty(arg: String, save: SaveType, safeMode: Boolean): Property? {
         val cleanUrl = service.parseUrlOrWebId(arg)
+
         return if (cleanUrl != null) {
             console.d()
             console.d(cleanUrl)
             val webId = service.getPropertyIdFromUrl(cleanUrl)
             GlobalVariables.lastUsedIndexOrWebId = webId
-            val property = service.fetchProperty(webId, newTab = true)
+            val property = service.fetchProperty(webId)
             if (property.isBuddyUp && save != SaveType.FORCE_SAVE) {
                 console.d("\nBuddy up - skipping...")
                 return null
@@ -59,6 +60,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
             }
             propertyWithRoutes
         } else {
+            console.e("Invalid url: $arg")
             null
         }
     }

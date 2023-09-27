@@ -8,16 +8,11 @@ import org.openqa.selenium.Cookie
 
 interface Service {
 
-    fun openTabs(vararg urls: String): List<String>
+    ///// Functions that require an open webpage
 
-    fun openHTML(html: String)
-
-    /**
-     * Starting from a page other than the first one is supported.
-     */
     fun getPageInfo(searchUrl: String, propertiesRemoved: Int = 0): PageInfo
 
-    fun fetchProperty(webId: String, newTab: Boolean = false): Property
+    fun fetchProperty(webId: String): Property
 
     fun markAsUnsuitable(webId: String, unsuitable: Boolean)
 
@@ -27,17 +22,11 @@ interface Service {
 
     fun tagMessage(messageUrl: String, vararg tags: MessageTag)
 
-    fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String?
+    ///// Functions that require a browser instance but not an open webpage
 
-    fun getPropertyIdFromUrl(url: String): String
+    fun openTabs(vararg urls: String): List<String>
 
-    fun getUrlFromWebId(webId: String): String
-
-    fun isValidUrl(url: String): Boolean
-
-    fun cleanUrl(url: String): String
-
-    fun parseUrlOrWebId(arg: String): String?
+    fun openHTML(html: String)
 
     fun cleanup()
 
@@ -50,4 +39,18 @@ interface Service {
     fun addOrUpdateCookies(cookies: List<Cookie>)
 
     fun saveCookies()
+
+    ///// Functions that are service dependent, but do not require a browser instance
+
+    fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String?
+
+    fun getPropertyIdFromUrl(url: String): String
+
+    fun getUrlFromWebId(webId: String): String
+
+    fun isValidUrl(url: String): Boolean
+
+    fun cleanUrl(url: String): String
+
+    fun parseUrlOrWebId(arg: String): String?
 }
