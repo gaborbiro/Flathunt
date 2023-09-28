@@ -7,6 +7,7 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.console.ConsoleWriterFactory
 import app.gaborbiro.flathunt.console.di.ConsoleModule
 import app.gaborbiro.flathunt.data.di.DataModule
+import app.gaborbiro.flathunt.directions.di.DirectionsModule
 import app.gaborbiro.flathunt.repo.di.RepoModule
 import app.gaborbiro.flathunt.request.di.RequestModule
 import app.gaborbiro.flathunt.service.di.ServiceModule
@@ -43,7 +44,8 @@ fun setupKoin(serviceConfig: String): KoinApplication {
             RepoModule().module,
             RequestModule().module,
             ConsoleModule().module,
-            ServiceModule().module
+            ServiceModule().module,
+            DirectionsModule().module,
         )
     }
     val serviceModule = module {

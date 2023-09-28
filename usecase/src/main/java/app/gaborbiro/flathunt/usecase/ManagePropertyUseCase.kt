@@ -4,11 +4,10 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.directions.DirectionsLatLon
-import app.gaborbiro.flathunt.directions.getRoutesToNearestStations
+import app.gaborbiro.flathunt.directions.DirectionsService
 import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
-import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
@@ -17,7 +16,7 @@ import org.koin.core.component.inject
 class ManagePropertyUseCase : BaseUseCase() {
 
     private val propertyRepository: PropertyRepository by inject()
-    private val requestCaller: RequestCaller by inject()
+    private val directionsService: DirectionsService by inject()
     private val console: ConsoleWriter by inject()
 
     override val commands: List<Command<*>>
@@ -144,7 +143,7 @@ class ManagePropertyUseCase : BaseUseCase() {
                 it.location
                     ?.let {
                         console.d(
-                            getRoutesToNearestStations(DirectionsLatLon(it.latitude, it.longitude), requestCaller)
+                            directionsService.getRoutesToNearestStations(DirectionsLatLon(it.latitude, it.longitude))
                                 .orNull()
                                 ?.joinToString("")
                                 ?: "No nearby stations found"

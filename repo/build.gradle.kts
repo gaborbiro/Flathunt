@@ -15,7 +15,6 @@ dependencies {
     implementation(project(":service:domain"))
     implementation(project(":data:domain"))
     implementation(project(":directions"))
-    implementation(project(":request:domain"))
     implementation(project(":console:domain"))
 
     implementation(Dependencies.Google.gson)

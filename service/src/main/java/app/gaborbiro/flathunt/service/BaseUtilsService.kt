@@ -12,8 +12,6 @@ abstract class BaseUtilsService : UtilsService, KoinComponent {
     protected abstract val rootUrl: String
     protected abstract val sessionCookieName: String
     protected abstract val sessionCookieDomain: String
-    private val driver: WebDriver by inject()
-    private val browser: BrowserImpl by inject()
 
     ///// Functions that are service dependent, but do not require a browser instance
 

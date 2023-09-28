@@ -6,11 +6,10 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.directions.DirectionsLatLon
-import app.gaborbiro.flathunt.directions.calculateRoutes
+import app.gaborbiro.flathunt.directions.DirectionsService
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
-import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
@@ -26,8 +25,8 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val criteria: ValidationCriteria by inject()
     private val validator: PropertyValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
-    private val requestCaller: RequestCaller by inject()
     private val console: ConsoleWriter by inject()
+    private val directionsService: DirectionsService by inject()
 
     override fun fetchPropertiesFromAllPages(searchUrl: String) {
         val storedIds = store.getProperties().map { it.webId }.toSet()
@@ -100,7 +99,10 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         val rawPropertyValid = validator.checkValid(property)
         return if (rawPropertyValid) {
             val routes = property.location?.let {
-                calculateRoutes(DirectionsLatLon(it.latitude, it.longitude), criteria.pointsOfInterest, requestCaller)
+                directionsService.calculateRoutes(
+                    DirectionsLatLon(it.latitude, it.longitude),
+                    criteria.pointsOfInterest
+                )
             } ?: emptyList()
             val propertyWithRoutes = property.withRoutes(routes)
             val propertyWithRoutesValid = validator.checkValid(propertyWithRoutes)

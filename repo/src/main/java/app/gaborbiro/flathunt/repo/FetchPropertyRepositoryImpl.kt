@@ -5,12 +5,11 @@ import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.directions.DirectionsLatLon
-import app.gaborbiro.flathunt.directions.calculateRoutes
+import app.gaborbiro.flathunt.directions.DirectionsService
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.model.SaveType
-import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
@@ -25,8 +24,8 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
     private val criteria: ValidationCriteria by inject()
     private val repository: PropertyRepository by inject()
     private val validator: PropertyValidator by inject()
-    private val requestCaller: RequestCaller by inject()
     private val console: ConsoleWriter by inject()
+    private val directionsService: DirectionsService by inject()
 
     /**
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
@@ -45,7 +44,10 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                 return null
             }
             val routes = property.location?.let {
-                calculateRoutes(DirectionsLatLon(it.latitude, it.longitude), criteria.pointsOfInterest, requestCaller)
+                directionsService.calculateRoutes(
+                    DirectionsLatLon(it.latitude, it.longitude),
+                    criteria.pointsOfInterest
+                )
             } ?: emptyList()
             val propertyWithRoutes = property.withRoutes(routes)
             console.i(propertyWithRoutes.prettyPrint())
