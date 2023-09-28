@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.google
+package app.gaborbiro.flathunt.directions
 
 import com.google.gson.annotations.SerializedName
 import java.util.concurrent.TimeUnit

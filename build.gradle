@@ -29,7 +29,7 @@ dependencies {
     implementation(project(":data:domain"))
     implementation(project(":repo"))
     implementation(project(":repo:domain"))
-    implementation(project(":google"))
+    implementation(project(":directions"))
     implementation(project(":base"))
     implementation(project(":request"))
     implementation(project(":request:domain"))

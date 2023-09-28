@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.google
+package app.gaborbiro.flathunt.directions
 
 internal class DirectionsResult(
     val transitCount: Int,

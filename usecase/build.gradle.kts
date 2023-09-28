@@ -14,7 +14,7 @@ dependencies {
     implementation(project(":data:domain"))
     implementation(project(":repo:domain"))
     implementation(project(":request:domain"))
-    implementation(project(":google"))
+    implementation(project(":directions"))
     implementation(project(":console:domain"))
 
     implementation(Dependencies.Koin.core)

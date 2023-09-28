@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.google
+package app.gaborbiro.flathunt.directions
 
 class TflStopsResponse(
     val stopPoints: List<StopPoint>

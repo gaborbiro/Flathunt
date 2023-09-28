@@ -1,7 +1,7 @@
 package app.gaborbiro.flathunt.data.domain.model
 
 import app.gaborbiro.flathunt.*
-import app.gaborbiro.flathunt.google.Route
+import app.gaborbiro.flathunt.directions.Route
 
 open class Property(
     val webId: String,

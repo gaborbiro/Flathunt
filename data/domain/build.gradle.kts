@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
     implementation(project(":base"))
-    implementation(project(":google"))
+    implementation(project(":directions"))
 
     implementation(Dependencies.Selenium.java)
 }

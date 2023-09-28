@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt.google
+package app.gaborbiro.flathunt.directions
 
 import app.gaborbiro.flathunt.*
 
@@ -10,7 +10,7 @@ class Route(
     val distanceKm: Float,
     val replacementTransitData: String?,
     val name: String?,
-    val coordinates: GoogleLatLon,
+    val coordinates: DirectionsLatLon,
 ) {
     override fun toString(): String {
         val description = "$timeMinutes minutes ${travelLimit.mode.description} ${name?.let { "to $it " } ?: ""}"

@@ -14,7 +14,7 @@ dependencies {
     implementation(project(":repo:domain"))
     implementation(project(":service:domain"))
     implementation(project(":data:domain"))
-    implementation(project(":google"))
+    implementation(project(":directions"))
     implementation(project(":request:domain"))
     implementation(project(":console:domain"))
 

@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.POI
 import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.google.Route
+import app.gaborbiro.flathunt.directions.Route
 import app.gaborbiro.flathunt.matcher
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent

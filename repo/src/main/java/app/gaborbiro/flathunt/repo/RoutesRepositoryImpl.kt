@@ -5,8 +5,8 @@ import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.google.GoogleLatLon
-import app.gaborbiro.flathunt.google.calculateRoutes
+import app.gaborbiro.flathunt.directions.DirectionsLatLon
+import app.gaborbiro.flathunt.directions.calculateRoutes
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.RoutesRepository
 import app.gaborbiro.flathunt.request.RequestCaller
@@ -42,7 +42,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
         }
         val (toSave, unsuitable) = properties.partition { property ->
             val routes = property.location?.let {
-                calculateRoutes(GoogleLatLon(it.latitude, it.longitude), criteria.pointsOfInterest, requestCaller)
+                calculateRoutes(DirectionsLatLon(it.latitude, it.longitude), criteria.pointsOfInterest, requestCaller)
             } ?: emptyList()
             console.d("\n${property.webId}: ${property.title}:\n${routes.joinToString(", ")}")
             val propertyWithRoutes = property.withRoutes(routes)

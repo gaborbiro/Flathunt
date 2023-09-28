@@ -3,8 +3,8 @@ package app.gaborbiro.flathunt.usecase
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
-import app.gaborbiro.flathunt.google.GoogleLatLon
-import app.gaborbiro.flathunt.google.getRoutesToNearestStations
+import app.gaborbiro.flathunt.directions.DirectionsLatLon
+import app.gaborbiro.flathunt.directions.getRoutesToNearestStations
 import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
@@ -144,7 +144,7 @@ class ManagePropertyUseCase : BaseUseCase() {
                 it.location
                     ?.let {
                         console.d(
-                            getRoutesToNearestStations(GoogleLatLon(it.latitude, it.longitude), requestCaller)
+                            getRoutesToNearestStations(DirectionsLatLon(it.latitude, it.longitude), requestCaller)
                                 .orNull()
                                 ?.joinToString("")
                                 ?: "No nearby stations found"
