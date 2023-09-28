@@ -5,6 +5,7 @@ import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.google.GoogleLatLon
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
@@ -98,7 +99,9 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         // pre-validate to save on the Google Maps API call
         val rawPropertyValid = validator.checkValid(property)
         return if (rawPropertyValid) {
-            val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
+            val routes = property.location?.let {
+                calculateRoutes(GoogleLatLon(it.latitude, it.longitude), criteria.pointsOfInterest, requestCaller)
+            } ?: emptyList()
             val propertyWithRoutes = property.withRoutes(routes)
             val propertyWithRoutesValid = validator.checkValid(propertyWithRoutes)
             if (propertyWithRoutesValid) {

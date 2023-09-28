@@ -11,14 +11,14 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 
-fun calculateRoutes(location: LatLon?, pois: Collection<POI>, requestCaller: RequestCaller): List<Route> {
+fun calculateRoutes(location: GoogleLatLon?, pois: Collection<POI>, requestCaller: RequestCaller): List<Route> {
     return location?.let {
         pois.mapNotNull { poi ->
             when (poi) {
                 is POI.Destination -> {
                     getDirectionsTo(
                         from = location,
-                        to = poi.coordinates,
+                        to = GoogleLatLon(poi.coordinates.latitude, poi.coordinates.longitude),
                         travelLimits = poi.max,
                         requestCaller,
                     )?.let { (travelOption, direction) ->
@@ -30,7 +30,7 @@ fun calculateRoutes(location: LatLon?, pois: Collection<POI>, requestCaller: Req
                             distanceKm = direction.distanceKm,
                             replacementTransitData = direction.replacementTransitData,
                             name = poi.name,
-                            coordinates = poi.coordinates,
+                            coordinates = GoogleLatLon(poi.coordinates.latitude, poi.coordinates.longitude),
                         )
                     }
                 }
@@ -46,8 +46,8 @@ fun calculateRoutes(location: LatLon?, pois: Collection<POI>, requestCaller: Req
 private val gson = Gson()
 
 private fun getDirectionsTo(
-    from: LatLon,
-    to: LatLon,
+    from: GoogleLatLon,
+    to: GoogleLatLon,
     travelLimits: Array<out TravelLimit>,
     requestCaller: RequestCaller,
 ): Pair<TravelLimit, DirectionsResult>? {
@@ -106,8 +106,8 @@ private fun getDirectionsTo(
                     ) {
                         val oldStep1 = collapsedSteps[0]
                         val cyclingLeg1 = fetchDirections(
-                            from = oldStep1.startLocation.let { LatLon(it.lat, it.lng) },
-                            to = oldStep1.endLocation.let { LatLon(it.lat, it.lng) },
+                            from = oldStep1.startLocation.let { GoogleLatLon(it.lat, it.lng) },
+                            to = oldStep1.endLocation.let { GoogleLatLon(it.lat, it.lng) },
                             mode = TravelMode.CYCLING,
                             departureTime = departureTime,
                             alternatives = false,
@@ -121,8 +121,8 @@ private fun getDirectionsTo(
                         }
                         val oldStep2 = collapsedSteps[2]
                         val cyclingLeg2: RouteLeg? = fetchDirections(
-                            from = oldStep2.startLocation.let { LatLon(it.lat, it.lng) },
-                            to = oldStep2.endLocation.let { LatLon(it.lat, it.lng) },
+                            from = oldStep2.startLocation.let { GoogleLatLon(it.lat, it.lng) },
+                            to = oldStep2.endLocation.let { GoogleLatLon(it.lat, it.lng) },
                             mode = TravelMode.CYCLING,
                             departureTime = departureTime,
                             alternatives = false,
@@ -186,8 +186,8 @@ private fun RouteStep.replaceable() = travelMode == TravelMode.WALKING.value.upp
         transitDetails?.line?.vehicle?.name == "Bus"
 
 private fun fetchDirections(
-    from: LatLon,
-    to: LatLon,
+    from: GoogleLatLon,
+    to: GoogleLatLon,
     mode: TravelMode,
     departureTime: Long,
     alternatives: Boolean,
@@ -216,7 +216,7 @@ private fun fetchDirections(
     return gson.fromJson(json, DirectionsResponse::class.java)
 }
 
-fun getRoutesToNearestStations(from: LatLon, requestCaller: RequestCaller): List<Route> {
+fun getRoutesToNearestStations(from: GoogleLatLon, requestCaller: RequestCaller): List<Route> {
     val radius = 5000f / (60f / POI.NearestRailStation.max[0].maxMinutes)
     val url = "https://api.tfl.gov.uk/Stoppoint?" +
             "lat=${from.latitude}" +
@@ -227,7 +227,7 @@ fun getRoutesToNearestStations(from: LatLon, requestCaller: RequestCaller): List
     val json = requestCaller.get(url)
     val stops = gson.fromJson(json, TflStopsResponse::class.java).stopPoints
     return stops.mapNotNull {
-        val location = LatLon(it.lat, it.lon)
+        val location = GoogleLatLon(it.lat, it.lon)
         getDirectionsTo(
             from = from,
             to = location,

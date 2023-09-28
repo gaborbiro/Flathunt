@@ -4,6 +4,7 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.google.GoogleLatLon
 import app.gaborbiro.flathunt.google.calculateRoutes
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
@@ -43,7 +44,9 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                 console.d("\nBuddy up - skipping...")
                 return null
             }
-            val routes = calculateRoutes(property.location, criteria.pointsOfInterest, requestCaller)
+            val routes = property.location?.let {
+                calculateRoutes(GoogleLatLon(it.latitude, it.longitude), criteria.pointsOfInterest, requestCaller)
+            } ?: emptyList()
             val propertyWithRoutes = property.withRoutes(routes)
             console.i(propertyWithRoutes.prettyPrint())
             if (validator.checkValid(propertyWithRoutes)) {

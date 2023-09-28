@@ -10,7 +10,7 @@ class Route(
     val distanceKm: Float,
     val replacementTransitData: String?,
     val name: String?,
-    val coordinates: LatLon,
+    val coordinates: GoogleLatLon,
 ) {
     override fun toString(): String {
         val description = "$timeMinutes minutes ${travelLimit.mode.description} ${name?.let { "to $it " } ?: ""}"
