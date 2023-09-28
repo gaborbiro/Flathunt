@@ -34,11 +34,11 @@ val poiBaixaChiado = POI.Destination(
 val EXP = ValidationCriteria(
     pointsOfInterest = listOf(
         poiBaixaChiado,
+        POI.NearestRailStation
     ),
-    maxPrice = 1600,
-//    maxBedrooms = 2,
-//    furnished = true,
-//    maxFlatmates = 0,
-//    airConditioning = true,
-//    heating = true,
+    maxPrice = 1400,
+    minBedrooms = 1,
+    maxBedrooms = 2,
+    furnished = true,
+    airConditioning = true,
 )

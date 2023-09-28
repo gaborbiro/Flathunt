@@ -5,12 +5,10 @@ import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.service.BaseWebService
-import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
-import org.koin.core.component.inject
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
@@ -80,6 +78,11 @@ class IdealistaWebService : BaseWebService() {
                 equipped = true
             }
         }
+        val tRegex = Regex("T[\\d]+")
+        val rooms = features.firstOrNull {  it.matches(tRegex) }?.let {
+            it.substring(1).toInt()
+        }
+
         val heating = features.any { it.contains("heating", ignoreCase = true) }
         val airConditioning = features.any { it.contains("Air conditioning", ignoreCase = true) }
         val mapURL = (driver as JavascriptExecutor)
@@ -93,6 +96,7 @@ class IdealistaWebService : BaseWebService() {
         val location = LatLon(center[0], center[1])
         return Property(
             webId = webId,
+            totalRooms = rooms,
             title = driver.findElement(By.className("main-info__title-main")).text,
             prices = arrayOf(Price(priceStr, priceStr, price)),
             furnished = equipped,
