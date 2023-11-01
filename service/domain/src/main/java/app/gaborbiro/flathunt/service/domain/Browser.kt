@@ -6,7 +6,7 @@ interface Browser {
 
     fun openNewTab(retry: Boolean = true): String?
 
-    fun openTabs(vararg urls: String): List<String>
+    fun openTabs(urls: List<String>): List<String>
 
     fun openHTML(html: String)
 

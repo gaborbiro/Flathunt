@@ -6,6 +6,7 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.PriceParseResult
@@ -184,7 +185,7 @@ class SpareRoomWebService : BaseWebService() {
                 prices = prices.toTypedArray(),
                 location = findRegex("latitude: \"(.*?)\",longitude: \"(.*?)\"")?.let {
                     if (it[0].isNotEmpty() && it[1].isNotEmpty())
-                        LatLon(it[0], it[1])
+                        PropertyLatLon(it[0], it[1])
                     else null
                 },
                 billsIncluded = null,
@@ -222,7 +223,6 @@ class SpareRoomWebService : BaseWebService() {
                 occupation = findSimpleText(
                     "//section[@class=\"feature feature--household-preferences\"]//dt[@class=\"feature-list__key\" and contains(text(),\"Occupation\")]/following-sibling::dd[1]"
                 ) ?: MISSING_VALUE,
-                routes = null,
             )
         }
     }

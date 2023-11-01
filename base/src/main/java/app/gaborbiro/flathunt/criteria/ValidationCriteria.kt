@@ -1,4 +1,4 @@
-package app.gaborbiro.flathunt
+package app.gaborbiro.flathunt.criteria
 
 import java.time.LocalDate
 

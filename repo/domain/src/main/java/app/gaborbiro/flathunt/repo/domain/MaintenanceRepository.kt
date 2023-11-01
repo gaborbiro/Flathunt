@@ -6,7 +6,9 @@ interface MaintenanceRepository {
 
     fun restore(path: String): Int
 
-    fun clearCookies()
+    fun clearBrowserCookies()
+
+    fun clearStoredCookies()
 
     fun importCookiesToBrowser(path: String)
 

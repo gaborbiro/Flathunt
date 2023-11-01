@@ -1,6 +1,6 @@
-package app.gaborbiro.flathunt
+package app.gaborbiro.flathunt.directions.model
 
-class LatLon(
+class DirectionsLatLon(
     val latitude: String,
     val longitude: String,
 ) {

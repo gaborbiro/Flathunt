@@ -7,6 +7,7 @@ import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.InboxRepository
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
+import app.gaborbiro.flathunt.repo.validator.PropertyValidator
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
@@ -36,11 +37,11 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
                 val webId = utilsService.getPropertyIdFromUrl(propertyLink)
                 val property = savedProperties[webId] ?: run {
                     console.d("=======> Fetching property $propertyLink (sent by ${message.senderName})")
-                    webService.fetchProperty(webId).clone(senderName = message.senderName, messageUrl = message.messageLink)
+                    webService.fetchProperty(webId).copy(senderName = message.senderName, messageUrl = message.messageLink)
                 }
                 if (property.isBuddyUp) {
                     if (!GlobalVariables.safeMode) webService.tagMessage(message.messageLink, MessageTag.BUDDY_UP)
-                } else if (!validator.checkValid(property)) {
+                } else if (!validator.isValid(property)) {
                     if (!property.markedUnsuitable) { // not yet marked as unsuitable
                         if (!GlobalVariables.safeMode) {
                             webService.markAsUnsuitable(webId, unsuitable = true)

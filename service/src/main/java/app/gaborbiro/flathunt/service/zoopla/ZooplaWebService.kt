@@ -1,10 +1,10 @@
 package app.gaborbiro.flathunt.service.zoopla
 
-import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
 import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.PriceParseResult
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
@@ -141,12 +141,11 @@ class ZooplaWebService : BaseWebService() {
             preferredGender = "",
             occupation = "",
             location = propertyData.location.coordinates.let {
-                LatLon(
+                PropertyLatLon(
                     it.latitude.toString(),
                     it.longitude.toString()
                 )
             },
-            routes = null
         )
     }
 

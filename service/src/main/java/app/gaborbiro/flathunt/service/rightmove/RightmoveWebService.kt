@@ -1,12 +1,12 @@
 package app.gaborbiro.flathunt.service.rightmove
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
 import app.gaborbiro.flathunt.request.RequestCaller
 import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.PriceParseResult
@@ -80,7 +80,7 @@ class RightmoveWebService : BaseWebService() {
                 .getAttribute("src")
                 .let { splitQuery(it) }
                 .let {
-                    LatLon(it["latitude"]!!, it["longitude"]!!)
+                    PropertyLatLon(it["latitude"]!!, it["longitude"]!!)
                 }
             val lettingDetailsMap = runCatching { findElement(By.className("_2E1qBJkWUYMJYHfYJzUb_r")) }.getOrNull()
                 ?.findElements(By.tagName("div"))
@@ -145,7 +145,6 @@ class RightmoveWebService : BaseWebService() {
                 householdGender = "",
                 preferredGender = "",
                 occupation = "",
-                routes = null,
             )
         }
     }

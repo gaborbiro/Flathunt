@@ -3,7 +3,6 @@ package app.gaborbiro.flathunt.data
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Cookies
-import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 import com.google.gson.Gson
 import org.koin.core.annotation.Named
@@ -32,17 +31,17 @@ class StoreImpl(
         return Preferences.get(prefPropertiesKey, null)
     }
 
-    override fun getProperties(): List<PersistedProperty> {
+    override fun getProperties(): List<Property> {
         val jsonProperties = getJsonProperties() ?: return emptyList()
         return gson.fromJson(jsonProperties, PropertiesWrapper::class.java).data
     }
 
     override fun overrideProperties(properties: List<Property>) {
         val jsonProperties = gson.toJson(PropertiesWrapper(properties.map {
-            if (it is PersistedProperty) {
+            if (it.index != null) {
                 it
             } else {
-                PersistedProperty(it, nextIndex().also { index -> console.i("new index: $index") })
+                it.copy(index = nextIndex().also { index -> console.i("new index: $index") })
             }
         }))
         overrideJsonProperties(jsonProperties)

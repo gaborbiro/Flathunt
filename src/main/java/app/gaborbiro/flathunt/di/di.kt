@@ -1,7 +1,7 @@
 package app.gaborbiro.flathunt.di
 
 import app.gaborbiro.flathunt.EXP
-import app.gaborbiro.flathunt.ValidationCriteria
+import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.console.ConsoleWriterFactory

@@ -3,7 +3,7 @@ package app.gaborbiro.flathunt
 object Dependencies {
 
     object Google {
-        const val gson = "com.google.code.gson:gson:2.8.9"
+        const val gson = "com.google.code.gson:gson:2.10.1"
     }
 
     object Selenium {

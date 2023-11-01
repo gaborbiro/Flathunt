@@ -1,6 +1,6 @@
 package app.gaborbiro.flathunt.usecase
 
-import app.gaborbiro.flathunt.ValidationCriteria
+import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository

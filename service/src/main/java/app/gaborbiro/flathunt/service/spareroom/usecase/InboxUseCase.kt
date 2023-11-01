@@ -31,7 +31,7 @@ class InboxUseCase : BaseUseCase() {
                 properties.forEach { property ->
                     propertyRepository.addOrUpdateProperty(property)
                 }
-                val (_, unsuitable) = routesRepository.validateByRoutes(properties)
+                val (_, unsuitable) = routesRepository.revalidateRoutes(properties)
                 unsuitable.forEach { property ->
                     property.messageUrl?.let {
                         inboxRepository.tagMessage(it, MessageTag.REJECTED)

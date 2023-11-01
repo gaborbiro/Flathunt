@@ -1,15 +1,20 @@
 package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.GlobalVariables
-import app.gaborbiro.flathunt.ValidationCriteria
 import app.gaborbiro.flathunt.console.ConsoleWriter
+import app.gaborbiro.flathunt.criteria.POI
+import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.directions.DirectionsLatLon
 import app.gaborbiro.flathunt.directions.DirectionsService
+import app.gaborbiro.flathunt.directions.model.DirectionsLatLon
+import app.gaborbiro.flathunt.directions.model.Route
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
+import app.gaborbiro.flathunt.repo.mapper.Mapper
+import app.gaborbiro.flathunt.repo.validator.LocationValidator
+import app.gaborbiro.flathunt.repo.validator.PropertyValidator
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
@@ -23,10 +28,12 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val webService: WebService by inject()
     private val utilsService: UtilsService by inject()
     private val criteria: ValidationCriteria by inject()
-    private val validator: PropertyValidator by inject()
+    private val propertyValidator: PropertyValidator by inject()
+    private val locationValidator: LocationValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
     private val console: ConsoleWriter by inject()
     private val directionsService: DirectionsService by inject()
+    private val mapper: Mapper by inject()
 
     override fun fetchPropertiesFromAllPages(searchUrl: String) {
         val storedIds = store.getProperties().map { it.webId }.toSet()
@@ -69,21 +76,19 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         onMarkedAsUnsuitable: () -> Unit
     ) {
         try {
-            val rawProperty = webService.fetchProperty(webId)
-            console.d(rawProperty.title)
-            val propertyWithRoutes = processProperty(rawProperty)
-            propertyWithRoutes
-                ?.let {
-                    addedIds.add(webId)
-                    console.i(propertyWithRoutes.prettyPrint())
+            val property = webService.fetchProperty(webId)
+            console.d(property.title)
+            val valid = validateProperty(property)
+            if (valid) {
+                addedIds.add(webId)
+                console.i(property.prettyPrint())
+            } else {
+                if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
+                    propertyRepository.markAsUnsuitable(webId, unsuitable = true)
                 }
-                ?: run {
-                    if (!rawProperty.markedUnsuitable && !GlobalVariables.safeMode) {
-                        propertyRepository.markAsUnsuitable(webId, unsuitable = true)
-                    }
-                    onMarkedAsUnsuitable()
-                    failedIds.add(webId)
-                }
+                onMarkedAsUnsuitable()
+                failedIds.add(webId)
+            }
         } catch (t: Throwable) {
             console.d()
             t.printStackTrace()
@@ -91,30 +96,41 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         }
     }
 
-    /**
-     * @return property with fresh routes if property is valid, null otherwise
-     */
-    private fun processProperty(property: Property): Property? {
+    private fun validateProperty(property: Property): Boolean {
         // pre-validate to save on the Google Maps API call
-        val rawPropertyValid = validator.checkValid(property)
-        return if (rawPropertyValid) {
-            val routes = property.location?.let {
-                directionsService.calculateRoutes(
-                    DirectionsLatLon(it.latitude, it.longitude),
-                    criteria.pointsOfInterest
+        val propertyValid = propertyValidator.isValid(property)
+
+        return if (propertyValid) {
+            val routesResult: Map<POI, Route?> = criteria.pointsOfInterest.associateWith { poi ->
+                property.location?.let {
+                    directionsService.route(
+                        from = DirectionsLatLon(it.latitude, it.longitude),
+                        to = mapper.map(poi)
+                    )
+                }
+            }
+            val routesStr = routesResult.toList().joinToString { (poi, route) ->
+                "\n${poi.description}: ${route?.toString()}"
+            }
+            console.d("\n${property.webId}: ${property.title}:\n$routesStr")
+
+            if (locationValidator.isValid(routesResult)) {
+                val links = mapper.mapLinks(property, routesResult)
+                val staticMapUrl = property.location?.let { mapper.mapStaticMap(it, routesResult) }
+                val commuteScore = mapper.mapCommuteScore(routesResult)
+                val finalProperty = property.copy(
+                    links = links,
+                    staticMapUrl = staticMapUrl,
+                    commuteScore = commuteScore
                 )
-            } ?: emptyList()
-            val propertyWithRoutes = property.withRoutes(routes)
-            val propertyWithRoutesValid = validator.checkValid(propertyWithRoutes)
-            if (propertyWithRoutesValid) {
-                console.d(routes.joinToString(""))
-                propertyRepository.addOrUpdateProperty(propertyWithRoutes)
-                propertyWithRoutes
+                propertyRepository.addOrUpdateProperty(finalProperty)
+                console.d("Valid")
+                true
             } else {
-                null
+                false
             }
         } else {
-            null
+            false
         }
     }
 }

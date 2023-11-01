@@ -17,9 +17,14 @@ class MaintenanceUseCase : UseCase, KoinComponent {
     override val commands: List<Command<*>>
         get() = listOf(
             command(
-                command = "clear cookies",
-                description = "Deletes cookies (will re-login on next launch)",
-                exec = { repo.clearCookies() }
+                command = "clear browser cookies",
+                description = "Deletes cookies from current (if any) browser",
+                exec = { repo.clearBrowserCookies() }
+            ),
+            command(
+                command = "clear stored cookies",
+                description = "Deletes cookies from database (will re-login on next launch)",
+                exec = { repo.clearBrowserCookies() }
             ),
             command(
                 command = "import cookies",

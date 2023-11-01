@@ -40,8 +40,9 @@ class BrowserImpl : Browser, KoinComponent {
                     // browser has no session cookies
                     if (storedCookies.hasSession(sessionCookieName, sessionCookieDomain)) {
                         // we have session cookies stored
-                        driver.manage().deleteAllCookies()
-                        storedCookies.forEach { driver.manage().addCookie(it) }
+                        val options = driver.manage()
+                        options.deleteAllCookies()
+                        storedCookies.forEach { options.addCookie(it) }
                         sessionAvailable = true
                         needsRefresh = true
                     }
@@ -52,7 +53,7 @@ class BrowserImpl : Browser, KoinComponent {
         return sessionAvailable to needsRefresh
     }
 
-    override fun openTabs(vararg urls: String): List<String> {
+    override fun openTabs(urls: List<String>): List<String> {
         driver.switchTo().window("")
         val oldWindowHandles = driver.windowHandles
         urls.mapNotNull { url ->
@@ -137,7 +138,7 @@ class BrowserImpl : Browser, KoinComponent {
     private fun Set<Cookie>?.hasSession(sessionCookieName: String, sessionCookieDomain: String): Boolean {
         return this
             ?.firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
-            ?.let { it.expiry > Date() }
+            ?.let { it.expiry == null || it.expiry > Date() }
             ?: false
     }
 }

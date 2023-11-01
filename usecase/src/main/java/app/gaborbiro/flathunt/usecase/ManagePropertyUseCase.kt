@@ -2,8 +2,10 @@ package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
-import app.gaborbiro.flathunt.directions.DirectionsLatLon
+import app.gaborbiro.flathunt.criteria.POI
+import app.gaborbiro.flathunt.criteria.POITravelMode
+import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.directions.model.DirectionsLatLon
 import app.gaborbiro.flathunt.directions.DirectionsService
 import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.prettyPrint
@@ -12,6 +14,8 @@ import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
 import org.koin.core.component.inject
+import app.gaborbiro.flathunt.directions.model.DirectionsTravelLimit
+import app.gaborbiro.flathunt.directions.model.DirectionsTravelMode
 
 class ManagePropertyUseCase : BaseUseCase() {
 
@@ -61,7 +65,7 @@ class ManagePropertyUseCase : BaseUseCase() {
     {
         val next = GlobalVariables.lastUsedIndexOrWebId?.let { propertyRepository.getNextProperty(it) }
         getPropertiesByIndexOrWebIdArray("$").forEach {
-            propertyRepository.deleteProperty(it.index, markAsUnsuitable = true, GlobalVariables.safeMode)
+            propertyRepository.deleteProperty(it.index!!, markAsUnsuitable = true, GlobalVariables.safeMode)
         }
         next?.let {
             console.d("${it.index} - ${it.webId}")
@@ -79,7 +83,7 @@ class ManagePropertyUseCase : BaseUseCase() {
     )
     { (arg, mark) ->
         getPropertiesByIndexOrWebIdArray(arg).forEach {
-            propertyRepository.deleteProperty(it.index, markAsUnsuitable = mark, GlobalVariables.safeMode)
+            propertyRepository.deleteProperty(it.index!!, markAsUnsuitable = mark, GlobalVariables.safeMode)
         }
     }
 
@@ -105,7 +109,7 @@ class ManagePropertyUseCase : BaseUseCase() {
         property
             ?.let {
                 GlobalVariables.lastUsedIndexOrWebId = indexOrWebId
-                propertyRepository.addOrUpdateProperty(it.clone(comment = comment))
+                propertyRepository.addOrUpdateProperty(it.copy(comment = comment))
             }
             ?: run { console.d("Cannot find property with index or web id $indexOrWebId") }
     }
@@ -123,7 +127,7 @@ class ManagePropertyUseCase : BaseUseCase() {
             ?.let {
                 GlobalVariables.lastUsedIndexOrWebId = indexOrWebId
                 if (comment.isNotBlank()) {
-                    propertyRepository.addOrUpdateProperty(it.clone(comment = it.comment + " " + comment))
+                    propertyRepository.addOrUpdateProperty(it.copy(comment = it.comment + " " + comment))
                 }
             }
             ?: run { console.d("Cannot find property with index or web id $indexOrWebId") }
@@ -142,8 +146,17 @@ class ManagePropertyUseCase : BaseUseCase() {
                 GlobalVariables.lastUsedIndexOrWebId = indexOrWebId
                 it.location
                     ?.let {
+                        val poi = POI.NearestRailStation.max[0]
+                        val travelMode = when (poi.mode) {
+                            POITravelMode.TRANSIT -> DirectionsTravelMode.TRANSIT
+                            POITravelMode.CYCLING -> DirectionsTravelMode.CYCLING
+                            POITravelMode.WALKING -> DirectionsTravelMode.WALKING
+                        }
                         console.d(
-                            directionsService.getRoutesToNearestStations(DirectionsLatLon(it.latitude, it.longitude))
+                            directionsService.getRoutesToNearestStations(
+                                from = DirectionsLatLon(latitude = it.latitude, longitude = it.longitude),
+                                limit = DirectionsTravelLimit(travelMode, poi.maxMinutes)
+                            )
                                 .orNull()
                                 ?.joinToString("")
                                 ?: "No nearby stations found"
@@ -155,7 +168,7 @@ class ManagePropertyUseCase : BaseUseCase() {
             ?: run { console.d("Cannot find property with index or web id $indexOrWebId") }
     }
 
-    private fun getPropertiesByIndexOrWebIdArray(arg: String): List<PersistedProperty> {
+    private fun getPropertiesByIndexOrWebIdArray(arg: String): List<Property> {
         val arg = arg.checkLastUsedIndexOrWebId()
         var properties = propertyRepository.getProperty(arg)?.let { listOf(it) }
 

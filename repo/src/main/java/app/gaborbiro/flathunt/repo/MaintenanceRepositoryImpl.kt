@@ -5,7 +5,6 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.service.domain.Browser
 import app.gaborbiro.flathunt.service.domain.UtilsService
-import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -41,9 +40,12 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
         return store.getProperties().size
     }
 
-    override fun clearCookies() {
-//        store.clearCookies()
+    override fun clearBrowserCookies() {
         browser.clearCookies()
+    }
+
+    override fun clearStoredCookies() {
+        store.clearCookies()
     }
 
     override fun importCookiesToBrowser(path: String) {

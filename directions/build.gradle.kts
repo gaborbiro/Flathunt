@@ -17,5 +17,5 @@ dependencies {
     implementation(Dependencies.Koin.annotations)
     ksp(Dependencies.Koin.ksp)
 
-    implementation("com.google.code.gson:gson:2.8.9")
+    implementation(Dependencies.Google.gson)
 }

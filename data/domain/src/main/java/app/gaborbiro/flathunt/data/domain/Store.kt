@@ -1,13 +1,12 @@
 package app.gaborbiro.flathunt.data.domain
 
 import app.gaborbiro.flathunt.data.domain.model.Cookies
-import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 
 interface Store {
     fun getJsonProperties(): String?
 
-    fun getProperties(): List<PersistedProperty>
+    fun getProperties(): List<Property>
 
     fun overrideProperties(properties: List<Property>)
 
@@ -17,7 +16,7 @@ interface Store {
 
     fun getBlacklistWebIds(): List<String>
 
-    fun saveBlacklistWebIds (webIds: List<String>)
+    fun saveBlacklistWebIds(webIds: List<String>)
 
     fun clearBlacklist()
 

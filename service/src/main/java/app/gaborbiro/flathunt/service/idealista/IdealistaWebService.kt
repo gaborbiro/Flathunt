@@ -1,9 +1,9 @@
 package app.gaborbiro.flathunt.service.idealista
 
-import app.gaborbiro.flathunt.LatLon
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
 import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
@@ -93,7 +93,7 @@ class IdealistaWebService : BaseWebService() {
             .get("center")!!
             .get(1)
             .split(",")
-        val location = LatLon(center[0], center[1])
+        val location = PropertyLatLon(center[0], center[1])
         return Property(
             webId = webId,
             totalRooms = rooms,

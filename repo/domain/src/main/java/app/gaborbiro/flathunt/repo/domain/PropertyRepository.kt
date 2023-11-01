@@ -1,13 +1,12 @@
 package app.gaborbiro.flathunt.repo.domain
 
-import app.gaborbiro.flathunt.data.domain.model.PersistedProperty
 import app.gaborbiro.flathunt.data.domain.model.Property
 
 interface PropertyRepository {
 
-    fun getProperty(indexOrWebId: String): PersistedProperty?
+    fun getProperty(indexOrWebId: String): Property?
 
-    fun getProperties(): List<PersistedProperty>
+    fun getProperties(): List<Property>
 
     fun addOrUpdateProperty(property: Property): Boolean
 
@@ -29,7 +28,7 @@ interface PropertyRepository {
 
     fun markAsUnsuitable(webId: String, unsuitable: Boolean)
 
-    fun getNextProperty(indexOrWebId: String): PersistedProperty?
+    fun getNextProperty(indexOrWebId: String): Property?
 
     fun reindex()
 }

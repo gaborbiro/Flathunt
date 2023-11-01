@@ -115,17 +115,4 @@ fun nostrict(lambda: () -> Unit) {
     }
 }
 
-fun escapeHTML(s: String): String {
-    val out = StringBuilder(16.coerceAtLeast(s.length))
-    for (element in s) {
-        if (element.code > 127 || element == '"' || element == '\'' || element == '<' || element == '>' || element == '&') {
-            out.append("&#")
-            out.append(element.code)
-            out.append(';')
-        } else {
-            out.append(element)
-        }
-    }
-    return out.toString()
-}
 

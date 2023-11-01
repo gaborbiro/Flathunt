@@ -1,16 +1,19 @@
 package app.gaborbiro.flathunt
 
+import app.gaborbiro.flathunt.criteria.POITravelLimit
+import app.gaborbiro.flathunt.criteria.POITravelMode
 
-infix fun Int.minutes(travelMode: TravelMode) = TravelLimit(travelMode, this)
 
-infix fun TravelLimit.or(travelLimit: TravelLimit) = arrayOf(this, travelLimit)
-infix fun Array<TravelLimit>.or(travelLimit: TravelLimit) = this + travelLimit
+infix fun Int.minutes(travelMode: POITravelMode) = POITravelLimit(travelMode, this)
 
-infix fun TravelLimit.or(minutes: Int) = TravelLimitBuilder(arrayOf(this), minutes)
-infix fun Array<TravelLimit>.or(minutes: Int) = TravelLimitBuilder(this, minutes)
+infix fun POITravelLimit.or(travelLimit: POITravelLimit) = arrayOf(this, travelLimit)
+infix fun Array<POITravelLimit>.or(travelLimit: POITravelLimit) = this + travelLimit
 
-class TravelLimitBuilder(private val maxes: Array<TravelLimit>, private val minutes: Int) {
-    fun build(travelMode: TravelMode) = maxes or (minutes minutes travelMode)
+infix fun POITravelLimit.or(minutes: Int) = TravelLimitBuilder(arrayOf(this), minutes)
+infix fun Array<POITravelLimit>.or(minutes: Int) = TravelLimitBuilder(this, minutes)
+
+class TravelLimitBuilder(private val maxes: Array<POITravelLimit>, private val minutes: Int) {
+    fun build(travelMode: POITravelMode) = maxes or (minutes minutes travelMode)
 }
 
-infix fun TravelLimitBuilder.minutes(travelMode: TravelMode) = build(travelMode)
+infix fun TravelLimitBuilder.minutes(travelMode: POITravelMode) = build(travelMode)

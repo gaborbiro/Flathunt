@@ -21,7 +21,7 @@ class RoutesUseCase : BaseUseCase() {
                 "Feel free to tweak any of your validation criteria in Setup.kt before running this command."
     )
     {
-        routesRepository.validateByRoutes()
+        routesRepository.revalidateRoutes()
         console.d("Finished calculating routes")
     }
 }
