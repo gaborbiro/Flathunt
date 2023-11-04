@@ -89,7 +89,7 @@ internal class Mapper : KoinComponent {
                     "&markers=size:mid|color:green|${route.destination.toGoogleCoords()}"
                 } else null
             }
-        val pois = routes.map { it.value }.filterIsInstance<POI.Destination>().map {
+        val pois = routes.map { it.key }.filterIsInstance<POI.Destination>().map {
             val coords = DirectionsLatLon(it.latitude, it.longitude).toGoogleCoords()
             "&markers=size:mid|color:blue|$coords"
         }

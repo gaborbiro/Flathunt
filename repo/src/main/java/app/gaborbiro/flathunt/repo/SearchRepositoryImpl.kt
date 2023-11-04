@@ -76,14 +76,14 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         onMarkedAsUnsuitable: () -> Unit
     ) {
         try {
-            val property = webService.fetchProperty(webId)
-            console.d(property.title)
-            val valid = validateProperty(property)
-            if (valid) {
+            val basicProperty = webService.fetchProperty(webId)
+            console.d(basicProperty.title)
+            val property = processProperty(basicProperty)
+            if (property != null) {
                 addedIds.add(webId)
                 console.i(property.prettyPrint())
             } else {
-                if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
+                if (!basicProperty.markedUnsuitable && !GlobalVariables.safeMode) {
                     propertyRepository.markAsUnsuitable(webId, unsuitable = true)
                 }
                 onMarkedAsUnsuitable()
@@ -96,7 +96,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         }
     }
 
-    private fun validateProperty(property: Property): Boolean {
+    private fun processProperty(property: Property): Property? {
         // pre-validate to save on the Google Maps API call
         val propertyValid = propertyValidator.isValid(property)
 
@@ -110,7 +110,8 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
                 }
             }
             val routesStr = routesResult.toList().joinToString { (poi, route) ->
-                "\n${poi.description}: ${route?.toString()}"
+                val routeStr = route?.let { "${it.timeMinutes} minutes of ${it.mode.description}" }
+                "\n${poi.description}: $routeStr"
             }
             console.d("\n${property.webId}: ${property.title}:\n$routesStr")
 
@@ -125,12 +126,12 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
                 )
                 propertyRepository.addOrUpdateProperty(finalProperty)
                 console.d("Valid")
-                true
+                finalProperty
             } else {
-                false
+                null
             }
         } else {
-            false
+            null
         }
     }
 }

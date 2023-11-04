@@ -87,7 +87,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
         limit: DirectionsTravelLimit,
     ): Route? {
         val departureTime = LocalDateTime.of(LocalDate.now().plus(1L, ChronoUnit.DAYS), LocalTime.NOON)
-            .atZone(ZoneId.of("GMT")).toInstant().epochSecond
+            .atZone(ZoneId.systemDefault()).toInstant().epochSecond
 
         fun isReplaceable(step: RouteStep): Boolean {
             return step.travelMode == DirectionsTravelMode.WALKING.value.uppercase() ||
@@ -103,114 +103,115 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
             response.routes.filter {
                 // there is only one leg, unless waypoints are specified in the request
                 val leg = it.legs[0]
-                leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() } <= 2 // max two changes
+                leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() } <= 2 // max one change
             }.map { route ->
                 val leg = route.legs[0]
                 val totalDurationSecs: Int = leg.duration.value
                 val totalDurationMins = TimeUnit.SECONDS.toMinutes(totalDurationSecs.toLong()).toInt()
                 val totalDistanceMeters: Int = leg.distance.value
                 val totalDistanceKm = totalDistanceMeters / 1000f
-                val replacementDirections = if (limit.mode == DirectionsTravelMode.TRANSIT) {
-                    val collapsedSteps = leg.steps.fold(mutableListOf<RouteStep>()) { steps, step ->
-                        if (steps.isEmpty()) {
-                            if (isReplaceable(step)) {
-                                steps.add(step.copy(travelMode = DirectionsTravelMode.CYCLING.value.uppercase()))
-                            } else {
-                                steps.add(step)
-                            }
-                        } else {
-                            val last = steps.lastOrNull()!!
-                            if (last.travelMode == DirectionsTravelMode.CYCLING.value.uppercase()) {
-                                if (isReplaceable(step)) { // fold it in
-                                    steps[steps.size - 1] = last.copy(
-                                        endLocation = step.endLocation,
-                                        duration = LegDuration(step.duration.value + last.duration.value),
-                                        distance = LegDistance(step.distance.value + last.distance.value)
-                                    )
-                                } else {
-                                    steps.add(step)
-                                }
-                            } else {
-                                if (isReplaceable(step)) {
-                                    steps.add(step.copy(travelMode = DirectionsTravelMode.CYCLING.value.uppercase()))
-                                } else {
-                                    steps.add(step)
-                                }
-                            }
-                        }
-                        steps
-                    }
-                    if (collapsedSteps.size == 3
-                        && (collapsedSteps[0].travelMode == DirectionsTravelMode.CYCLING.value.uppercase())
-                        && collapsedSteps[1].travelMode != DirectionsTravelMode.CYCLING.value.uppercase()
-                        && collapsedSteps[2].travelMode == DirectionsTravelMode.CYCLING.value.uppercase()
-                    ) {
-                        val oldStep1 = collapsedSteps[0]
-                        val cyclingLeg1 = fetchDirections(
-                            from = oldStep1.startLocation.let { DirectionsLatLon(it.lat, it.lng) },
-                            to = oldStep1.endLocation.let { DirectionsLatLon(it.lat, it.lng) },
-                            mode = DirectionsTravelMode.CYCLING,
-                            departureTime = departureTime,
-                            alternatives = false,
-                        ).let {
-                            if (it.routes.isNotEmpty()) {
-                                it.routes[0].legs[0]
-                            } else {
-                                null
-                            }
-                        }
-                        val oldStep2 = collapsedSteps[2]
-                        val cyclingLeg2: RouteLeg? = fetchDirections(
-                            from = oldStep2.startLocation.let { DirectionsLatLon(it.lat, it.lng) },
-                            to = oldStep2.endLocation.let { DirectionsLatLon(it.lat, it.lng) },
-                            mode = DirectionsTravelMode.CYCLING,
-                            departureTime = departureTime,
-                            alternatives = false,
-                        ).let {
-                            if (it.routes.isNotEmpty()) {
-                                it.routes[0].legs[0]
-                            } else {
-                                null
-                            }
-                        }
-                        // It is possible that google doesn't return a cycling alternative to the start/end walking leg,
-                        // because it is too short of a distance. We can just fall back on the original walking step, as
-                        // the time saving wouldn't be significant anyway with a bicycle.
-                        val replacedTimeSeconds =
-                            (cyclingLeg1?.duration ?: oldStep1.duration).value +
-                                    (cyclingLeg2?.duration ?: oldStep2.duration).value +
-                                    leg.steps[1].duration.value
-                        val replacedTimeMinutes = TimeUnit.SECONDS.toMinutes(replacedTimeSeconds.toLong()).toInt()
-                        if (replacedTimeMinutes < totalDurationMins) {
-                            val replacedDistanceMeters =
-                                (cyclingLeg1?.distance ?: oldStep1.distance).value +
-                                        (cyclingLeg2?.distance ?: oldStep2.distance).value +
-                                        leg.steps[1].distance.value
-                            Route(
-                                transitCount = 1,
-                                timeMinutes = replacedTimeMinutes,
-                                distanceKm = replacedDistanceMeters / 1000f,
-                                replacementTransitData = collapsedSteps[1].transitDetails!!.toString(),
-                                mode = DirectionsTravelMode.CYCLING,
-                                destination = to,
-                            )
-                        } else {
-                            null
-                        }
-                    } else {
-                        null
-                    }
-                } else {
-                    null
-                }
-                (replacementDirections ?: Route(
+//                val replacementDirections = if (limit.mode == DirectionsTravelMode.TRANSIT) {
+//                    val collapsedSteps = leg.steps.fold(mutableListOf<RouteStep>()) { steps, step ->
+//                        if (steps.isEmpty()) {
+//                            if (isReplaceable(step)) {
+//                                steps.add(step.copy(travelMode = DirectionsTravelMode.CYCLING.value.uppercase()))
+//                            } else {
+//                                steps.add(step)
+//                            }
+//                        } else {
+//                            val last = steps.lastOrNull()!!
+//                            if (last.travelMode == DirectionsTravelMode.CYCLING.value.uppercase()) {
+//                                if (isReplaceable(step)) { // fold it in
+//                                    steps[steps.size - 1] = last.copy(
+//                                        endLocation = step.endLocation,
+//                                        duration = LegDuration(step.duration.value + last.duration.value),
+//                                        distance = LegDistance(step.distance.value + last.distance.value)
+//                                    )
+//                                } else {
+//                                    steps.add(step)
+//                                }
+//                            } else {
+//                                if (isReplaceable(step)) {
+//                                    steps.add(step.copy(travelMode = DirectionsTravelMode.CYCLING.value.uppercase()))
+//                                } else {
+//                                    steps.add(step)
+//                                }
+//                            }
+//                        }
+//                        steps
+//                    }
+//                    if (collapsedSteps.size == 3
+//                        && (collapsedSteps[0].travelMode == DirectionsTravelMode.CYCLING.value.uppercase())
+//                        && collapsedSteps[1].travelMode != DirectionsTravelMode.CYCLING.value.uppercase()
+//                        && collapsedSteps[2].travelMode == DirectionsTravelMode.CYCLING.value.uppercase()
+//                    ) {
+//                        val oldStep1 = collapsedSteps[0]
+//                        val cyclingLeg1 = fetchDirections(
+//                            from = oldStep1.startLocation.let { DirectionsLatLon(it.lat, it.lng) },
+//                            to = oldStep1.endLocation.let { DirectionsLatLon(it.lat, it.lng) },
+//                            mode = DirectionsTravelMode.CYCLING,
+//                            departureTime = departureTime,
+//                            alternatives = false,
+//                        ).let {
+//                            if (it.routes.isNotEmpty()) {
+//                                it.routes[0].legs[0]
+//                            } else {
+//                                null
+//                            }
+//                        }
+//                        val oldStep2 = collapsedSteps[2]
+//                        val cyclingLeg2: RouteLeg? = fetchDirections(
+//                            from = oldStep2.startLocation.let { DirectionsLatLon(it.lat, it.lng) },
+//                            to = oldStep2.endLocation.let { DirectionsLatLon(it.lat, it.lng) },
+//                            mode = DirectionsTravelMode.CYCLING,
+//                            departureTime = departureTime,
+//                            alternatives = false,
+//                        ).let {
+//                            if (it.routes.isNotEmpty()) {
+//                                it.routes[0].legs[0]
+//                            } else {
+//                                null
+//                            }
+//                        }
+//                        // It is possible that google doesn't return a cycling alternative to the start/end walking leg,
+//                        // because it is too short of a distance. We can just fall back on the original walking step, as
+//                        // the time saving wouldn't be significant anyway with a bicycle.
+//                        val replacedTimeSeconds =
+//                            (cyclingLeg1?.duration ?: oldStep1.duration).value +
+//                                    (cyclingLeg2?.duration ?: oldStep2.duration).value +
+//                                    leg.steps[1].duration.value
+//                        val replacedTimeMinutes = TimeUnit.SECONDS.toMinutes(replacedTimeSeconds.toLong()).toInt()
+//                        if (replacedTimeMinutes < totalDurationMins) {
+//                            val replacedDistanceMeters =
+//                                (cyclingLeg1?.distance ?: oldStep1.distance).value +
+//                                        (cyclingLeg2?.distance ?: oldStep2.distance).value +
+//                                        leg.steps[1].distance.value
+//                            Route(
+//                                transitCount = 1,
+//                                timeMinutes = replacedTimeMinutes,
+//                                distanceKm = replacedDistanceMeters / 1000f,
+//                                replacementTransitData = collapsedSteps[1].transitDetails!!.toString(),
+//                                mode = DirectionsTravelMode.CYCLING,
+//                                destination = to,
+//                            )
+//                        } else {
+//                            null
+//                        }
+//                    } else {
+//                        null
+//                    }
+//                } else {
+//                    null
+//                }
+//                replacementDirections ?:
+                Route(
                     transitCount = leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() },
                     timeMinutes = totalDurationMins,
                     distanceKm = totalDistanceKm,
                     replacementTransitData = null,
                     mode = limit.mode,
                     destination = to,
-                ))
+                )
             }.minByOrNull { it.timeMinutes }
         }
     }

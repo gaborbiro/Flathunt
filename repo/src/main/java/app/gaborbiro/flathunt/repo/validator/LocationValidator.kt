@@ -19,7 +19,7 @@ internal class LocationValidator : KoinComponent {
         return if (errors.isEmpty()) {
             true
         } else {
-            console.d("\nRejected: ${errors.joinToString()}")
+            console.d("\nRejected:\n${errors.joinToString("\n")}")
             false
         }
     }
@@ -32,9 +32,8 @@ internal class LocationValidator : KoinComponent {
         routes
             .filterValues { it == null }
             .toList()
-            .map { it.first }
-            .joinToString { ", " }
-            .let {
+            .map { it.first.description }
+            .forEach {
                 errors.add("missing route to: $it")
             }
         routes
