@@ -49,6 +49,7 @@ dependencies {
     ksp(Dependencies.Koin.ksp)
 }
 
+apply plugin: "com.anatawa12.compile-time-constant"
 def createCompileTimeConstant = tasks.withType(CreateConstantsTask) {
     constantsClass = "app.gaborbiro.flathunt.compileTimeConstant.Constants"
     values(
