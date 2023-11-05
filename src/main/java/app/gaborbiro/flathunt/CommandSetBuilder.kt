@@ -29,7 +29,7 @@ class CommandSetBuilder(
         allCommands.apply {
             put(
                 HELP_COMMAND_CODE,
-                command(command = HELP_COMMAND_CODE, description = "Prints this menu") {
+                command(command = HELP_COMMAND_CODE, description = "Prints this help") {
                     printCommands(serviceConfig, allCommands)
                 }
             )
@@ -42,7 +42,7 @@ class CommandSetBuilder(
     }
 
     private fun printCommands(serviceConfig: String, commands: Map<String, Command<*>>) {
-        console.d("\nAvailable commands:\n")
+        console.d("Available commands:\n")
         val commandsStr = commands
             .toSortedMap()
             .mapKeys {

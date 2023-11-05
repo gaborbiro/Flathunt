@@ -7,8 +7,6 @@ plugins {
     id("com.anatawa12.compile-time-constant")
 }
 
-apply(from = "${project.rootDir}/services.gradle")
-
 repositories {
     mavenCentral()
 }
@@ -30,6 +28,7 @@ dependencies {
     implementation(Dependencies.OkHttp.okhttp)
 }
 
+apply(from = "${project.rootDir}/services.gradle")
 val createCompileTimeConstant = tasks.withType(CreateConstantsTask::class.java) {
     constantsClass = "app.gaborbiro.flathunt.compileTimeConstant.Constants"
     values(

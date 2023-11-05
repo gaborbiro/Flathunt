@@ -106,7 +106,7 @@ class ManagePropertyUseCase : BaseUseCase() {
 
     private val comment = command<String, String>(
         command = "comment",
-        description = "Set the comment field of a property, by index or web id",
+        description = "Set the comment field of a property",
         argumentName1 = "idx",
         argumentName2 = "comment",
     )
@@ -123,7 +123,7 @@ class ManagePropertyUseCase : BaseUseCase() {
 
     private val commentAppend = command<String, String>(
         command = "comment+",
-        description = "Append comment to a property, by index or web id",
+        description = "Append comment to a property",
         argumentName1 = "idx",
         argumentName2 = "comment",
     )

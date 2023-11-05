@@ -8,11 +8,13 @@ import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
 import org.koin.core.component.inject
+import org.koin.core.qualifier.StringQualifier
 
 class ListUseCase : BaseUseCase() {
 
     private val propertyRepository: PropertyRepository by inject()
     private val console: ConsoleWriter by inject()
+    private val serviceName: String by inject(StringQualifier("serviceName"))
 
     override val commands: List<Command<*>>
         get() = listOf(
@@ -28,7 +30,7 @@ class ListUseCase : BaseUseCase() {
 
     private val listProperties = command(
         command = "list properties",
-        description = "Print all properties"
+        description = "Print all ${serviceName} properties"
     )
     {
         val properties = propertyRepository.getProperties()
@@ -42,7 +44,7 @@ class ListUseCase : BaseUseCase() {
 
     private val listIds = command(
         command = "list ids",
-        description = "Print all property ids"
+        description = "Print all ${serviceName} property ids"
     )
     {
         val properties = propertyRepository.getProperties()
@@ -56,7 +58,7 @@ class ListUseCase : BaseUseCase() {
 
     private val listUrl = command(
         command = "list urls",
-        description = "Print all property urls"
+        description = "Print all ${serviceName} property urls"
     )
     {
         val properties = propertyRepository.getProperties()
@@ -76,28 +78,28 @@ class ListUseCase : BaseUseCase() {
 
     private val deleteList = command(
         command = "clear all",
-        description = "Delete all data from this service"
+        description = "Delete all data from the ${serviceName} database"
     ) {
         propertyRepository.clearProperties()
     }
 
     private val deleteBlacklist = command(
         command = "clear blacklist",
-        description = "Remove all properties from blacklist"
+        description = "Remove all properties from the ${serviceName} blacklist"
     ) {
         propertyRepository.clearBlacklist()
     }
 
     private val listBlacklist = command(
         command = "list blacklist",
-        description = "Print all blacklisted ids"
+        description = "Print all blacklisted ${serviceName} ids"
     ) {
         propertyRepository.getBlacklist().forEach { console.d(it) }
     }
 
     private val addBlacklist = command<String>(
-        command = "add blacklist",
-        description = "Add ids to blacklist",
+        command = "blacklist",
+        description = "Add ids to the ${serviceName} blacklist",
         argumentDescription = "id (comma separated)"
     ) { (ids) ->
         propertyRepository.addToBlacklist(ids.split(Regex("[,\\s]+")))
@@ -105,7 +107,7 @@ class ListUseCase : BaseUseCase() {
 
     private val reindex = command(
         command = "reindex",
-        description = "Re-indexes all properties in the database starting from 1"
+        description = "Re-indexes all properties in the ${serviceName} database starting from 1"
     )
     {
         propertyRepository.reindex()

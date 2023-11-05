@@ -1,3 +1,4 @@
+import com.anatawa12.compileTimeConstant.CreateConstantsTask
 import app.gaborbiro.flathunt.Dependencies
 
 plugins {
@@ -16,5 +17,6 @@ dependencies {
     implementation(project(":directions"))
     implementation(project(":console:domain"))
 
+    implementation(Dependencies.Koin.annotations)
     implementation(Dependencies.Koin.core)
 }
