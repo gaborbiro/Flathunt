@@ -5,10 +5,6 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-kotlin {
-    jvmToolchain(Dependencies.jdk)
-}
-
 repositories {
     mavenCentral()
 }

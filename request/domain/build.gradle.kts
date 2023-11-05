@@ -4,10 +4,6 @@ plugins {
     kotlin("jvm")
 }
 
-kotlin {
-    jvmToolchain(Dependencies.jdk)
-}
-
 repositories {
     mavenCentral()
 }
