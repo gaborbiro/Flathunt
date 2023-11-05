@@ -5,7 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-apply(from = "${project.rootDir}/service.gradle")
+apply(from = "${project.rootDir}/services.gradle")
 
 repositories {
     mavenCentral()

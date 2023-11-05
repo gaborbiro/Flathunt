@@ -1,0 +1,13 @@
+def SERVICES = [
+        "spareroom",
+        "rightmove",
+        "zoopla",
+        "idealista",
+]
+
+def CRITERIA = [
+        "exp",
+]
+
+ext.SERVICE_CONFIGS = SERVICES.collect { service -> CRITERIA.collect { criteria -> service + "-" + criteria } }.flatten()
+ext.SERVICE_CONSTANTS = SERVICE_CONFIGS + SERVICES + CRITERIA
