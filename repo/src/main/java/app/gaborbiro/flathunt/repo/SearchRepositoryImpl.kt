@@ -35,11 +35,11 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val directionsService: DirectionsService by inject()
     private val mapper: Mapper by inject()
 
-    override fun fetchPropertiesFromAllPages(searchUrl: String) {
+    override fun fetchPropertiesFromAllPages(url: String) {
         val storedIds = store.getProperties().map { it.webId }.toSet()
         val addedIds = mutableListOf<String>()
         val failedIds = mutableListOf<String>()
-        var currentSearchUrl: String? = searchUrl
+        var currentSearchUrl: String? = url
         var markedAsUnsuitableCount = 0
         do {
             val pageInfo = webService.getPageInfo(currentSearchUrl!!)

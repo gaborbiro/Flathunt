@@ -3,7 +3,7 @@ package app.gaborbiro.flathunt.service.spareroom.usecase
 import app.gaborbiro.flathunt.repo.domain.InboxRepository
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
-import app.gaborbiro.flathunt.repo.domain.RoutesRepository
+import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
@@ -13,7 +13,7 @@ import org.koin.core.component.inject
 class InboxUseCase : BaseUseCase() {
 
     private val webService: WebService by inject()
-    private val routesRepository: RoutesRepository by inject()
+    private val directionsRepository: DirectionsRepository by inject()
     private val inboxRepository: InboxRepository by inject()
     private val propertyRepository: PropertyRepository by inject()
 
@@ -31,7 +31,7 @@ class InboxUseCase : BaseUseCase() {
                 properties.forEach { property ->
                     propertyRepository.addOrUpdateProperty(property)
                 }
-                val (_, unsuitable) = routesRepository.revalidateRoutes(properties)
+                val (_, unsuitable) = directionsRepository.revalidateDirections(properties)
                 unsuitable.forEach { property ->
                     property.messageUrl?.let {
                         inboxRepository.tagMessage(it, MessageTag.REJECTED)

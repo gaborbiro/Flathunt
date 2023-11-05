@@ -14,10 +14,11 @@ class SearchUseCase : BaseUseCase() {
 
     private val search = command<String>(
         command = "search",
-        description = "Reads new properties from a search url. Marks, saves and prints found properties that are valid",
-        argumentName = "search url",
+        description = "Read new properties from the search url. Saves and prints properties that are valid. " +
+                "Marks them as unsuitable if needed",
+        argumentDescription = "url",
     )
-    { (searchUrl) ->
-        searchRepository.fetchPropertiesFromAllPages(searchUrl)
+    { (url) ->
+        searchRepository.fetchPropertiesFromAllPages(url)
     }
 }

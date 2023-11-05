@@ -32,10 +32,18 @@ val poiRnD = POI.Destination(
     max = 30 minutes TRANSIT or 15 minutes WALKING
 )
 
+val poiMartha = POI.Destination(
+    description = "Martha",
+    latitude = "38.7212354",
+    longitude = "-9.1371214",
+    max = 30 minutes TRANSIT or 15 minutes WALKING
+)
+
 val EXP = ValidationCriteria(
     pointsOfInterest = listOf(
         poiBaixaChiado,
-        poiRnD
+        poiRnD,
+        poiMartha,
     ),
     maxPrice = 1400,
     minBedrooms = 1,

@@ -30,7 +30,7 @@ class CommandSetBuilder(
             put(
                 HELP_COMMAND_CODE,
                 command(command = HELP_COMMAND_CODE, description = "Prints this menu") {
-                    printInfo(serviceConfig, allCommands)
+                    printCommands(serviceConfig, allCommands)
                 }
             )
             put(
@@ -41,9 +41,18 @@ class CommandSetBuilder(
         return CommandSet(allCommands)
     }
 
-    private fun printInfo(serviceConfig: String, commands: Map<String, Command<*>>) {
-        console.d("\nAvailable commands:")
-        console.d(commands.mapKeys { "- ${it.key}" }.mapValues { it.value.description }.prettyPrint())
+    private fun printCommands(serviceConfig: String, commands: Map<String, Command<*>>) {
+        console.d("\nAvailable commands:\n")
+        val commandsStr = commands
+            .toSortedMap()
+            .mapKeys {
+                "- ${it.key} ${it.value.argumentsDescription()}"
+            }
+            .mapValues {
+                it.value.description
+            }
+            .prettyPrint()
+        console.d(commandsStr)
         console.d()
         console.d("Service:\t\t$serviceConfig")
     }

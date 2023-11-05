@@ -2,15 +2,15 @@ package app.gaborbiro.flathunt.repo.domain
 
 interface MaintenanceRepository {
 
-    fun backup(path: String)
+    fun backup(filepath: String)
 
-    fun restore(path: String): Int
+    fun restore(filepath: String): Int
 
     fun clearBrowserCookies()
 
     fun clearStoredCookies()
 
-    fun importCookiesToBrowser(path: String)
+    fun importCookiesToBrowser(filepath: String)
 
     fun saveCookies()
 }

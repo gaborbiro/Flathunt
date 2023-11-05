@@ -4,6 +4,7 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.validator.PropertyValidator
 import app.gaborbiro.flathunt.service.domain.Browser
@@ -22,11 +23,12 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     private val browser: Browser by inject()
     private val validator: PropertyValidator by inject()
     private val console: ConsoleWriter by inject()
+    private val directionsRepository: DirectionsRepository by inject()
 
-    override fun getProperty(indexOrWebId: String): Property? {
+    override fun getProperty(idx: String): Property? {
         val properties = store.getProperties()
-        return properties.firstOrNull { it.index.toString() == indexOrWebId }
-            ?: properties.firstOrNull { it.webId == indexOrWebId }
+        return properties.firstOrNull { it.index.toString() == idx }
+            ?: properties.firstOrNull { it.webId == idx }
     }
 
     override fun getProperties(): List<Property> {
@@ -52,26 +54,33 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         }
     }
 
-    override fun verifyAll() {
+    override fun verify(directions: Boolean) {
         val properties = getProperties()
-        val validProperties = properties.filter { validator.validate(it).isEmpty() }
-        val toDelete = (properties - validProperties.toSet()).joinToString("\n") { "#${it.index} ${it.webId}" }
+        val invalidProperties = properties.filter { validator.validate(it).isNotEmpty() }
+        val toDelete = invalidProperties.joinToString("\n") { "#${it.index} ${it.webId}" }
         console.d("Deleting properties:")
         console.d(toDelete)
         if (!GlobalVariables.safeMode) {
-            store.overrideProperties(validProperties)
+            store.overrideProperties(invalidProperties)
+        }
+        if (directions) {
+            val (_, invalidDirectionsProperties) = directionsRepository.revalidateDirections()
+            val toDelete = invalidDirectionsProperties.joinToString("\n") { "#${it.index} ${it.webId}" }
+            console.d("Deleting properties:")
+            console.d(toDelete)
         }
     }
 
     override fun deleteProperty(index: Int, markAsUnsuitable: Boolean, safeMode: Boolean): Boolean {
         val properties = store.getProperties().toMutableList()
         return properties.firstOrNull { it.index == index }?.let { property ->
-            properties.removeIf { it.webId == property.webId }
-            store.overrideProperties(properties)
-            console.d("Property deleted")
             if (markAsUnsuitable && !safeMode) {
                 webService.markAsUnsuitable(property.webId, unsuitable = true)
             }
+            properties.removeIf { it.webId == property.webId }
+            store.overrideProperties(properties)
+            console.d("Property deleted")
+
             true
         } ?: run {
             false
@@ -119,8 +128,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         webService.markAsUnsuitable(webId, unsuitable)
     }
 
-    override fun getNextProperty(indexOrWebId: String): Property? {
-        return getProperty(indexOrWebId)?.let { currentProperty ->
+    override fun getNextProperty(idx: String): Property? {
+        return getProperty(idx)?.let { currentProperty ->
             store.getProperties().sortedBy { it.index }.firstOrNull { it.index!! > currentProperty.index!! }
         }
     }

@@ -21,10 +21,10 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
     private val browser: Browser by inject()
     private val console: ConsoleWriter by inject()
 
-    override fun backup(path: String) {
+    override fun backup(filepath: String) {
         store.getJsonProperties()?.let { json ->
             try {
-                PrintWriter(path).use { it.print(json) }
+                PrintWriter(filepath).use { it.print(json) }
                 console.d("${json.length} bytes backed up")
             } catch (t: Throwable) {
                 t.printStackTrace()
@@ -34,8 +34,8 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
         }
     }
 
-    override fun restore(path: String): Int {
-        val json = File(path).bufferedReader().use { it.readText() }
+    override fun restore(filepath: String): Int {
+        val json = File(filepath).bufferedReader().use { it.readText() }
         store.overrideJsonProperties(json)
         return store.getProperties().size
     }
@@ -48,8 +48,8 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
         store.clearCookies()
     }
 
-    override fun importCookiesToBrowser(path: String) {
-        val cookieFile = File(path)
+    override fun importCookiesToBrowser(filepath: String) {
+        val cookieFile = File(filepath)
         if (cookieFile.exists() && cookieFile.isFile) {
             val reader = BufferedReader(InputStreamReader(FileInputStream(cookieFile)))
             val cookies = reader.lines()

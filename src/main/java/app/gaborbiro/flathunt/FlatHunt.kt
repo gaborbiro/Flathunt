@@ -139,7 +139,6 @@ class FlatHunt {
                 InboxUseCase(),
                 SearchUseCase(),
                 FetchPropertyUseCase(),
-                RoutesUseCase(),
                 ListUseCase(),
                 ManagePropertyUseCase(),
                 MaintenanceUseCase(),
@@ -148,7 +147,6 @@ class FlatHunt {
             Constants.`rightmove-exp` -> setOf(
                 SearchUseCase(),
                 FetchPropertyUseCase(),
-                RoutesUseCase(),
                 ListUseCase(),
                 ManagePropertyUseCase(),
                 MaintenanceUseCase(),
@@ -157,7 +155,6 @@ class FlatHunt {
             Constants.`zoopla-exp` -> setOf(
                 SearchUseCase(),
                 FetchPropertyUseCase(),
-                RoutesUseCase(),
                 ListUseCase(),
                 ManagePropertyUseCase(),
                 MaintenanceUseCase(),

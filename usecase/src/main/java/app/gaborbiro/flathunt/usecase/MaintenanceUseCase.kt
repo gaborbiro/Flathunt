@@ -18,48 +18,40 @@ class MaintenanceUseCase : UseCase, KoinComponent {
         get() = listOf(
             command(
                 command = "clear browser cookies",
-                description = "Deletes cookies from current (if any) browser",
+                description = "Delete cookies from current browser (if open)",
                 exec = { repo.clearBrowserCookies() }
             ),
             command(
                 command = "clear stored cookies",
-                description = "Deletes cookies from database (will re-login on next launch)",
+                description = "Delete cookies from database (will re-login on next launch)",
                 exec = { repo.clearBrowserCookies() }
             ),
             command(
                 command = "import cookies",
-                description = "Add cookies from cookie-override.txt file. Requires open website.",
+                description = "Add cookies from cookie-override.txt file. Requires open browser.",
                 exec = { repo.importCookiesToBrowser("cookie-override.txt") }
             ),
             command(
                 command = "save cookies",
-                description = "Overrides currently stored cookies with the ones from the browser",
+                description = "Override currently stored cookies with the ones from the browser. Requires open browser.",
                 exec = { repo.saveCookies() }
             ),
             command<String>(
                 command = "export",
-                description = "Exports saved properties to the specified path",
-                argumentName = "path",
-                exec = {
-                    repo.backup(it.first)
-                }
-            ),
-            command<String>(
-                command = "backup",
-                description = "Exports saved properties to the specified path",
-                argumentName = "path",
-                exec = {
-                    repo.backup(it.first)
+                description = "Export saved properties to the specified path",
+                argumentDescription = "filepath",
+                exec = { (filepath) ->
+                    repo.backup(filepath)
                 }
             ),
             command<String>(
                 command = "import",
-                description = "Imports properties from specified path. Warning: this will irrevocably override all your data. " +
+                description = "Import properties from specified path. Warning: this will irrevocably override all your data. " +
                         "Make sure to back your data up first by using the 'export' command.",
-                argumentName = "path",
-            ) { (path) ->
+                argumentDescription = "filepath",
+            ) { (filepath) ->
                 try {
-                    val size = repo.restore(path)
+                    val size = repo.restore(filepath)
                     console.d("Imported $size properties")
                 } catch (t: Throwable) {
                     t.printStackTrace()
@@ -76,7 +68,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
             },
             command(
                 command = "regedit",
-                description = "Opens Windows regedit to Flathunt"
+                description = "Open Windows regedit to Flathunt"
             ) {
                 Runtime.getRuntime()
                     .exec("REG ADD \"HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\" /v \"LastKey\" /d \"HKEY_CURRENT_USER\\SOFTWARE\\JavaSoft\\Prefs\\app\\gaborbiro\\flathunt\" /f")
@@ -95,10 +87,10 @@ class MaintenanceUseCase : UseCase, KoinComponent {
             },
             command(
                 command = "safe mode off (default)",
-                description = "Messages or properties will be labeled/marked as needed"
+                description = "Messages or properties will be labeled/marked unsuitable as needed"
             ) {
                 GlobalVariables.safeMode = false
-                console.d("Safe mode disabled. Messages or properties will be labeled/marked as needed.")
+                console.d("Safe mode disabled. Messages or properties will be labeled/marked unsuitable as needed.")
             }
         )
 }

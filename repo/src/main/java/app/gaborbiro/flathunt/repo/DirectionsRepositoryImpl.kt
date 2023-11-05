@@ -10,7 +10,7 @@ import app.gaborbiro.flathunt.directions.model.DirectionsLatLon
 import app.gaborbiro.flathunt.directions.DirectionsService
 import app.gaborbiro.flathunt.directions.model.Route
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
-import app.gaborbiro.flathunt.repo.domain.RoutesRepository
+import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.mapper.Mapper
 import app.gaborbiro.flathunt.repo.validator.LocationValidator
 import app.gaborbiro.flathunt.repo.validator.PropertyValidator
@@ -20,7 +20,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 @Singleton
-class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
+class DirectionsRepositoryImpl : DirectionsRepository, KoinComponent {
 
     private val store: Store by inject()
     private val webService: WebService by inject()
@@ -32,8 +32,8 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
     private val console: ConsoleWriter by inject()
     private val mapper: Mapper by inject()
 
-    override fun revalidateRoutes(): Pair<List<Property>, List<Property>> {
-        return revalidateRoutes(store.getProperties())
+    override fun revalidateDirections(): Pair<List<Property>, List<Property>> {
+        return revalidateDirections(store.getProperties())
     }
 
     /**
@@ -41,7 +41,7 @@ class RoutesRepositoryImpl : RoutesRepository, KoinComponent {
      *
      * @return list of valid and invalid properties (according to route)
      */
-    override fun revalidateRoutes(properties: List<Property>): Pair<List<Property>, List<Property>> {
+    override fun revalidateDirections(properties: List<Property>): Pair<List<Property>, List<Property>> {
         if (properties.isEmpty()) {
             console.d("No saved properties. Fetch some")
             return Pair(emptyList(), emptyList())

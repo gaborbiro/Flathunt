@@ -37,14 +37,14 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
     /**
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
      */
-    override fun fetchProperty(arg: String, save: SaveType, safeMode: Boolean): Property? {
-        val cleanUrl = utilsService.parseUrlOrWebId(arg)
+    override fun fetchProperty(idu: String, save: SaveType, safeMode: Boolean): Property? {
+        val cleanUrl = utilsService.parseWebIdOrUrl(idu)
 
         return if (cleanUrl != null) {
             console.d()
             console.d(cleanUrl)
             val webId = utilsService.getPropertyIdFromUrl(cleanUrl)
-            GlobalVariables.lastUsedIndexOrWebId = webId
+            GlobalVariables.lastIdx = webId
             val property = webService.fetchProperty(webId)
 
             if (property.isBuddyUp && save != SaveType.FORCE_SAVE) {
@@ -92,7 +92,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
             }
             finalProperty
         } else {
-            console.e("Invalid url: $arg")
+            console.e("Invalid url: $idu")
             null
         }
     }

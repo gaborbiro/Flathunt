@@ -23,13 +23,13 @@ class FetchPropertyUseCase : BaseUseCase() {
 
     private val fetch = command<String>(
         command = "fetch",
-        description = "Fetches property (by id or url), validates it and labels it as needed. " +
-                "(same as peek, but also saves or marks the property)",
-        argumentName = "id or url",
+        description = "Fetch property, validate it and label it as needed. " +
+                "Same as peek, but also saves or marks the property as unsuitable.",
+        argumentDescription = "idu",
     )
-    { (arg) ->
+    { (idu) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrWebId(),
+            idu = idu.checkLastUsedIdx(),
             save = SaveType.SAVE,
             safeMode = GlobalVariables.safeMode
         )
@@ -37,13 +37,13 @@ class FetchPropertyUseCase : BaseUseCase() {
 
     private val fetchAndOpen = command<String>(
         command = "fetch open",
-        description = "Fetches property (by id or url), validates it and labels it as needed. If valid, opens it in a browser. " +
-                "(same as peek, but also saves or marks the property)",
-        argumentName = "id or url",
+        description = "Fetch property, validate it and label it as needed. If valid, open it in a browser. " +
+                "Same as peek, but also saves or marks the property as unsuitable.",
+        argumentDescription = "idu",
     )
-    { (arg) ->
+    { (idu) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrWebId(),
+            idu = idu.checkLastUsedIdx(),
             save = SaveType.SAVE,
             safeMode = GlobalVariables.safeMode
         )?.let(propertyRepository::openLinks)
@@ -51,13 +51,13 @@ class FetchPropertyUseCase : BaseUseCase() {
 
     private val peek = command<String>(
         command = "peek",
-        description = "Fetches property (by id or url), validates it and even labels it as needed. " +
+        description = "Fetch property, validate it and even label it as needed. " +
                 "Same as 'fetch' but doesn't save it in the database.",
-        argumentName = "id or url",
+        argumentDescription = "idu",
     )
-    { (arg) ->
+    { (idu) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrWebId(),
+            idu = idu.checkLastUsedIdx(),
             save = SaveType.CHECK,
             safeMode = true
         )
@@ -65,13 +65,13 @@ class FetchPropertyUseCase : BaseUseCase() {
 
     private val peekOpen = command<String>(
         command = "peek open",
-        description = "Fetches property (by id or url), validates it and even labels it as needed. " +
+        description = "Fetch property, validate it and label it as needed. " +
                 "Opens it in a browser. Same as 'fetch open' but doesn't save it in the database.",
-        argumentName = "id or url",
+        argumentDescription = "idu",
     )
-    { (arg) ->
+    { (idu) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrWebId(),
+            idu = idu.checkLastUsedIdx(),
             save = SaveType.CHECK,
             safeMode = true
         )?.let(propertyRepository::openLinks)
@@ -80,12 +80,12 @@ class FetchPropertyUseCase : BaseUseCase() {
 
     private val forceFetch = command<String>(
         command = "force fetch",
-        description = "Fetches property (by id or url) and adds it to the database (without validation). Also, it opens it in a browser.",
-        argumentName = "id or url",
+        description = "Fetch property and add it to the database (without validation). Also, it open it in browser.",
+        argumentDescription = "idu",
     )
-    { (arg) ->
+    { (idu) ->
         fetchPropertyRepository.fetchProperty(
-            arg = arg.checkLastUsedIndexOrWebId(),
+            idu = idu.checkLastUsedIdx(),
             save = SaveType.FORCE_SAVE,
             safeMode = true
         )?.let(propertyRepository::openLinks)

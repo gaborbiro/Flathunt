@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.data.domain.model.Property
 
 interface PropertyRepository {
 
-    fun getProperty(indexOrWebId: String): Property?
+    fun getProperty(idx: String): Property?
 
     fun getProperties(): List<Property>
 
@@ -16,7 +16,7 @@ interface PropertyRepository {
 
     fun clearProperties()
 
-    fun verifyAll()
+    fun verify(directions: Boolean)
 
     fun getBlacklist(): List<String>
 
@@ -28,7 +28,7 @@ interface PropertyRepository {
 
     fun markAsUnsuitable(webId: String, unsuitable: Boolean)
 
-    fun getNextProperty(indexOrWebId: String): Property?
+    fun getNextProperty(idx: String): Property?
 
     fun reindex()
 }

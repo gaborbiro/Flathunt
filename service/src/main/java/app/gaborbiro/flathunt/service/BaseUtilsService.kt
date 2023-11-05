@@ -3,9 +3,6 @@ package app.gaborbiro.flathunt.service
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.openqa.selenium.NoSuchWindowException
-import org.openqa.selenium.WebDriver
 
 abstract class BaseUtilsService : UtilsService, KoinComponent {
 
@@ -23,12 +20,12 @@ abstract class BaseUtilsService : UtilsService, KoinComponent {
         return url
     }
 
-    override fun parseUrlOrWebId(arg: String): String? {
-        var cleanUrl = cleanUrl(arg)
+    override fun parseWebIdOrUrl(idu: String): String? {
+        var cleanUrl = cleanUrl(idu)
         if (!isValidUrl(cleanUrl)) {
             val matcher = cleanUrl.matcher("^([\\d]+)$")
             if (matcher.find()) {
-                cleanUrl = getUrlFromWebId(arg)
+                cleanUrl = getUrlFromWebId(idu)
             }
         }
         return if (isValidUrl(cleanUrl)) {

@@ -47,7 +47,7 @@ inline fun <reified T> T.prettyPrint(): String {
             it.name to (strValue)
         }
     }.associate { it }
-    return map.prettyPrint()
+    return map.toSortedMap().prettyPrint()
 }
 
 fun getAllFields(fields: MutableList<Field>, type: Class<*>): List<Field> {

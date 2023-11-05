@@ -103,6 +103,7 @@ class BrowserImpl : Browser, KoinComponent {
     }
 
     override fun addOrUpdateCookies(cookies: List<Cookie>) {
+        driver.switchTo().window("")
         driver.manage().run {
             cookies.forEach(::addCookie)
         }

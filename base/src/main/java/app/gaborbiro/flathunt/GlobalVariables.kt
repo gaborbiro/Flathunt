@@ -1,8 +1,8 @@
 package app.gaborbiro.flathunt
 
 object GlobalVariables {
-    var safeMode = true
+    var safeMode = false
     var debug = false
     var strict = false
-    var lastUsedIndexOrWebId: String? = null
+    var lastIdx: String? = null
 }

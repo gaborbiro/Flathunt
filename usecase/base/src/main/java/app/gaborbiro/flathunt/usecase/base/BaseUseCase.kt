@@ -5,14 +5,12 @@ import org.koin.core.component.KoinComponent
 
 abstract class BaseUseCase : UseCase, KoinComponent {
 
-    protected fun String.checkLastUsedIndexOrWebId(): String {
-        return GlobalVariables.lastUsedIndexOrWebId?.let {
-            if (this == "$") {
-                GlobalVariables.lastUsedIndexOrWebId
-            } else {
-                this
-            }
-        } ?: this
+    protected fun String.checkLastUsedIdx(): String {
+        return if (this == "$") {
+            GlobalVariables.lastIdx ?: this
+        } else {
+            this
+        }
     }
 
 //    private fun openUrl(url: String) {
