@@ -5,6 +5,10 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+kotlin {
+    jvmToolchain(Dependencies.jdk)
+}
+
 apply(from = "${project.rootDir}/service.gradle")
 
 repositories {

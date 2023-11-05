@@ -2,8 +2,11 @@ package app.gaborbiro.flathunt
 
 object Dependencies {
 
+    const val jdk = 13
+
     object Google {
         const val gson = "com.google.code.gson:gson:2.10.1"
+        const val ksp = "com.google.devtools.ksp:1.9.20-1.0.14"
     }
 
     object Selenium {
