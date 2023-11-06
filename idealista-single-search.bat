@@ -1,0 +1,1 @@
+java -jar Flathunt-idealista-exp.jar -c "search https://www.idealista.pt/en/areas/arrendar-casas/com-preco-max_1400,t1,t2,banho-1,equipamento_mobilado,novo,bom-estado/?shape=%28%28sbhkFlq%7Cv%40eiAaE%7Bw%40%7Di%40t%40go%40xD_cCh%7B%40_fBzcBdmBfl%40jrE%7BqAtI%29%29

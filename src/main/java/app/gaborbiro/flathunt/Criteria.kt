@@ -22,7 +22,7 @@ val poiBaixaChiado = POI.Destination(
     description = "Baixa-Chiado Metro Station",
     latitude = "38.7108472",
     longitude = "-9.1430462",
-    max = 20 minutes TRANSIT or 10 minutes WALKING
+    max = 25 minutes TRANSIT or 10 minutes WALKING
 )
 
 val poiRnD = POI.Destination(
@@ -49,4 +49,5 @@ val EXP = ValidationCriteria(
     minBedrooms = 1,
     maxBedrooms = 2,
     furnished = true,
+    allowedEnergyCertification = listOf("a+", "a+", "a", "b", "b-", "c", "In process", "Not indicated", "Unknown")
 )

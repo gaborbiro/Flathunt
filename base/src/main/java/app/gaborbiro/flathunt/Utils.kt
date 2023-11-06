@@ -107,6 +107,8 @@ fun Float.decimals(digits: Int = 2): String {
     return "%.${digits}f".format(this)
 }
 
+fun String.orNull() = if (isBlank()) null else trim()
+
 fun Collection<*>.orNull() = if (this.isEmpty()) null else this
 
 fun nostrict(lambda: () -> Unit) {

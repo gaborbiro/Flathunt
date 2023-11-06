@@ -24,4 +24,5 @@ class ValidationCriteria(
     val noBedsit: Boolean? = null,
     val airConditioning: Boolean? = null,
     val heating: Boolean? = null,
+    val allowedEnergyCertification: List<String>? = null,
 )

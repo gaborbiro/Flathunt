@@ -115,6 +115,11 @@ internal class PropertyValidator : KoinComponent {
                 errors.add("no need for heating")
             }
         }
+        criteria.allowedEnergyCertification?.let {
+            if (it.contains(property.energyCertification).not()) {
+                errors.add("Invalid energy certification: ${property.energyCertification}")
+            }
+        }
         return errors
     }
 }

@@ -30,20 +30,13 @@ data class Property(
     val commuteScore: Int? = null,
     val links: List<String> = emptyList(),
     val staticMapUrl: String? = null,
+    val energyCertification: String? = null,
 ) : Comparable<Property> {
 
     override fun compareTo(other: Property): Int {
         if (webId == other.webId) return 0
         return (commuteScore ?: Int.MAX_VALUE).compareTo(other.commuteScore ?: Int.MAX_VALUE)
     }
-
-//    /**
-//     * Score based on how close the property is to non-transit points of interests
-//     */
-//    private fun averageScore(): Int {
-//        return this.routes?.filter { it.travelMode != DirectionsTravelMode.WALKING }?.map { it.timeMinutes }?.average()
-//            ?.toInt() ?: Int.MAX_VALUE
-//    }
 }
 
 class Price(

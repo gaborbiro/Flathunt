@@ -4,6 +4,8 @@ import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
+import app.gaborbiro.flathunt.findSimpleText
+import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
@@ -12,6 +14,7 @@ import org.koin.core.annotation.Singleton
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebElement
 import org.openqa.selenium.remote.RemoteWebElement
 import java.net.URI
 import java.text.DecimalFormat
@@ -70,6 +73,9 @@ class IdealistaWebService : BaseWebService() {
         val matcher = priceRegex.matcher(priceStr)
         if (!matcher.find()) throw IllegalArgumentException("Cannot parse price: $priceStr")
         val price = DecimalFormat("#,###").parse(matcher.group(1)).toInt()
+
+        // peek https://www.idealista.pt/en/imovel/31059949/
+
         val features = driver.findElements(By.className("details-property_features"))
             .map { it.findElements(By.tagName("li")).map { it.text } }.flatten().distinct()
         var equipped = false
@@ -79,12 +85,14 @@ class IdealistaWebService : BaseWebService() {
             }
         }
         val tRegex = Regex("T[\\d]+")
-        val rooms = features.firstOrNull {  it.matches(tRegex) }?.let {
+        val rooms = features.firstOrNull { it.matches(tRegex) }?.let {
             it.substring(1).toInt()
         }
 
         val heating = features.any { it.contains("heating", ignoreCase = true) }
         val airConditioning = features.any { it.contains("Air conditioning", ignoreCase = true) }
+        val energyCertificationElement = driver.findElements(By.xpath("//*[contains(text(), \"Energy performance certificate\")]/following-sibling::*/ul/li/*[last()]")).lastOrNull()
+        val energyCertification = energyCertificationElement?.let { it.getAttribute("title").orNull() ?: it.text } ?: "Unknown"
         val mapURL = (driver as JavascriptExecutor)
             .executeScript("return config['multimediaCarrousel']['map']['src'];") as String
         val center: List<String> = URI.create(mapURL).query.split("&")
@@ -103,6 +111,7 @@ class IdealistaWebService : BaseWebService() {
             heating = heating,
             airConditioning = airConditioning,
             location = location,
+            energyCertification = energyCertification,
         )
     }
 

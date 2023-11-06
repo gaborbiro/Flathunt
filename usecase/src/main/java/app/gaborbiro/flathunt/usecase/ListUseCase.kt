@@ -77,8 +77,8 @@ class ListUseCase : BaseUseCase() {
     }
 
     private val deleteList = command(
-        command = "clear all",
-        description = "Delete all data from the ${serviceName} database"
+        command = "clear properties",
+        description = "Delete all properties from the ${serviceName} database"
     ) {
         propertyRepository.clearProperties()
     }
