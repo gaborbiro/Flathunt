@@ -12,6 +12,7 @@ repositories {
 dependencies {
     implementation(project(":base"))
     implementation(project(":request:domain"))
+    implementation(project(":console:domain"))
 
     implementation(Dependencies.Koin.core)
     implementation(Dependencies.Koin.annotations)

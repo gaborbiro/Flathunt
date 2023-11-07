@@ -24,12 +24,12 @@ class MaintenanceUseCase : UseCase, KoinComponent {
             command(
                 command = "clear stored cookies",
                 description = "Delete cookies from database (will re-login on next launch)",
-                exec = { repo.clearBrowserCookies() }
+                exec = { repo.clearStoredCookies() }
             ),
             command(
                 command = "import cookies",
-                description = "Add cookies from cookie-override.txt file. Requires open browser.",
-                exec = { repo.importCookiesToBrowser("cookie-override.txt") }
+                description = "Add cookies from cookie-override.txt to registry (override) and also browser if available",
+                exec = { repo.importCookies("cookie-override.txt") }
             ),
             command(
                 command = "save cookies",

@@ -4,6 +4,7 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
+import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.validator.PropertyValidator
@@ -54,17 +55,18 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         }
     }
 
-    override fun verify(directions: Boolean) {
+    override fun validate(directions: Boolean) {
         val properties = getProperties()
-        val invalidProperties = properties.filter { validator.validate(it).isNotEmpty() }
-        val toDelete = invalidProperties.joinToString("\n") { "#${it.index} ${it.webId}" }
+        val unsuitable = properties.filter { validator.validate(it).isNotEmpty() }
+        val unsuitableStr = unsuitable.joinToString("\n") { "#${it.index} ${it.webId}" }
         console.d("Deleting properties:")
-        console.d(toDelete)
+        console.d(unsuitableStr.orNull())
         if (!GlobalVariables.safeMode) {
-            store.overrideProperties(invalidProperties)
+            val newProperties = store.getProperties() - unsuitable.toSet()
+            store.overrideProperties(newProperties)
         }
         if (directions) {
-            val (_, invalidDirectionsProperties) = directionsRepository.revalidateDirections()
+            val (_, invalidDirectionsProperties) = directionsRepository.validateDirections()
             val toDelete = invalidDirectionsProperties.joinToString("\n") { "#${it.index} ${it.webId}" }
             console.d("Deleting properties:")
             console.d(toDelete)
@@ -91,8 +93,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         return utilsService.getUrlFromWebId(webId)
     }
 
-    override fun clearProperties() {
-        store.clearProperties()
+    override fun clearProperties(): Int {
+        return store.clearProperties()
     }
 
     override fun getBlacklist(): List<String> {
@@ -104,8 +106,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         store.saveBlacklistWebIds(webIds - blacklist + blacklist)
     }
 
-    override fun clearBlacklist() {
-        store.clearBlacklist()
+    override fun clearBlacklist(): Int {
+        return store.clearBlacklist()
     }
 
     override fun openLinks(property: Property) {

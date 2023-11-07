@@ -32,8 +32,8 @@ class DirectionsRepositoryImpl : DirectionsRepository, KoinComponent {
     private val console: ConsoleWriter by inject()
     private val mapper: Mapper by inject()
 
-    override fun revalidateDirections(): Pair<List<Property>, List<Property>> {
-        return revalidateDirections(store.getProperties())
+    override fun validateDirections(): Pair<List<Property>, List<Property>> {
+        return validateDirections(store.getProperties())
     }
 
     /**
@@ -41,12 +41,12 @@ class DirectionsRepositoryImpl : DirectionsRepository, KoinComponent {
      *
      * @return list of valid and invalid properties (according to route)
      */
-    override fun revalidateDirections(properties: List<Property>): Pair<List<Property>, List<Property>> {
+    override fun validateDirections(properties: List<Property>): Pair<List<Property>, List<Property>> {
         if (properties.isEmpty()) {
             console.d("No saved properties. Fetch some")
             return Pair(emptyList(), emptyList())
         }
-        val (toSave, unsuitable) = properties.partition { property ->
+        val (suitable, unsuitable) = properties.partition { property ->
             val routesResult: Map<POI, Route?> = criteria.pointsOfInterest.associateWith { poi ->
                 property.location?.let {
                     directionsService.route(
@@ -79,6 +79,6 @@ class DirectionsRepositoryImpl : DirectionsRepository, KoinComponent {
                 false
             }
         }
-        return toSave to unsuitable
+        return suitable to unsuitable
     }
 }

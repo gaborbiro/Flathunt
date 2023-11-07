@@ -20,6 +20,7 @@ import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.IOException
 
 @Singleton
 class SearchRepositoryImpl : SearchRepository, KoinComponent {
@@ -82,6 +83,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
             if (property != null) {
                 addedIds.add(webId)
                 console.i(property.prettyPrint())
+                console.d()
             } else {
                 if (!basicProperty.markedUnsuitable && !GlobalVariables.safeMode) {
                     propertyRepository.markAsUnsuitable(webId, unsuitable = true)
@@ -92,6 +94,9 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         } catch (t: Throwable) {
             console.d()
             t.printStackTrace()
+            if (t is IOException) {
+                throw t
+            }
             failedIds.add(webId)
         }
     }
@@ -125,7 +130,6 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
                     commuteScore = commuteScore
                 )
                 propertyRepository.addOrUpdateProperty(finalProperty)
-                console.d("Valid")
                 finalProperty
             } else {
                 null

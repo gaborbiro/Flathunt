@@ -1,12 +1,10 @@
 package app.gaborbiro.flathunt.service
 
-import app.gaborbiro.flathunt.data.domain.Store
-import app.gaborbiro.flathunt.data.domain.model.Cookies
+import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.service.domain.Browser
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
-import org.koin.core.component.inject
 import org.openqa.selenium.Cookie
 import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.WebDriver
@@ -17,7 +15,6 @@ import java.util.*
 class BrowserImpl : Browser, KoinComponent {
 
     private val tabHandleStack = Stack<Set<String>>()
-    private val store: Store by inject()
 
     private var browserLaunched: Boolean = false
 
@@ -26,23 +23,26 @@ class BrowserImpl : Browser, KoinComponent {
         get()
     }
 
-    fun ensureSession(sessionCookieName: String, sessionCookieDomain: String): Pair<Boolean, Boolean> {
+    fun ensureSession(
+        sessionCookieName: String,
+        sessionCookieDomain: String,
+        cookieSet: CookieSet?
+    ): Pair<Boolean, Boolean> {
         var needsRefresh = false
         var sessionAvailable = false
-        val storedCookies: Set<Cookie>? = store.getCookies()?.cookies
-
-        if (storedCookies != null) {
+        val cookies = cookieSet?.cookies
+        if (cookies != null) {
             runCatching {
                 if (driver.manage().cookies.hasSession(sessionCookieName, sessionCookieDomain)) {
                     // browser already has valid session cookies, nothing to do
                     sessionAvailable = true
                 } else {
                     // browser has no session cookies
-                    if (storedCookies.hasSession(sessionCookieName, sessionCookieDomain)) {
+                    if (cookies.hasSession(sessionCookieName, sessionCookieDomain)) {
                         // we have session cookies stored
                         val options = driver.manage()
                         options.deleteAllCookies()
-                        storedCookies.forEach { options.addCookie(it) }
+                        cookies.forEach { options.addCookie(it) }
                         sessionAvailable = true
                         needsRefresh = true
                     }
@@ -102,16 +102,16 @@ class BrowserImpl : Browser, KoinComponent {
         driver.manage().deleteAllCookies()
     }
 
-    override fun addOrUpdateCookies(cookies: List<Cookie>) {
+    override fun addOrUpdateCookies(cookies: CookieSet) {
         driver.switchTo().window("")
         driver.manage().run {
-            cookies.forEach(::addCookie)
+            cookies.cookies.forEach(::addCookie)
         }
         driver[driver.currentUrl]
     }
 
-    override fun saveCookies() {
-        store.saveCookies(Cookies(driver.manage().cookies))
+    override fun getCookies(): CookieSet {
+        return CookieSet(driver.manage().cookies)
     }
 
     /**

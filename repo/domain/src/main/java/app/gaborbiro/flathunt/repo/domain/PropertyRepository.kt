@@ -14,15 +14,15 @@ interface PropertyRepository {
 
     fun getPropertyUrl(webId: String): String
 
-    fun clearProperties()
+    fun clearProperties(): Int
 
-    fun verify(directions: Boolean)
+    fun validate(directions: Boolean)
 
     fun getBlacklist(): List<String>
 
     fun addToBlacklist(webIds: List<String>)
 
-    fun clearBlacklist()
+    fun clearBlacklist(): Int
 
     fun openLinks(property: Property)
 

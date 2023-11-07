@@ -27,13 +27,14 @@ class ManagePropertyUseCase : BaseUseCase() {
         get() = listOf(
             print,
             open,
+            next,
             tyn,
             delete,
             unsuitable,
             comment,
             commentAppend,
             stations,
-            verify,
+            validate,
         )
 
     private val print = command<String>(
@@ -59,7 +60,23 @@ class ManagePropertyUseCase : BaseUseCase() {
     )
     { (idxs) ->
         getPropertiesByIdxs(idxs.checkLastUsedIdx())
-            .forEach(propertyRepository::openLinks)
+            .forEach {
+                it.prettyPrint().let(::println)
+                propertyRepository.openLinks(it)
+            }
+    }
+
+    private val next = command(
+        command = "next",
+        description = "Open next available index in browser",
+    )
+    {
+        val next = propertyRepository.getNextProperty(GlobalVariables.lastIdx!!)
+        next?.let {
+            it.prettyPrint().let(::println)
+            GlobalVariables.lastIdx = it.webId
+            propertyRepository.openLinks(it)
+        } ?: run { console.d("Nothing to open") }
     }
 
     private val tyn = command(
@@ -74,7 +91,7 @@ class ManagePropertyUseCase : BaseUseCase() {
                 propertyRepository.deleteProperty(it.index!!, markAsUnsuitable = true, GlobalVariables.safeMode)
             }
         next?.let {
-            console.d("${it.index} - ${it.webId}")
+            it.prettyPrint().let(::println)
             GlobalVariables.lastIdx = it.webId
             propertyRepository.openLinks(it)
         } ?: run { console.d("Nothing to open") }
@@ -173,15 +190,15 @@ class ManagePropertyUseCase : BaseUseCase() {
             ?: run { console.d("Cannot find property with index or web id $nonWildIdx") }
     }
 
-    private val verify = command<Boolean>(
-        command = "verify",
+    private val validate = command<Boolean>(
+        command = "validate",
         description = "Remove all invalid properties from the database. Useful for revalidating previously added " +
                 "properties after criteria change. Use the directions argument (false by default) to also rerun " +
                 "directions calculations. Note: this operation marks properties as unsuitable on the website.",
         argumentDescription = "directions",
     )
     { (directions) ->
-        propertyRepository.verify(directions)
+        propertyRepository.validate(directions)
     }
 
     private fun getPropertiesByIdxs(idxs: String): List<Property> {

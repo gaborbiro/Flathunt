@@ -4,7 +4,6 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
@@ -16,7 +15,6 @@ import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.WebDriver
 
 abstract class BaseWebService : WebService, KoinComponent {
-
 
     protected abstract val rootUrl: String
     protected abstract val sessionCookieName: String
@@ -109,16 +107,24 @@ abstract class BaseWebService : WebService, KoinComponent {
         }
 
         beforeEnsureSession(driver)
-        val (sessionAvailable, refresh) = browser.ensureSession(sessionCookieName, sessionCookieDomain)
+        val (sessionAvailable, refresh) = browser.ensureSession(
+            sessionCookieName,
+            sessionCookieDomain,
+            store.getCookies(),
+        )
         afterEnsureSession(driver)
 
         if (sessionAvailable.not() && login(driver)) {
             Thread.sleep(500)
-            browser.saveCookies()
+            browser.getCookies()
         }
         if (refresh) {
             driver[finalUrls[0]]
         }
+    }
+
+    override fun openRoot() {
+        ensurePageWithSession()
     }
 
     protected abstract fun login(driver: WebDriver): Boolean

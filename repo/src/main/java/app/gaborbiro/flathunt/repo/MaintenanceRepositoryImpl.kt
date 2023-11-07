@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
+import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.service.domain.Browser
 import app.gaborbiro.flathunt.service.domain.UtilsService
@@ -48,11 +49,12 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
         store.clearCookies()
     }
 
-    override fun importCookiesToBrowser(filepath: String) {
+    override fun importCookies(filepath: String) {
         val cookieFile = File(filepath)
         if (cookieFile.exists() && cookieFile.isFile) {
             val reader = BufferedReader(InputStreamReader(FileInputStream(cookieFile)))
-            val cookies = reader.lines()
+            val cookies: MutableList<Cookie> = reader.lines()
+                .filter { it.startsWith("//").not() }
                 .flatMap {
                     Stream.of(*it.split(";").toTypedArray())
                 }
@@ -68,16 +70,21 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
                     }
                 }
                 .map { (key, value) ->
-                    Cookie.Builder(key, value).domain(utilsService.domain()).build()
+                    Cookie.Builder(key, value)
+                        .domain(utilsService.domain())
+                        .build()
                 }
-                .collect(Collectors.toList())
+                .collect(Collectors.toUnmodifiableList())
+
             if (cookies.isNotEmpty()) {
-                browser.addOrUpdateCookies(cookies)
+                val cookieSet = CookieSet(cookies.toSet())
+                store.setCookies(cookieSet)
+                browser.addOrUpdateCookies(cookieSet)
             }
         }
     }
 
     override fun saveCookies() {
-        browser.saveCookies()
+        store.setCookies(browser.getCookies())
     }
 }

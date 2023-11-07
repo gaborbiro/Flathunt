@@ -10,7 +10,9 @@ class SearchUseCase : BaseUseCase() {
     private val searchRepository: SearchRepository by inject()
 
     override val commands
-        get() = listOf(search)
+        get() = listOf(
+            search
+        )
 
     private val search = command<String>(
         command = "search",

@@ -21,9 +21,10 @@ class ListUseCase : BaseUseCase() {
             listProperties,
             listIds,
             listUrl,
-            deleteList,
-            deleteBlacklist,
             listBlacklist,
+            clearProperties,
+            clearBlacklist,
+            clearAll,
             addBlacklist,
             reindex,
         )
@@ -76,25 +77,35 @@ class ListUseCase : BaseUseCase() {
         }
     }
 
-    private val deleteList = command(
+    private val listBlacklist = command(
+        command = "list blacklist",
+        description = "Print all blacklisted ${serviceName} ids"
+    ) {
+        propertyRepository.getBlacklist().forEach { console.d(it) }
+    }
+
+    private val clearProperties = command(
         command = "clear properties",
         description = "Delete all properties from the ${serviceName} database"
     ) {
         propertyRepository.clearProperties()
     }
 
-    private val deleteBlacklist = command(
+    private val clearBlacklist = command(
         command = "clear blacklist",
         description = "Remove all properties from the ${serviceName} blacklist"
     ) {
         propertyRepository.clearBlacklist()
     }
 
-    private val listBlacklist = command(
-        command = "list blacklist",
-        description = "Print all blacklisted ${serviceName} ids"
+    private val clearAll = command(
+        command = "clear all",
+        description = "Remove all properties from the ${serviceName} database and blacklist"
     ) {
-        propertyRepository.getBlacklist().forEach { console.d(it) }
+        var count = propertyRepository.clearProperties()
+        console.d("$count properties deleted")
+        count = propertyRepository.clearBlacklist()
+        console.d("$count blacklisted ids deleted")
     }
 
     private val addBlacklist = command<String>(

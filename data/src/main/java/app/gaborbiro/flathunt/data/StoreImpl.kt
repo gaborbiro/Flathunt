@@ -2,7 +2,7 @@ package app.gaborbiro.flathunt.data
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
-import app.gaborbiro.flathunt.data.domain.model.Cookies
+import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.data.domain.model.Property
 import com.google.gson.Gson
 import org.koin.core.annotation.Named
@@ -51,8 +51,10 @@ class StoreImpl(
         Preferences.save(prefPropertiesKey, json)
     }
 
-    override fun clearProperties() {
+    override fun clearProperties(): Int {
+        val count = getProperties().size
         Preferences.clear(prefPropertiesKey)
+        return count
     }
 
     // END Properties
@@ -66,8 +68,10 @@ class StoreImpl(
         Preferences.save(prefBlacklistKey, webIds.joinToString(","))
     }
 
-    override fun clearBlacklist() {
+    override fun clearBlacklist(): Int {
+        val count = getBlacklistWebIds().size
         Preferences.clear(prefBlacklistKey)
+        return count
     }
 
     // END Blacklist
@@ -80,13 +84,13 @@ class StoreImpl(
         }
     }
 
-    override fun saveCookies(cookies: Cookies) {
+    override fun setCookies(cookies: CookieSet) {
         Preferences.save(prefCookiesKey, gson.toJson(cookies))
     }
 
-    override fun getCookies(): Cookies? {
+    override fun getCookies(): CookieSet? {
         return Preferences.get(prefCookiesKey, null)?.let {
-            gson.fromJson(it, Cookies::class.java)
+            gson.fromJson(it, CookieSet::class.java)
         }
     }
 

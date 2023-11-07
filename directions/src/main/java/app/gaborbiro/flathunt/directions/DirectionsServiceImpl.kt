@@ -1,12 +1,14 @@
 package app.gaborbiro.flathunt.directions
 
 import app.gaborbiro.flathunt.LocalProperties
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.directions.model.*
 import app.gaborbiro.flathunt.request.RequestCaller
 import com.google.gson.Gson
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -19,20 +21,20 @@ import kotlin.math.ceil
 class DirectionsServiceImpl : DirectionsService, KoinComponent {
 
     private val requestCaller: RequestCaller by inject()
+    private val console: ConsoleWriter by inject()
     private val gson = Gson()
 
     override fun route(from: DirectionsLatLon, to: Destination): Route? {
         return when (to) {
-            is Destination.Specific -> {
+            is Destination.Coordinate -> {
                 route(
                     from = from,
-                    to = to.location,
-                    travelLimits = to.limits,
+                    to = to,
                 )
             }
 
             is Destination.NearestStation -> {
-                getRoutesToNearestStations(from = from, limit = to.limit)
+                getRoutesToNearestStations(from = from, limit = to.limits[0])
                     .minByOrNull { it.timeMinutes }
             }
         }
@@ -55,19 +57,20 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
             val location = DirectionsLatLon(it.lat, it.lon)
             route(
                 from = from,
-                to = location,
-                travelLimits = listOf(limit),
+                to = Destination.Coordinate(location, listOf(limit)),
             )
-                ?.copy(destinationName = it.commonName)
+                ?.copy(
+                    destination = Destination.NearestStation(limit.maxMinutes),
+                    destinationName = it.commonName
+                )
         }
     }
 
     private fun route(
         from: DirectionsLatLon,
-        to: DirectionsLatLon,
-        travelLimits: List<DirectionsTravelLimit>,
+        to: Destination.Coordinate,
     ): Route? {
-        val directions: List<Pair<DirectionsTravelLimit, Route>> = travelLimits.mapNotNull { limit ->
+        val directions: List<Pair<DirectionsTravelLimit, Route>> = to.limits.mapNotNull { limit ->
             route(from, to, limit)?.let { limit to it }
         }
         val validOnes: List<Route> = directions.filter { (limit, result) ->
@@ -83,7 +86,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
 
     private fun route(
         from: DirectionsLatLon,
-        to: DirectionsLatLon,
+        to: Destination.Coordinate,
         limit: DirectionsTravelLimit,
     ): Route? {
         val departureTime = LocalDateTime.of(LocalDate.now().plus(1L, ChronoUnit.DAYS), LocalTime.NOON)
@@ -97,7 +100,10 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
 
         val response = fetchDirections(from, to, limit.mode, departureTime, alternatives = true)
         return if (response.routes.isEmpty()) {
-            null
+            if (response.errorMessage != null) {
+                console.e(response.errorMessage)
+            }
+            throw IOException("Google API responded with ${response.status}")
         } else {
             // there might be multiple routes because the 'alternatives' field is set to true
             response.routes.filter {
@@ -211,6 +217,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
                     replacementTransitData = null,
                     mode = limit.mode,
                     destination = to,
+                    to = to.location,
                 )
             }.minByOrNull { it.timeMinutes }
         }
@@ -218,15 +225,19 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
 
     private fun fetchDirections(
         from: DirectionsLatLon,
-        to: DirectionsLatLon,
+        to: Destination.Coordinate,
         mode: DirectionsTravelMode,
         departureTime: Long,
         alternatives: Boolean,
     ): DirectionsResponse {
+        val destination = when (to) {
+            is Destination.Address -> to.address
+            else -> to.location.toGoogleCoords()
+        }
         val url = "https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=${from.toGoogleCoords()}" +
                 "&" +
-                "destination=${to.toGoogleCoords()}" +
+                "destination=$destination" +
                 "&" +
                 "mode=${mode.value}" +
                 "&" +

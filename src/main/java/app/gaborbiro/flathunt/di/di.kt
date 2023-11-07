@@ -1,11 +1,11 @@
 package app.gaborbiro.flathunt.di
 
 import app.gaborbiro.flathunt.EXP
-import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.console.ConsoleWriterFactory
 import app.gaborbiro.flathunt.console.di.ConsoleModule
+import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.di.DataModule
 import app.gaborbiro.flathunt.directions.di.DirectionsModule
 import app.gaborbiro.flathunt.repo.di.RepoModule
@@ -15,8 +15,10 @@ import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.core.logger.PrintLogger
 import org.koin.core.qualifier.StringQualifier
 import org.koin.dsl.module
+import org.koin.java.KoinJavaComponent
 import org.koin.ksp.generated.module
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver
@@ -79,16 +81,13 @@ fun setupKoin(serviceConfig: String): KoinApplication {
         }
     }
     app.modules(consoleModule)
-
+    app.logger(PrintLogger())
     return app
 }
 
 private fun getValidationCriteria(serviceConfig: String): ValidationCriteria {
     return when (serviceConfig) {
-        Constants.`idealista-exp` -> EXP
-        Constants.`spareroom-exp` -> EXP
-        Constants.`rightmove-exp` -> EXP
-        Constants.`zoopla-exp` -> EXP
-        else -> throw IllegalArgumentException("Missing service parameter from Manifest")
+        Constants.`idealista-exp`, Constants.`spareroom-exp`, Constants.`rightmove-exp`, Constants.`zoopla-exp` -> EXP
+        else -> throw IllegalArgumentException("Unknown service configuration $serviceConfig")
     }
 }

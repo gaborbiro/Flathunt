@@ -1,6 +1,6 @@
 package app.gaborbiro.flathunt.service.domain
 
-import org.openqa.selenium.Cookie
+import app.gaborbiro.flathunt.data.domain.model.CookieSet
 
 interface Browser {
 
@@ -18,7 +18,7 @@ interface Browser {
 
     fun clearCookies()
 
-    fun addOrUpdateCookies(cookies: List<Cookie>)
+    fun addOrUpdateCookies(cookies: CookieSet)
 
-    fun saveCookies()
+    fun getCookies(): CookieSet
 }

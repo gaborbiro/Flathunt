@@ -4,7 +4,11 @@ import com.google.gson.annotations.SerializedName
 import java.util.concurrent.TimeUnit
 
 data class DirectionsResponse(
-    val routes: List<DirectionsRoute> // only one route unless provideRouteAlternatives field is set to true
+    @SerializedName("error_message")
+    val errorMessage: String?,
+    val routes: List<DirectionsRoute>, // only one route unless provideRouteAlternatives field is set to true
+    @SerializedName("status")
+    val status: String?,
 )
 
 data class DirectionsRoute(

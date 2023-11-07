@@ -3,7 +3,6 @@ package app.gaborbiro.flathunt.service.idealista
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.service.BaseUtilsService
 import app.gaborbiro.flathunt.service.domain.UtilsService
-import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton

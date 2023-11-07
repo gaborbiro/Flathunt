@@ -4,7 +4,6 @@ import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
-import app.gaborbiro.flathunt.findSimpleText
 import app.gaborbiro.flathunt.orNull
 import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.domain.WebService
@@ -14,7 +13,6 @@ import org.koin.core.annotation.Singleton
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebElement
 import org.openqa.selenium.remote.RemoteWebElement
 import java.net.URI
 import java.text.DecimalFormat
@@ -118,6 +116,7 @@ class IdealistaWebService : BaseWebService() {
     override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
         ensurePageWithSession(utilsService.getUrlFromWebId(webId))
         driver.findElements(By.className("discard-btn"))[1].click()
+        assert(driver.findElements(By.className("icon-recover")).isNotEmpty())
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {

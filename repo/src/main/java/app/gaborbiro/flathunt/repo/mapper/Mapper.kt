@@ -15,15 +15,19 @@ internal class Mapper : KoinComponent {
 
     fun map(poi: POI): Destination {
         return when (poi) {
-            is POI.Destination -> {
-                Destination.Specific(
-                    location = DirectionsLatLon(poi.latitude, poi.longitude),
-                    limits = poi.max.map(::map)
-                )
-            }
+            is POI.Address -> Destination.Address(
+                location = DirectionsLatLon(poi.latitude, poi.longitude),
+                address = poi.address,
+                limits = poi.max.map(::map)
+            )
+
+            is POI.Coordinate -> Destination.Coordinate(
+                location = DirectionsLatLon(poi.latitude, poi.longitude),
+                limits = poi.max.map(::map)
+            )
 
             is POI.NearestRailStation -> {
-                Destination.NearestStation(map(poi.max[0]))
+                Destination.NearestStation(poi.max[0].maxMinutes)
             }
         }
     }
@@ -63,13 +67,14 @@ internal class Mapper : KoinComponent {
 
         routes.forEach { (poi, route) ->
             if (route != null) {
-                val destination = when (poi) {
-                    is POI.Destination -> route.destination.toGoogleCoords()
-                    is POI.NearestRailStation -> escapeHTML(route.destinationName!!)
+                val destinationStr = when (val destination = route.destination) {
+                    is Destination.Address -> destination.address
+                    is Destination.Coordinate -> destination.location.toGoogleCoords()
+                    is Destination.NearestStation -> escapeHTML(route.destinationName!!)
                 }
                 val url = "https://www.google.com/maps/dir/?api=1" +
                         "&origin=${property.location?.toGoogleCoords()}" +
-                        "&destination=$destination" +
+                        "&destination=$destinationStr" +
 //                    (it.placeId?.let { "&destination_place_id=$it" } ?: "") +
                         "&travelmode=${route.mode.value}"
                 urls.add(url)
@@ -86,10 +91,10 @@ internal class Mapper : KoinComponent {
         val nearestStations =
             routes.filter { it.key is POI.NearestRailStation }.mapNotNull { (_, route) ->
                 if (route != null) {
-                    "&markers=size:mid|color:green|${route.destination.toGoogleCoords()}"
+                    "&markers=size:mid|color:green|${route.to.toGoogleCoords()}"
                 } else null
             }
-        val pois = routes.map { it.key }.filterIsInstance<POI.Destination>().map {
+        val pois = routes.map { it.key }.filterIsInstance<POI.Coordinate>().map {
             val coords = DirectionsLatLon(it.latitude, it.longitude).toGoogleCoords()
             "&markers=size:mid|color:blue|$coords"
         }

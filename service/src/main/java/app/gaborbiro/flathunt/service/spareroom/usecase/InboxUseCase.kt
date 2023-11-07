@@ -12,7 +12,6 @@ import org.koin.core.component.inject
 
 class InboxUseCase : BaseUseCase() {
 
-    private val webService: WebService by inject()
     private val directionsRepository: DirectionsRepository by inject()
     private val inboxRepository: InboxRepository by inject()
     private val propertyRepository: PropertyRepository by inject()
@@ -31,7 +30,7 @@ class InboxUseCase : BaseUseCase() {
                 properties.forEach { property ->
                     propertyRepository.addOrUpdateProperty(property)
                 }
-                val (_, unsuitable) = directionsRepository.revalidateDirections(properties)
+                val (_, unsuitable) = directionsRepository.validateDirections(properties)
                 unsuitable.forEach { property ->
                     property.messageUrl?.let {
                         inboxRepository.tagMessage(it, MessageTag.REJECTED)

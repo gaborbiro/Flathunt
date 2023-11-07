@@ -6,7 +6,7 @@ import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 
 /**
- * All calls in this interface require session and an open webpage
+ * All calls in this interface will try to acquire session
  */
 interface WebService {
 
@@ -21,4 +21,6 @@ interface WebService {
     fun fetchMessages(safeMode: Boolean): List<Message>
 
     fun tagMessage(messageUrl: String, vararg tags: MessageTag)
+
+    fun openRoot()
 }

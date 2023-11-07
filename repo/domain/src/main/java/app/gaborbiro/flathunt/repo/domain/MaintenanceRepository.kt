@@ -10,7 +10,7 @@ interface MaintenanceRepository {
 
     fun clearStoredCookies()
 
-    fun importCookiesToBrowser(filepath: String)
+    fun importCookies(filepath: String)
 
     fun saveCookies()
 }

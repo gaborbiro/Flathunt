@@ -5,10 +5,10 @@ import app.gaborbiro.flathunt.minutes
 
 sealed class POI(open val description: String, open vararg val max: POITravelLimit) {
 
-    class Destination(
+    open class Coordinate(
         override val description: String,
-        val latitude: String,
-        val longitude: String,
+        open val latitude: String,
+        open val longitude: String,
         override vararg val max: POITravelLimit
     ) : POI(description, *max) {
 
@@ -21,6 +21,27 @@ sealed class POI(open val description: String, open vararg val max: POITravelLim
 
         override fun toString(): String {
             return "$description, ${max.joinToString(", ")}"
+        }
+    }
+
+    class Address(
+        override val description: String,
+        override val latitude: String,
+        override val longitude: String,
+        val address: String,
+        override vararg val max: POITravelLimit
+    ) : Coordinate(description, latitude, longitude, *max) {
+
+        constructor(
+            description: String,
+            latitude: String,
+            longitude: String,
+            address: String,
+            max: POITravelLimit
+        ) : this(description, longitude, latitude, address, *arrayOf(max))
+
+        override fun toString(): String {
+            return "$description, $address, ${max.joinToString(", ")}"
         }
     }
 

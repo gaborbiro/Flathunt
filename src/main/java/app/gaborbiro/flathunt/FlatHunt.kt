@@ -21,7 +21,7 @@ class FlatHunt {
     fun main(args: Array<String>) {
         java.util.logging.LogManager.getLogManager().reset() // disable all logging
 
-        val serviceConfig = getServiceConfigFromArgs(args)
+        val serviceConfig = getServiceConfigFromSystem()
         val app = setupKoin(serviceConfig)
 
         val console = app.koin.get<ConsoleWriter>()
@@ -75,7 +75,6 @@ class FlatHunt {
                 hintShown = true
                 console.d("Type 'help' for a list of available commands")
             }
-            console.d("> ", newLine = false)
             input = reader.readLine()
             if (input == CommandSetBuilder.EXIT_COMMAND_CODE) {
                 return
@@ -119,10 +118,10 @@ class FlatHunt {
         }
     }
 
-    private fun getServiceConfigFromArgs(args: Array<String>): String {
+    private fun getServiceConfigFromSystem(): String {
         return if (Manifests.exists("jar-build-timestamp")) {
             Manifests.read("serviceConfig")
-        } else args[0]
+        } else System.getProperty("serviceConfig")
     }
 
     private fun getUseCases(serviceConfig: String): Set<UseCase> {

@@ -96,4 +96,8 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
             null
         }
     }
+
+    override fun openRoot() {
+        webService.openRoot()
+    }
 }

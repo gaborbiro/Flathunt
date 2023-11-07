@@ -4,7 +4,9 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.model.SaveType
-import app.gaborbiro.flathunt.usecase.base.*
+import app.gaborbiro.flathunt.usecase.base.BaseUseCase
+import app.gaborbiro.flathunt.usecase.base.Command
+import app.gaborbiro.flathunt.usecase.base.command
 import org.koin.core.component.inject
 
 class FetchPropertyUseCase : BaseUseCase() {
@@ -19,6 +21,7 @@ class FetchPropertyUseCase : BaseUseCase() {
             peek,
             peekOpen,
             forceFetch,
+            root,
         )
 
     private val fetch = command<String>(
@@ -89,5 +92,12 @@ class FetchPropertyUseCase : BaseUseCase() {
             save = SaveType.FORCE_SAVE,
             safeMode = true
         )?.let(propertyRepository::openLinks)
+    }
+
+    private val root = command(
+        command = "root",
+        description = "open website"
+    ) {
+        fetchPropertyRepository.openRoot()
     }
 }

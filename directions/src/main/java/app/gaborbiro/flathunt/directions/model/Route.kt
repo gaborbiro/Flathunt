@@ -7,5 +7,6 @@ data class Route(
     val distanceKm: Float,
     val replacementTransitData: String?,
     val destinationName: String? = null,
-    val destination: DirectionsLatLon
+    val destination: Destination,
+    val to: DirectionsLatLon,
 )
