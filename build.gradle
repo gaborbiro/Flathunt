@@ -32,6 +32,7 @@ dependencies {
     implementation(project(":repo:domain"))
     implementation(project(":directions"))
     implementation(project(":base"))
+    implementation(project(":criteria"))
     implementation(project(":request"))
     implementation(project(":request:domain"))
     implementation(project(":console"))

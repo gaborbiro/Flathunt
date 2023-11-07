@@ -21,4 +21,6 @@ interface Browser {
     fun addOrUpdateCookies(cookies: CookieSet)
 
     fun getCookies(): CookieSet
+
+    fun initialised(): Boolean
 }

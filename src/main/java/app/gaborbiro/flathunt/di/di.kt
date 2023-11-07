@@ -1,6 +1,6 @@
 package app.gaborbiro.flathunt.di
 
-import app.gaborbiro.flathunt.EXP
+import app.gaborbiro.flathunt.criteria.EXP
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.console.ConsoleWriterFactory
@@ -18,7 +18,6 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.PrintLogger
 import org.koin.core.qualifier.StringQualifier
 import org.koin.dsl.module
-import org.koin.java.KoinJavaComponent
 import org.koin.ksp.generated.module
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver

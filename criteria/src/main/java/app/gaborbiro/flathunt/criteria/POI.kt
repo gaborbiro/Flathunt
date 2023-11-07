@@ -1,23 +1,37 @@
 package app.gaborbiro.flathunt.criteria
 
 import app.gaborbiro.flathunt.criteria.POITravelMode.WALKING
-import app.gaborbiro.flathunt.minutes
 
 sealed class POI(open val description: String, open vararg val max: POITravelLimit) {
 
-    open class Coordinate(
+    open class CoordinateSet(
         override val description: String,
-        open val latitude: String,
-        open val longitude: String,
-        override vararg val max: POITravelLimit
+        val locations: List<Address>,
+        override vararg val max: POITravelLimit,
     ) : POI(description, *max) {
 
         constructor(
             description: String,
-            latitude: String,
-            longitude: String,
-            max: POITravelLimit
-        ) : this(description, latitude, longitude, *arrayOf(max))
+            locations: List<Address>,
+            max: POITravelLimit,
+        ) : this(description, locations, *arrayOf(max))
+
+        override fun toString(): String {
+            return "$description, ${max.joinToString(", ")}"
+        }
+    }
+
+    open class Coordinate(
+        override val description: String,
+        open val location: POILocation,
+        override vararg val max: POITravelLimit,
+    ) : POI(description, *max) {
+
+        constructor(
+            description: String,
+            location: POILocation,
+            max: POITravelLimit,
+        ) : this(description, location, *arrayOf(max))
 
         override fun toString(): String {
             return "$description, ${max.joinToString(", ")}"
@@ -26,19 +40,17 @@ sealed class POI(open val description: String, open vararg val max: POITravelLim
 
     class Address(
         override val description: String,
-        override val latitude: String,
-        override val longitude: String,
+        override val location: POILocation,
         val address: String,
         override vararg val max: POITravelLimit
-    ) : Coordinate(description, latitude, longitude, *max) {
+    ) : Coordinate(description, location, *max) {
 
         constructor(
             description: String,
-            latitude: String,
-            longitude: String,
+            location: POILocation,
             address: String,
             max: POITravelLimit
-        ) : this(description, longitude, latitude, address, *arrayOf(max))
+        ) : this(description, location, address, *arrayOf(max))
 
         override fun toString(): String {
             return "$description, $address, ${max.joinToString(", ")}"

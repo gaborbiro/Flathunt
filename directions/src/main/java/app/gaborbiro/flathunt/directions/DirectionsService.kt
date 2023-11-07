@@ -8,5 +8,9 @@ import app.gaborbiro.flathunt.directions.model.DirectionsTravelLimit
 interface DirectionsService {
     fun route(from: DirectionsLatLon, to: Destination): Route?
 
-    fun getRoutesToNearestStations(from: DirectionsLatLon, limit: DirectionsTravelLimit): List<Route>
+    fun getRoutesToNearestStations(
+        from: DirectionsLatLon,
+        limit: DirectionsTravelLimit,
+        description: String,
+    ): List<Route>
 }

@@ -10,13 +10,13 @@ interface PropertyRepository {
 
     fun addOrUpdateProperty(property: Property): Boolean
 
-    fun deleteProperty(index: Int, markAsUnsuitable: Boolean, safeMode: Boolean): Boolean
+    fun deleteProperty(index: Int, markAsUnsuitable: Boolean): Boolean
 
     fun getPropertyUrl(webId: String): String
 
     fun clearProperties(): Int
 
-    fun validate(directions: Boolean)
+    fun validate()
 
     fun getBlacklist(): List<String>
 

@@ -34,7 +34,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
             }
 
             is Destination.NearestStation -> {
-                getRoutesToNearestStations(from = from, limit = to.limits[0])
+                getRoutesToNearestStations(description = to.description, from = from, limit = to.limits[0])
                     .minByOrNull { it.timeMinutes }
             }
         }
@@ -42,7 +42,8 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
 
     override fun getRoutesToNearestStations(
         from: DirectionsLatLon,
-        limit: DirectionsTravelLimit
+        limit: DirectionsTravelLimit,
+        description: String,
     ): List<Route> {
         val radius = 5000f / (60f / limit.maxMinutes)
         val url = "https://api.tfl.gov.uk/Stoppoint?" +
@@ -57,11 +58,18 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
             val location = DirectionsLatLon(it.lat, it.lon)
             route(
                 from = from,
-                to = Destination.Coordinate(location, listOf(limit)),
+                to = Destination.Coordinate(
+                    description = description,
+                    location = location,
+                    limits = listOf(limit),
+                ),
             )
                 ?.copy(
-                    destination = Destination.NearestStation(limit.maxMinutes),
-                    destinationName = it.commonName
+                    destination = Destination.NearestStation(
+                        description = description,
+                        maxMinutes = limit.maxMinutes,
+                    ),
+                    destinationName = it.commonName,
                 )
         }
     }

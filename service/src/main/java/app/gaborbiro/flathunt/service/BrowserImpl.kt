@@ -114,6 +114,10 @@ class BrowserImpl : Browser, KoinComponent {
         return CookieSet(driver.manage().cookies)
     }
 
+    override fun initialised(): Boolean {
+        return browserLaunched
+    }
+
     /**
      * The window handle of the new tab is the last item in driver.windowHandles
      */

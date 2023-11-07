@@ -1,7 +1,4 @@
-package app.gaborbiro.flathunt
-
-import app.gaborbiro.flathunt.criteria.POITravelLimit
-import app.gaborbiro.flathunt.criteria.POITravelMode
+package app.gaborbiro.flathunt.criteria
 
 
 infix fun Int.minutes(travelMode: POITravelMode) = POITravelLimit(travelMode, this)

@@ -1,6 +1,5 @@
 package app.gaborbiro.flathunt.service.spareroom
 
-import app.gaborbiro.flathunt.*
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Message
@@ -8,10 +7,9 @@ import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
-import app.gaborbiro.flathunt.service.BaseWebService
-import app.gaborbiro.flathunt.service.PriceParseResult
+import app.gaborbiro.flathunt.service.*
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
-import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
+import app.gaborbiro.flathunt.splitQuery
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.inject

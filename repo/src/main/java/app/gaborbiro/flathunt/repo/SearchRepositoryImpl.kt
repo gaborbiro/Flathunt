@@ -2,14 +2,12 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.criteria.POI
 import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.directions.DirectionsService
-import app.gaborbiro.flathunt.directions.model.DirectionsLatLon
-import app.gaborbiro.flathunt.directions.model.Route
 import app.gaborbiro.flathunt.prettyPrint
+import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
 import app.gaborbiro.flathunt.repo.mapper.Mapper
@@ -28,13 +26,10 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val store: Store by inject()
     private val webService: WebService by inject()
     private val utilsService: UtilsService by inject()
-    private val criteria: ValidationCriteria by inject()
     private val propertyValidator: PropertyValidator by inject()
-    private val locationValidator: LocationValidator by inject()
     private val propertyRepository: PropertyRepository by inject()
+    private val directionsRepository: DirectionsRepository by inject()
     private val console: ConsoleWriter by inject()
-    private val directionsService: DirectionsService by inject()
-    private val mapper: Mapper by inject()
 
     override fun fetchPropertiesFromAllPages(url: String) {
         val storedIds = store.getProperties().map { it.webId }.toSet()
@@ -80,14 +75,12 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
             val basicProperty = webService.fetchProperty(webId)
             console.d(basicProperty.title)
             val property = processProperty(basicProperty)
+
             if (property != null) {
                 addedIds.add(webId)
                 console.i(property.prettyPrint())
                 console.d()
             } else {
-                if (!basicProperty.markedUnsuitable && !GlobalVariables.safeMode) {
-                    propertyRepository.markAsUnsuitable(webId, unsuitable = true)
-                }
                 onMarkedAsUnsuitable()
                 failedIds.add(webId)
             }
@@ -102,38 +95,19 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     }
 
     private fun processProperty(property: Property): Property? {
-        // pre-validate to save on the Google Maps API call
         val propertyValid = propertyValidator.isValid(property)
 
         return if (propertyValid) {
-            val routesResult: Map<POI, Route?> = criteria.pointsOfInterest.associateWith { poi ->
-                property.location?.let {
-                    directionsService.route(
-                        from = DirectionsLatLon(it.latitude, it.longitude),
-                        to = mapper.map(poi)
-                    )
+            val propertyWithRoutes = directionsRepository.validateDirections(property)
+
+            if (propertyWithRoutes != null) {
+                propertyRepository.addOrUpdateProperty(propertyWithRoutes)
+            } else {
+                if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
+                    propertyRepository.markAsUnsuitable(property.webId, unsuitable = true)
                 }
             }
-            val routesStr = routesResult.toList().joinToString { (poi, route) ->
-                val routeStr = route?.let { "${it.timeMinutes} minutes of ${it.mode.description}" }
-                "\n${poi.description}: $routeStr"
-            }
-            console.d("\n${property.webId}: ${property.title}:\n$routesStr")
-
-            if (locationValidator.isValid(routesResult)) {
-                val links = mapper.mapLinks(property, routesResult)
-                val staticMapUrl = property.location?.let { mapper.mapStaticMap(it, routesResult) }
-                val commuteScore = mapper.mapCommuteScore(routesResult)
-                val finalProperty = property.copy(
-                    links = links,
-                    staticMapUrl = staticMapUrl,
-                    commuteScore = commuteScore
-                )
-                propertyRepository.addOrUpdateProperty(finalProperty)
-                finalProperty
-            } else {
-                null
-            }
+            propertyWithRoutes
         } else {
             null
         }

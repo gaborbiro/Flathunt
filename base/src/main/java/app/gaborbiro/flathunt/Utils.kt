@@ -1,8 +1,6 @@
 package app.gaborbiro.flathunt
 
 
-import org.openqa.selenium.By
-import org.openqa.selenium.WebDriver
 import java.io.UnsupportedEncodingException
 import java.lang.reflect.Field
 import java.lang.reflect.Type
@@ -10,7 +8,6 @@ import java.net.URLDecoder
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-
 
 
 fun String.matcher(regex: String): Matcher = Pattern.compile(regex).matcher(this)
@@ -58,23 +55,6 @@ fun getAllFields(fields: MutableList<Field>, type: Class<*>): List<Field> {
     return fields
 }
 
-fun WebDriver.findRegex(regex: String): Array<String>? {
-    val matcher = pageSource.matcher(regex)
-    return if (matcher.find()) {
-        (1..matcher.groupCount()).map { matcher.group(it) }.toTypedArray()
-    } else {
-        null
-    }
-}
-
-fun WebDriver.findSimpleText(xpath: String): String? {
-    return runCatching { findElement(By.xpath(xpath)).text }.getOrNull()
-}
-
-fun WebDriver.linkExists(linkText: String): Boolean {
-    return runCatching { findElement(By.linkText(linkText)) }.getOrNull() != null
-}
-
 fun toType(arg: String, type: Type): Any {
     return when {
         type.typeName.contains(java.lang.Integer::class.java.name) -> arg.toInt()
@@ -99,15 +79,7 @@ fun splitQuery(url: String): Map<String, String?> {
     return queryPairs
 }
 
-fun Double.decimals(digits: Int = 2): String {
-    return "%.${digits}f".format(this)
-}
-
-fun Float.decimals(digits: Int = 2): String {
-    return "%.${digits}f".format(this)
-}
-
-fun String.orNull() = if (isBlank()) null else trim()
+fun String.or(default: String? = null) = if (isBlank()) default else trim()
 
 fun Collection<*>.orNull() = if (this.isEmpty()) null else this
 

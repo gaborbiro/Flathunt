@@ -28,7 +28,7 @@ internal class PropertyValidator : KoinComponent {
     /**
      * Validation is lenient, in that if a property attribute is missing, it won't fail the respective validation rule
      */
-    fun validate(property: Property): List<String> {
+    private fun validate(property: Property): List<String> {
         val errors = mutableListOf<String>()
 
         if (criteria.maxPrice != null && property.prices.all { it.pricePerMonthInt > criteria.maxPrice!! }) {

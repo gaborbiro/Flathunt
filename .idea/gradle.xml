@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/console" />
             <option value="$PROJECT_DIR$/console/domain" />
+            <option value="$PROJECT_DIR$/criteria" />
             <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/data/domain" />
             <option value="$PROJECT_DIR$/directions" />

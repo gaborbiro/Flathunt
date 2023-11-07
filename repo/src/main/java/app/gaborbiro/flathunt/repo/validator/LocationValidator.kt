@@ -3,7 +3,6 @@ package app.gaborbiro.flathunt.repo.validator
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.criteria.POI
 import app.gaborbiro.flathunt.directions.model.Route
-import app.gaborbiro.flathunt.repo.mapper.Mapper
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -11,7 +10,6 @@ import org.koin.core.component.inject
 @Singleton
 internal class LocationValidator : KoinComponent {
 
-    private val mapper: Mapper by inject()
     private val console: ConsoleWriter by inject()
 
     fun isValid(routes: Map<POI, Route?>): Boolean {
@@ -39,9 +37,7 @@ internal class LocationValidator : KoinComponent {
         routes
             .forEach { (poi, route) ->
                 if (route != null) {
-                    val poiTravelMode = mapper.map(route.mode)
-
-                    if (route.timeMinutes > poi.max.find { it.mode == poiTravelMode }!!.maxMinutes) {
+                    if (route.timeMinutes > poi.max.find { it.mode.value == route.mode.value }!!.maxMinutes) {
                         errors.add("${poi.description} is too far: best time is ${route.timeMinutes} minutes ${route.mode.description}")
                     }
                 }

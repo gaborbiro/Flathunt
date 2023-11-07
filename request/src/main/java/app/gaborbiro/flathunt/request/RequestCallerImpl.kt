@@ -40,12 +40,12 @@ class RequestCallerImpl : RequestCaller, KoinComponent {
 
     @Throws(Exception::class)
     override fun get(url: String): String {
-        console.d()
-        console.d(url, newLine = false)
+//        console.d()
+//        console.d(url, newLine = false)
         val connection = URL(url).openConnection()
         return connection.inputStream.bufferedReader().use { it.readText() }.also {
             (connection as HttpURLConnection).disconnect()
-            console.d(" - ${it.length}")
+//            console.d(" - ${it.length}")
         }
     }
 }

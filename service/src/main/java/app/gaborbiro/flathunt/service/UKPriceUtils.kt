@@ -1,7 +1,8 @@
 package app.gaborbiro.flathunt.service
 
-import app.gaborbiro.flathunt.AVG_WEEKS_IN_MONTH
 import app.gaborbiro.flathunt.matcher
+
+private const val AVG_WEEKS_IN_MONTH = 365.0 / 7 / 12 // 4.345
 
 fun ensurePriceIsPerMonth(price: String): PriceParseResult {
     val pricePerMonth = if (price.contains("pw")) {

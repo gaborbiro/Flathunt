@@ -79,7 +79,9 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
             if (cookies.isNotEmpty()) {
                 val cookieSet = CookieSet(cookies.toSet())
                 store.setCookies(cookieSet)
-                browser.addOrUpdateCookies(cookieSet)
+                if (browser.initialised()) {
+                    browser.addOrUpdateCookies(cookieSet)
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package app.gaborbiro.flathunt.repo.mapper
 
 import app.gaborbiro.flathunt.LocalProperties
 import app.gaborbiro.flathunt.criteria.POI
+import app.gaborbiro.flathunt.criteria.POILocation
 import app.gaborbiro.flathunt.criteria.POITravelLimit
 import app.gaborbiro.flathunt.criteria.POITravelMode
 import app.gaborbiro.flathunt.data.domain.model.Property
@@ -13,23 +14,59 @@ import org.koin.core.component.KoinComponent
 @Singleton
 internal class Mapper : KoinComponent {
 
-    fun map(poi: POI): Destination {
+    fun map(poi: POI, propertyLocation: PropertyLatLon): Destination {
         return when (poi) {
+            is POI.CoordinateSet -> {
+                val closestLocation: POI.Address = closest(poi.locations, propertyLocation)
+                Destination.Address(
+                    description = closestLocation.description,
+                    location = map(closestLocation.location),
+                    address = closestLocation.address,
+                    limits = poi.max.map(::map),
+                )
+            }
+
             is POI.Address -> Destination.Address(
-                location = DirectionsLatLon(poi.latitude, poi.longitude),
+                description = poi.description,
+                location = map(poi.location),
                 address = poi.address,
-                limits = poi.max.map(::map)
+                limits = poi.max.map(::map),
             )
 
             is POI.Coordinate -> Destination.Coordinate(
-                location = DirectionsLatLon(poi.latitude, poi.longitude),
-                limits = poi.max.map(::map)
+                description = poi.description,
+                location = map(poi.location),
+                limits = poi.max.map(::map),
             )
 
             is POI.NearestRailStation -> {
-                Destination.NearestStation(poi.max[0].maxMinutes)
+                Destination.NearestStation(
+                    description = poi.description,
+                    maxMinutes = poi.max[0].maxMinutes,
+                )
             }
         }
+    }
+
+    private fun closest(locations: List<POI.Address>, target: PropertyLatLon): POI.Address {
+        if (locations.isEmpty()) throw IllegalAccessException("locations should not be empty")
+        val targetLatitude = target.latitude.toDouble()
+        val targetLongitude = target.longitude.toDouble()
+        return locations.minBy {
+            distance(
+                latitude1 = it.location.latitude.toDouble(),
+                longitude1 = it.location.longitude.toDouble(),
+                latitude2 = targetLatitude,
+                longitude2 = targetLongitude,
+            )
+        }
+    }
+
+    private fun map(location: POILocation): DirectionsLatLon {
+        return DirectionsLatLon(
+            latitude = location.latitude,
+            longitude = location.longitude,
+        )
     }
 
     fun map(propertyLocation: PropertyLatLon): DirectionsLatLon {
@@ -95,7 +132,7 @@ internal class Mapper : KoinComponent {
                 } else null
             }
         val pois = routes.map { it.key }.filterIsInstance<POI.Coordinate>().map {
-            val coords = DirectionsLatLon(it.latitude, it.longitude).toGoogleCoords()
+            val coords = map(it.location).toGoogleCoords()
             "&markers=size:mid|color:blue|$coords"
         }
         return "http://maps.googleapis.com/maps/api/staticmap?" +

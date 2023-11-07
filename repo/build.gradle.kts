@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     implementation(project(":base"))
+    implementation(project(":criteria"))
     implementation(project(":repo:domain"))
     implementation(project(":service:domain"))
     implementation(project(":data:domain"))

@@ -1,10 +1,9 @@
 package app.gaborbiro.flathunt.service.spareroom.usecase
 
 import app.gaborbiro.flathunt.repo.domain.InboxRepository
-import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
-import app.gaborbiro.flathunt.service.domain.WebService
+import app.gaborbiro.flathunt.repo.domain.model.MessageTag
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
@@ -27,10 +26,9 @@ class InboxUseCase : BaseUseCase() {
                 val messages = inboxRepository.fetchMessages()
                 val properties = messages.map { inboxRepository.fetchPropertiesFromMessage(it) }.flatten()
 
-                properties.forEach { property ->
-                    propertyRepository.addOrUpdateProperty(property)
+                val unsuitable = properties.filter {
+                    directionsRepository.validateDirections(it) == null
                 }
-                val (_, unsuitable) = directionsRepository.validateDirections(properties)
                 unsuitable.forEach { property ->
                     property.messageUrl?.let {
                         inboxRepository.tagMessage(it, MessageTag.REJECTED)

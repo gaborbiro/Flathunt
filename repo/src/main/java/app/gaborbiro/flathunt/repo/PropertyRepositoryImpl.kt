@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.orNull
+import app.gaborbiro.flathunt.or
 import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.repo.validator.PropertyValidator
@@ -22,8 +22,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     private val webService: WebService by inject()
     private val utilsService: UtilsService by inject()
     private val browser: Browser by inject()
-    private val validator: PropertyValidator by inject()
     private val console: ConsoleWriter by inject()
+    private val validator: PropertyValidator by inject()
     private val directionsRepository: DirectionsRepository by inject()
 
     override fun getProperty(idx: String): Property? {
@@ -55,28 +55,36 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         }
     }
 
-    override fun validate(directions: Boolean) {
-        val properties = getProperties()
-        val unsuitable = properties.filter { validator.validate(it).isNotEmpty() }
+    override fun validate() {
+        webService.openRoot()
+        val unsuitable = store.getProperties().filter { property ->
+            if (validator.isValid(property)) {
+                val propertyWithRoutes = directionsRepository.validateDirections(property)
+                if (propertyWithRoutes != null) {
+                    addOrUpdateProperty(propertyWithRoutes)
+                    true
+                } else {
+                    if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
+                        markAsUnsuitable(property.webId, unsuitable = true)
+                    }
+                    false
+                }
+            } else {
+                if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
+                    markAsUnsuitable(property.webId, unsuitable = true)
+                }
+                false
+            }
+        }
         val unsuitableStr = unsuitable.joinToString("\n") { "#${it.index} ${it.webId}" }
-        console.d("Deleting properties:")
-        console.d(unsuitableStr.orNull())
-        if (!GlobalVariables.safeMode) {
-            val newProperties = store.getProperties() - unsuitable.toSet()
-            store.overrideProperties(newProperties)
-        }
-        if (directions) {
-            val (_, invalidDirectionsProperties) = directionsRepository.validateDirections()
-            val toDelete = invalidDirectionsProperties.joinToString("\n") { "#${it.index} ${it.webId}" }
-            console.d("Deleting properties:")
-            console.d(toDelete)
-        }
+        console.d("Unsuitable properties: ", newLine = false)
+        console.d(unsuitableStr.or("none"))
     }
 
-    override fun deleteProperty(index: Int, markAsUnsuitable: Boolean, safeMode: Boolean): Boolean {
+    override fun deleteProperty(index: Int, markAsUnsuitable: Boolean): Boolean {
         val properties = store.getProperties().toMutableList()
         return properties.firstOrNull { it.index == index }?.let { property ->
-            if (markAsUnsuitable && !safeMode) {
+            if (markAsUnsuitable && !GlobalVariables.safeMode) {
                 webService.markAsUnsuitable(property.webId, unsuitable = true)
             }
             properties.removeIf { it.webId == property.webId }

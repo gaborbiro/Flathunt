@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.data.domain.model.PropertyLatLon
-import app.gaborbiro.flathunt.orNull
+import app.gaborbiro.flathunt.or
 import app.gaborbiro.flathunt.service.BaseWebService
 import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
@@ -90,7 +90,7 @@ class IdealistaWebService : BaseWebService() {
         val heating = features.any { it.contains("heating", ignoreCase = true) }
         val airConditioning = features.any { it.contains("Air conditioning", ignoreCase = true) }
         val energyCertificationElement = driver.findElements(By.xpath("//*[contains(text(), \"Energy performance certificate\")]/following-sibling::*/ul/li/*[last()]")).lastOrNull()
-        val energyCertification = energyCertificationElement?.let { it.getAttribute("title").orNull() ?: it.text } ?: "Unknown"
+        val energyCertification = energyCertificationElement?.let { it.getAttribute("title").or() ?: it.text } ?: "Unknown"
         val mapURL = (driver as JavascriptExecutor)
             .executeScript("return config['multimediaCarrousel']['map']['src'];") as String
         val center: List<String> = URI.create(mapURL).query.split("&")
