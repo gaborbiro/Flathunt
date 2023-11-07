@@ -24,6 +24,7 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.CapabilityType
+import java.io.File
 import java.nio.file.Paths
 
 
@@ -59,6 +60,7 @@ fun setupKoin(serviceConfig: String): KoinApplication {
                     // window-position=0,0", "window-size=1,1
                     addArguments("start-maximized")
                     setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
+                    addExtensions(File("EditThisCookie.crx"))
                 }
             )
         }
