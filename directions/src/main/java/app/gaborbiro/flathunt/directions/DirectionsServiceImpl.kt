@@ -24,7 +24,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
     private val console: ConsoleWriter by inject()
     private val gson = Gson()
 
-    override fun route(from: DirectionsLatLon, to: Destination): Route? {
+    override fun route(from: DirectionsLatLon, to: Destination): DirectionsResult? {
         return when (to) {
             is Destination.Coordinate -> {
                 route(
@@ -35,7 +35,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
 
             is Destination.NearestStation -> {
                 getRoutesToNearestStations(description = to.description, from = from, limit = to.limits[0])
-                    .minByOrNull { it.timeMinutes }
+                    .minByOrNull { it.route.timeMinutes }
             }
         }
     }
@@ -44,7 +44,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
         from: DirectionsLatLon,
         limit: DirectionsTravelLimit,
         description: String,
-    ): List<Route> {
+    ): List<DirectionsResult> {
         val radius = 5000f / (60f / limit.maxMinutes)
         val url = "https://api.tfl.gov.uk/Stoppoint?" +
                 "lat=${from.latitude}" +
@@ -69,7 +69,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
                         description = description,
                         maxMinutes = limit.maxMinutes,
                     ),
-                    destinationName = it.commonName,
+                    discoveredName = it.commonName,
                 )
         }
     }
@@ -77,16 +77,16 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
     private fun route(
         from: DirectionsLatLon,
         to: Destination.Coordinate,
-    ): Route? {
-        val directions: List<Pair<DirectionsTravelLimit, Route>> = to.limits.mapNotNull { limit ->
+    ): DirectionsResult? {
+        val directions: List<Pair<DirectionsTravelLimit, DirectionsResult>> = to.limits.mapNotNull { limit ->
             route(from, to, limit)?.let { limit to it }
         }
-        val validOnes: List<Route> = directions.filter { (limit, result) ->
-            result.timeMinutes <= limit.maxMinutes
+        val validOnes: List<DirectionsResult> = directions.filter { (limit, result) ->
+            result.route.timeMinutes <= limit.maxMinutes
         }.map { it.second }
 
         return if (validOnes.isNotEmpty()) {
-            validOnes.minByOrNull { it.timeMinutes }
+            validOnes.minByOrNull { it.route.timeMinutes }
         } else {
             directions.firstOrNull()?.second
         }
@@ -96,7 +96,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
         from: DirectionsLatLon,
         to: Destination.Coordinate,
         limit: DirectionsTravelLimit,
-    ): Route? {
+    ): DirectionsResult? {
         val departureTime = LocalDateTime.of(LocalDate.now().plus(1L, ChronoUnit.DAYS), LocalTime.NOON)
             .atZone(ZoneId.systemDefault()).toInstant().epochSecond
 
@@ -218,16 +218,18 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
 //                    null
 //                }
 //                replacementDirections ?:
-                Route(
-                    transitCount = leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() },
-                    timeMinutes = totalDurationMins,
-                    distanceKm = totalDistanceKm,
-                    replacementTransitData = null,
+                DirectionsResult(
+                    Route(
+                        transitCount = leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() },
+                        timeMinutes = totalDurationMins,
+                        distanceKm = totalDistanceKm,
+                        replacementTransitData = null,
+                    ),
                     mode = limit.mode,
                     destination = to,
                     to = to.location,
                 )
-            }.minByOrNull { it.timeMinutes }
+            }.minByOrNull { it.route.timeMinutes }
         }
     }
 

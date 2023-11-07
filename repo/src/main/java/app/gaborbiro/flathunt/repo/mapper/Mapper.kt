@@ -95,18 +95,18 @@ internal class Mapper : KoinComponent {
         }
     }
 
-    fun mapLinks(property: Property, routes: List<Route>): List<String> {
+    fun mapLinks(property: Property, directionsResults: List<DirectionsResult>): List<String> {
         val urls = mutableListOf<String>()
 
         property.messageUrl?.let(urls::add)
 
         property.location?.toURL()?.let(urls::add)
 
-        routes.forEach { route ->
+        directionsResults.forEach { route ->
             val destinationStr = when (val destination = route.destination) {
                 is Destination.Address -> destination.address
                 is Destination.Coordinate -> destination.location.toGoogleCoords()
-                is Destination.NearestStation -> escapeHTML(route.destinationName!!)
+                is Destination.NearestStation -> escapeHTML(route.discoveredName!!)
             }
             val url = "https://www.google.com/maps/dir/?api=1" +
                     "&origin=${property.location?.toGoogleCoords()}" +
@@ -122,12 +122,12 @@ internal class Mapper : KoinComponent {
         return urls
     }
 
-    fun mapStaticMap(propertyLocation: PropertyLatLon, routes: List<Route>): String {
+    fun mapStaticMap(propertyLocation: PropertyLatLon, directionsResults: List<DirectionsResult>): String {
         val nearestStations =
-            routes.filter { it.destination is Destination.NearestStation }.map { route ->
+            directionsResults.filter { it.destination is Destination.NearestStation }.map { route ->
                 "&markers=size:mid|color:green|${route.to.toGoogleCoords()}"
             }
-        val pois = routes.map {
+        val pois = directionsResults.map {
             "&markers=size:mid|color:blue|${it.to.toGoogleCoords()}"
         }
         return "http://maps.googleapis.com/maps/api/staticmap?" +
@@ -138,10 +138,10 @@ internal class Mapper : KoinComponent {
                 "&key=${LocalProperties.googleApiKey}".replace(",", "%2C")
     }
 
-    fun mapCommuteScore(routes: List<Route>): Int {
-        val eligibleRoutes: List<Route> =
-            routes.filter { it.mode != DirectionsTravelMode.WALKING }
-        return if (eligibleRoutes.isNotEmpty()) eligibleRoutes.map { it.timeMinutes }.average()
+    fun mapCommuteScore(directionsResults: List<DirectionsResult>): Int {
+        val eligibleDirectionsResults: List<DirectionsResult> =
+            directionsResults.filter { it.mode != DirectionsTravelMode.WALKING }
+        return if (eligibleDirectionsResults.isNotEmpty()) eligibleDirectionsResults.map { it.route.timeMinutes }.average()
             .toInt() else Int.MAX_VALUE
     }
 

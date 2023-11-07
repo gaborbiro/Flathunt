@@ -5,7 +5,7 @@ import app.gaborbiro.flathunt.criteria.POI
 import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.directions.DirectionsService
-import app.gaborbiro.flathunt.directions.model.Route
+import app.gaborbiro.flathunt.directions.model.DirectionsResult
 import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.mapper.Mapper
 import app.gaborbiro.flathunt.repo.validator.LocationValidator
@@ -23,7 +23,7 @@ class DirectionsRepositoryImpl : DirectionsRepository, KoinComponent {
     private val mapper: Mapper by inject()
 
     override fun validateDirections(property: Property): Property? {
-        val routesResult: Map<POI, Route?> = criteria.pointsOfInterest.associateWith { poi ->
+        val routesResult: Map<POI, DirectionsResult?> = criteria.pointsOfInterest.associateWith { poi ->
             property.location?.let {
                 directionsService.route(
                     from = mapper.map(it),
