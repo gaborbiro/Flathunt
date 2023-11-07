@@ -33,9 +33,10 @@ class DirectionsRepositoryImpl : DirectionsRepository, KoinComponent {
         }
 
         return if (locationValidator.isValid(routesResult)) {
-            val links = mapper.mapLinks(property, routesResult)
-            val staticMapUrl = property.location?.let { mapper.mapStaticMap(it, routesResult) }
-            val commuteScore = mapper.mapCommuteScore(routesResult)
+            val routes = routesResult.values.filterNotNull()
+            val links = mapper.mapLinks(property, routes)
+            val staticMapUrl = property.location?.let { mapper.mapStaticMap(it, routes) }
+            val commuteScore = mapper.mapCommuteScore(routes)
             val finalProperty = property.copy(
                 links = links,
                 staticMapUrl = staticMapUrl,

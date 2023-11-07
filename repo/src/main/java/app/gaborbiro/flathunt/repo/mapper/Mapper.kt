@@ -95,27 +95,25 @@ internal class Mapper : KoinComponent {
         }
     }
 
-    fun mapLinks(property: Property, routes: Map<POI, Route?>): List<String> {
+    fun mapLinks(property: Property, routes: List<Route>): List<String> {
         val urls = mutableListOf<String>()
 
         property.messageUrl?.let(urls::add)
 
         property.location?.toURL()?.let(urls::add)
 
-        routes.forEach { (poi, route) ->
-            if (route != null) {
-                val destinationStr = when (val destination = route.destination) {
-                    is Destination.Address -> destination.address
-                    is Destination.Coordinate -> destination.location.toGoogleCoords()
-                    is Destination.NearestStation -> escapeHTML(route.destinationName!!)
-                }
-                val url = "https://www.google.com/maps/dir/?api=1" +
-                        "&origin=${property.location?.toGoogleCoords()}" +
-                        "&destination=$destinationStr" +
-//                    (it.placeId?.let { "&destination_place_id=$it" } ?: "") +
-                        "&travelmode=${route.mode.value}"
-                urls.add(url)
+        routes.forEach { route ->
+            val destinationStr = when (val destination = route.destination) {
+                is Destination.Address -> destination.address
+                is Destination.Coordinate -> destination.location.toGoogleCoords()
+                is Destination.NearestStation -> escapeHTML(route.destinationName!!)
             }
+            val url = "https://www.google.com/maps/dir/?api=1" +
+                    "&origin=${property.location?.toGoogleCoords()}" +
+                    "&destination=$destinationStr" +
+//                    (it.placeId?.let { "&destination_place_id=$it" } ?: "") +
+                    "&travelmode=${route.mode.value}"
+            urls.add(url)
         }
 
         property.location?.let {
@@ -124,16 +122,13 @@ internal class Mapper : KoinComponent {
         return urls
     }
 
-    fun mapStaticMap(propertyLocation: PropertyLatLon, routes: Map<POI, Route?>): String {
+    fun mapStaticMap(propertyLocation: PropertyLatLon, routes: List<Route>): String {
         val nearestStations =
-            routes.filter { it.key is POI.NearestRailStation }.mapNotNull { (_, route) ->
-                if (route != null) {
-                    "&markers=size:mid|color:green|${route.to.toGoogleCoords()}"
-                } else null
+            routes.filter { it.destination is Destination.NearestStation }.map { route ->
+                "&markers=size:mid|color:green|${route.to.toGoogleCoords()}"
             }
-        val pois = routes.map { it.key }.filterIsInstance<POI.Coordinate>().map {
-            val coords = map(it.location).toGoogleCoords()
-            "&markers=size:mid|color:blue|$coords"
+        val pois = routes.map {
+            "&markers=size:mid|color:blue|${it.to.toGoogleCoords()}"
         }
         return "http://maps.googleapis.com/maps/api/staticmap?" +
                 "&size=600x400" +
@@ -143,9 +138,9 @@ internal class Mapper : KoinComponent {
                 "&key=${LocalProperties.googleApiKey}".replace(",", "%2C")
     }
 
-    fun mapCommuteScore(routes: Map<POI, Route?>): Int {
+    fun mapCommuteScore(routes: List<Route>): Int {
         val eligibleRoutes: List<Route> =
-            routes.mapNotNull { it.value }.filter { it.mode != DirectionsTravelMode.WALKING }
+            routes.filter { it.mode != DirectionsTravelMode.WALKING }
         return if (eligibleRoutes.isNotEmpty()) eligibleRoutes.map { it.timeMinutes }.average()
             .toInt() else Int.MAX_VALUE
     }

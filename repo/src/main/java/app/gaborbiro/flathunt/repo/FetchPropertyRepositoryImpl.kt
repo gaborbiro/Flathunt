@@ -48,6 +48,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                 val propertyWithRoutes = directionsRepository.validateDirections(property)
                 if (propertyWithRoutes != null) {
                     console.i(propertyWithRoutes.prettyPrint())
+                    console.d()
                     when (save) {
                         SaveType.SAVE, SaveType.FORCE_SAVE -> repository.addOrUpdateProperty(propertyWithRoutes)
                         SaveType.CHECK -> {}
@@ -78,12 +79,8 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                 null
             }
         } else {
-            console.e("Invalid url: $idu")
+            console.e("Invalid id or url: $idu")
             null
         }
-    }
-
-    override fun openRoot() {
-        webService.openRoot()
     }
 }

@@ -91,6 +91,12 @@ class MaintenanceUseCase : UseCase, KoinComponent {
             ) {
                 GlobalVariables.safeMode = false
                 console.d("Safe mode disabled. Messages or properties will be labeled/marked unsuitable as needed.")
+            },
+            command(
+                command = "root",
+                description = "open website"
+            ) {
+                repo.openRoot()
             }
         )
 }

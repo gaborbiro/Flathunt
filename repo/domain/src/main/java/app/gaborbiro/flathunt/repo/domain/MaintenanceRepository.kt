@@ -13,4 +13,6 @@ interface MaintenanceRepository {
     fun importCookies(filepath: String)
 
     fun saveCookies()
+
+    fun openRoot()
 }

@@ -37,8 +37,9 @@ internal class LocationValidator : KoinComponent {
         routes
             .forEach { (poi, route) ->
                 if (route != null) {
-                    if (route.timeMinutes > poi.max.find { it.mode.value == route.mode.value }!!.maxMinutes) {
-                        errors.add("${poi.description} is too far: best time is ${route.timeMinutes} minutes ${route.mode.description}")
+                    val maxMinutes = route.destination.limits.find { it.mode == route.mode }!!.maxMinutes
+                    if (route.timeMinutes > maxMinutes) {
+                        errors.add("${route.destination.description} is too far: best time is ${route.timeMinutes} minutes ${route.mode.description} (max is $maxMinutes minutes)")
                     }
                 }
             }

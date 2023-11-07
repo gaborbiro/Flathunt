@@ -61,7 +61,7 @@ class StoreImpl(
 
     // START Blacklist
     override fun getBlacklistWebIds(): List<String> {
-        return Preferences.get(prefBlacklistKey, "")!!.split(",")
+        return Preferences.get(prefBlacklistKey, null)?.split(",") ?: emptyList()
     }
 
     override fun saveBlacklistWebIds(webIds: List<String>) {

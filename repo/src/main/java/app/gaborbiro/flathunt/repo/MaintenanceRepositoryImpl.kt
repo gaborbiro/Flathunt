@@ -6,6 +6,7 @@ import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.service.domain.Browser
 import app.gaborbiro.flathunt.service.domain.UtilsService
+import app.gaborbiro.flathunt.service.domain.WebService
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -17,6 +18,7 @@ import java.util.stream.Stream
 @Singleton
 class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
 
+    private val webService: WebService by inject()
     private val store: Store by inject()
     private val utilsService: UtilsService by inject()
     private val browser: Browser by inject()
@@ -88,5 +90,9 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
 
     override fun saveCookies() {
         store.setCookies(browser.getCookies())
+    }
+
+    override fun openRoot() {
+        webService.openRoot()
     }
 }

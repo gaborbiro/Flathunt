@@ -21,7 +21,6 @@ class FetchPropertyUseCase : BaseUseCase() {
             peek,
             peekOpen,
             forceFetch,
-            root,
         )
 
     private val fetch = command<String>(
@@ -92,12 +91,5 @@ class FetchPropertyUseCase : BaseUseCase() {
             save = SaveType.FORCE_SAVE,
             safeMode = true
         )?.let(propertyRepository::openLinks)
-    }
-
-    private val root = command(
-        command = "root",
-        description = "open website"
-    ) {
-        fetchPropertyRepository.openRoot()
     }
 }
