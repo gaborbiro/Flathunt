@@ -20,7 +20,7 @@ interface PropertyRepository {
 
     fun getBlacklist(): List<String>
 
-    fun addToBlacklist(webIds: List<String>)
+    fun addToBlacklist(webId: String)
 
     fun clearBlacklist(): Int
 

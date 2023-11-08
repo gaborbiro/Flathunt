@@ -109,9 +109,9 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         return store.getBlacklistWebIds()
     }
 
-    override fun addToBlacklist(webIds: List<String>) {
+    override fun addToBlacklist(webId: String) {
         val blacklist = getBlacklist()
-        store.saveBlacklistWebIds(webIds - blacklist + blacklist)
+        store.saveBlacklistWebIds((blacklist + webId).distinct())
     }
 
     override fun clearBlacklist(): Int {

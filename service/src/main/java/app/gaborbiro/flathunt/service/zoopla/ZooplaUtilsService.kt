@@ -1,13 +1,11 @@
 package app.gaborbiro.flathunt.service.zoopla
 
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
-import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.matcher
 import app.gaborbiro.flathunt.service.BaseUtilsService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
-import org.koin.core.component.inject
 
 @Singleton
 @Named(Constants.zoopla + "_utils")

@@ -3,18 +3,18 @@ package app.gaborbiro.flathunt.usecase
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Property
-import app.gaborbiro.flathunt.directions.DirectionsService
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
 import app.gaborbiro.flathunt.usecase.base.command
 import org.koin.core.component.inject
+import org.koin.core.qualifier.StringQualifier
 
 class ManagePropertyUseCase : BaseUseCase() {
 
     private val propertyRepository: PropertyRepository by inject()
-    private val directionsService: DirectionsService by inject()
+    private val serviceName: String by inject(StringQualifier("serviceName"))
     private val console: ConsoleWriter by inject()
 
     override val commands: List<Command<*>>
@@ -25,6 +25,7 @@ class ManagePropertyUseCase : BaseUseCase() {
             tyn,
             delete,
             unsuitable,
+            blacklist,
             comment,
             commentAppend,
 //            stations,
@@ -113,6 +114,17 @@ class ManagePropertyUseCase : BaseUseCase() {
     { (idxs, unsuitable) ->
         getPropertiesByIdxs(idxs.checkLastUsedIdx())
             .forEach { propertyRepository.markAsUnsuitable(it.webId, unsuitable) }
+    }
+
+    private val blacklist = command<String>(
+        command = "blacklist",
+        description = "Add ids to the ${serviceName} blacklist",
+        argumentDescription = "idx (comma separated)"
+    ) { (idxs) ->
+        getPropertiesByIdxs(idxs.checkLastUsedIdx())
+            .forEach {
+                propertyRepository.addToBlacklist(it.webId)
+            }
     }
 
     private val comment = command<String, String>(

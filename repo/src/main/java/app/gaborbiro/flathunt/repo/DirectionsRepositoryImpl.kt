@@ -1,11 +1,10 @@
 package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.criteria.POI
 import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.directions.DirectionsService
-import app.gaborbiro.flathunt.directions.model.DirectionsResult
+import app.gaborbiro.flathunt.directions.model.POIResult
 import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.mapper.Mapper
 import app.gaborbiro.flathunt.repo.validator.LocationValidator
@@ -23,20 +22,18 @@ class DirectionsRepositoryImpl : DirectionsRepository, KoinComponent {
     private val mapper: Mapper by inject()
 
     override fun validateDirections(property: Property): Property? {
-        val routesResult: Map<POI, DirectionsResult?> = criteria.pointsOfInterest.associateWith { poi ->
-            property.location?.let {
-                directionsService.route(
-                    from = mapper.map(it),
-                    to = mapper.map(poi, property.location!!)
-                )
-            }
+        val location = property.location!!
+        val poiResults: List<POIResult> = criteria.pointsOfInterest.map { poi ->
+            directionsService.directions(
+                from = mapper.map(location),
+                to = mapper.map(poi, location)
+            )
         }
 
-        return if (locationValidator.isValid(routesResult)) {
-            val routes = routesResult.values.filterNotNull()
-            val links = mapper.mapLinks(property, routes)
-            val staticMapUrl = property.location?.let { mapper.mapStaticMap(it, routes) }
-            val commuteScore = mapper.mapCommuteScore(routes)
+        return if (locationValidator.isValid(poiResults)) {
+            val links = mapper.mapLinks(property, poiResults)
+            val staticMapUrl = property.location?.let { mapper.mapStaticMap(it, poiResults) }
+            val commuteScore = mapper.mapCommuteScore(poiResults)
             val finalProperty = property.copy(
                 links = links,
                 staticMapUrl = staticMapUrl,

@@ -2,12 +2,12 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
-import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
 import app.gaborbiro.flathunt.repo.domain.model.SaveType
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
+import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -29,7 +29,7 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
         var currentSearchUrl: String? = url
         var markedAsUnsuitableCount = 0
         do {
-            val pageInfo = webService.getPageInfo(currentSearchUrl!!)
+            val pageInfo: PageInfo = webService.getPageInfo(currentSearchUrl!!)
             console.d("Fetching page ${pageInfo.page}/${pageInfo.pageCount}")
             val blacklist = store.getBlacklistWebIds().toSet()
             val newIds: List<String> = pageInfo.propertyWebIds - blacklist - storedIds

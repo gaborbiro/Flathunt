@@ -17,6 +17,6 @@ sealed class Destination(open val description: String, open val limits: List<Dir
 
     data class NearestStation(
         override val description: String,
-        val maxMinutes: Int,
-    ) : Destination(description, listOf(DirectionsTravelLimit(DirectionsTravelMode.WALKING, maxMinutes)))
+        val limit: DirectionsTravelLimit,
+    ) : Destination(description, listOf(limit))
 }

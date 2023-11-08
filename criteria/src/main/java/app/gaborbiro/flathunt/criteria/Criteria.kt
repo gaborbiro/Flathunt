@@ -117,6 +117,14 @@ private val poiGyms = POI.CoordinateSet(
             ),
             address = "Fitness+Hut+Avenida+de+Roma",
         ),
+        POI.Address(
+            description = "Hyatt Regency",
+            location = POILocation(
+                latitude = "38.69854577397226",
+                longitude = "-9.186718490548676"
+            ),
+            address = "Hyatt+Regency+Lisbon",
+        )
     ),
     max = 12 minutes WALKING,
 )

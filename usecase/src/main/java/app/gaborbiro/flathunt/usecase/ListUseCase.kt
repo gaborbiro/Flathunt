@@ -25,7 +25,6 @@ class ListUseCase : BaseUseCase() {
             clearProperties,
             clearBlacklist,
             clearAll,
-            addBlacklist,
             reindex,
         )
 
@@ -106,14 +105,6 @@ class ListUseCase : BaseUseCase() {
         console.d("$count properties deleted")
         count = propertyRepository.clearBlacklist()
         console.d("$count blacklisted ids deleted")
-    }
-
-    private val addBlacklist = command<String>(
-        command = "blacklist",
-        description = "Add ids to the ${serviceName} blacklist",
-        argumentDescription = "id (comma separated)"
-    ) { (ids) ->
-        propertyRepository.addToBlacklist(ids.split(Regex("[,\\s]+")))
     }
 
     private val reindex = command(

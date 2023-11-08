@@ -2,15 +2,8 @@ package app.gaborbiro.flathunt.directions
 
 import app.gaborbiro.flathunt.directions.model.Destination
 import app.gaborbiro.flathunt.directions.model.DirectionsLatLon
-import app.gaborbiro.flathunt.directions.model.DirectionsResult
-import app.gaborbiro.flathunt.directions.model.DirectionsTravelLimit
+import app.gaborbiro.flathunt.directions.model.POIResult
 
 interface DirectionsService {
-    fun route(from: DirectionsLatLon, to: Destination): DirectionsResult?
-
-    fun getRoutesToNearestStations(
-        from: DirectionsLatLon,
-        limit: DirectionsTravelLimit,
-        description: String,
-    ): List<DirectionsResult>
+    fun directions(from: DirectionsLatLon, to: Destination): POIResult
 }

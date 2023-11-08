@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt.directions
 
 import app.gaborbiro.flathunt.LocalProperties
+import app.gaborbiro.flathunt.Quad
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.directions.model.*
 import app.gaborbiro.flathunt.request.RequestCaller
@@ -24,28 +25,53 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
     private val console: ConsoleWriter by inject()
     private val gson = Gson()
 
-    override fun route(from: DirectionsLatLon, to: Destination): DirectionsResult? {
+    /**
+     * @return best route if there are more than one valid routes, first available route if none of them are valid,
+     * first available destination if no routes are available at all, null if no destinations are available at all.
+     */
+    override fun directions(from: DirectionsLatLon, to: Destination): POIResult {
         return when (to) {
             is Destination.Coordinate -> {
-                route(
+                val destinationStr = when (to) {
+                    is Destination.Address -> to.address
+                    else -> to.location.toGoogleCoords()
+                }
+                val (limit, route) = directions(
+                    description = to.description,
                     from = from,
-                    to = to,
+                    destinationStr = destinationStr,
+                    limits = to.limits,
+                )
+                POIResult(
+                    limit = limit,
+                    originalDescription = to.description,
+                    resolvedDestination = POIDestination(
+                        isNearestStation = false,
+                        description = to.description,
+                        address = destinationStr,
+                        location = to.location,
+                        limit = limit
+                    ),
+                    route = route,
                 )
             }
 
             is Destination.NearestStation -> {
-                getRoutesToNearestStations(description = to.description, from = from, limit = to.limits[0])
-                    .minByOrNull { it.route.timeMinutes }
+                nearestStation(from = from, to = to)
             }
         }
     }
 
-    override fun getRoutesToNearestStations(
+    /**
+     * Generate route to all the nearby public transport stations and pick the closest one.
+     * If no routes are available to any of them, still return some info about the first station.
+     * If no stations are available at all, return null.
+     */
+    private fun nearestStation(
         from: DirectionsLatLon,
-        limit: DirectionsTravelLimit,
-        description: String,
-    ): List<DirectionsResult> {
-        val radius = 5000f / (60f / limit.maxMinutes)
+        to: Destination.NearestStation,
+    ): POIResult {
+        val radius = 5000f / (60f / to.limit.maxMinutes)
         val url = "https://api.tfl.gov.uk/Stoppoint?" +
                 "lat=${from.latitude}" +
                 "&lon=${from.longitude}" +
@@ -54,49 +80,84 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
                 "&modes=dlr,overground,tube,tram,national-rail"
         val json = requestCaller.get(url)
         val stops = gson.fromJson(json, TflStopsResponse::class.java).stopPoints
-        return stops.mapNotNull {
-            val location = DirectionsLatLon(it.lat, it.lon)
-            route(
+        val route = stops.mapIndexed { index, stop ->
+            val resolvedLocation = DirectionsLatLon(stop.lat, stop.lon)
+            val (_, route) = directions(
+                description = stop.commonName,
                 from = from,
-                to = Destination.Coordinate(
-                    description = description,
-                    location = location,
-                    limits = listOf(limit),
-                ),
+                destinationStr = resolvedLocation.toGoogleCoords(),
+                limits = listOf(to.limit),
             )
-                ?.copy(
-                    destination = Destination.NearestStation(
-                        description = description,
-                        maxMinutes = limit.maxMinutes,
+            Quad(route, stop.commonName, resolvedLocation, index)
+        }.minByOrNull { it.first?.timeMinutes ?: (it.fourth * 10000) }
+
+        return route
+            ?.let { (route, name, location) ->
+                POIResult(
+                    originalDescription = to.description,
+                    limit = to.limit,
+                    resolvedDestination = POIDestination(
+                        isNearestStation = true,
+                        description = name,
+                        address = location.toGoogleCoords(),
+                        location = location,
+                        limit = to.limit,
                     ),
-                    discoveredName = it.commonName,
+                    route = route,
                 )
-        }
+            }
+            ?: POIResult(
+                originalDescription = to.description,
+                limit = to.limit,
+                resolvedDestination = null,
+                route = null,
+            )
     }
 
-    private fun route(
+    /**
+     * Try to get a route for each of the specified limits and return the best one. If nothing meets the limit,
+     * return the first route anyway (corresponding to the first specified limit) so that the user can follow up.
+     */
+    private fun directions(
+        description: String,
         from: DirectionsLatLon,
-        to: Destination.Coordinate,
-    ): DirectionsResult? {
-        val directions: List<Pair<DirectionsTravelLimit, DirectionsResult>> = to.limits.mapNotNull { limit ->
-            route(from, to, limit)?.let { limit to it }
+        destinationStr: String,
+        limits: List<DirectionsTravelLimit>,
+    ): Pair<DirectionsTravelLimit, Route?> {
+        if (limits.isEmpty()) throw IllegalArgumentException("Must specify at least one limit")
+
+        val resultMap: List<Pair<DirectionsTravelLimit, Route?>> = limits.map { limit ->
+            limit to directions(
+                from = from,
+                description = description,
+                destinationStr = destinationStr,
+                limit = limit
+            )
         }
-        val validOnes: List<DirectionsResult> = directions.filter { (limit, result) ->
-            result.route.timeMinutes <= limit.maxMinutes
-        }.map { it.second }
+        val validOnes: List<Pair<DirectionsTravelLimit, Route?>> = resultMap
+            .filter { (limit, route) ->
+                route != null && route.timeMinutes <= limit.maxMinutes
+            }
 
         return if (validOnes.isNotEmpty()) {
-            validOnes.minByOrNull { it.route.timeMinutes }
+            validOnes.minBy { (_, route) ->
+                route!!.timeMinutes
+            }
         } else {
-            directions.firstOrNull()?.second
+            resultMap.find { it.first == limits[0] }!!
         }
     }
 
-    private fun route(
+    /**
+     * @return DirectionsResult with the shortest non-null route if the Google API returned any solution,
+     * null otherwise
+     */
+    private fun directions(
         from: DirectionsLatLon,
-        to: Destination.Coordinate,
+        description: String,
+        destinationStr: String,
         limit: DirectionsTravelLimit,
-    ): DirectionsResult? {
+    ): Route? {
         val departureTime = LocalDateTime.of(LocalDate.now().plus(1L, ChronoUnit.DAYS), LocalTime.NOON)
             .atZone(ZoneId.systemDefault()).toInstant().epochSecond
 
@@ -106,7 +167,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
                     step.transitDetails?.line?.vehicle?.name == "Bus"
         }
 
-        val response = fetchDirections(from, to, limit.mode, departureTime, alternatives = true)
+        val response = fetchGoogleDirections(from, destinationStr, limit.mode, departureTime, alternatives = true)
         return if (response.routes.isEmpty()) {
             if (response.errorMessage != null) {
                 console.e(response.errorMessage)
@@ -118,8 +179,8 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
                 // there is only one leg, unless waypoints are specified in the request
                 val leg = it.legs[0]
                 leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() } <= 2 // max one change
-            }.map { route ->
-                val leg = route.legs[0]
+            }.map { directionsRoute ->
+                val leg = directionsRoute.legs[0]
                 val totalDurationSecs: Int = leg.duration.value
                 val totalDurationMins = TimeUnit.SECONDS.toMinutes(totalDurationSecs.toLong()).toInt()
                 val totalDistanceMeters: Int = leg.distance.value
@@ -218,36 +279,29 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
 //                    null
 //                }
 //                replacementDirections ?:
-                DirectionsResult(
-                    Route(
-                        transitCount = leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() },
-                        timeMinutes = totalDurationMins,
-                        distanceKm = totalDistanceKm,
-                        replacementTransitData = null,
-                    ),
-                    mode = limit.mode,
-                    destination = to,
-                    to = to.location,
+                Route(
+                    description = description,
+                    transitCount = leg.steps.count { it.travelMode == DirectionsTravelMode.TRANSIT.value.uppercase() },
+                    timeMinutes = totalDurationMins,
+                    distanceKm = totalDistanceKm,
+                    replacementTransitData = null,
+                    limit = limit,
                 )
-            }.minByOrNull { it.route.timeMinutes }
+            }.minByOrNull { it.timeMinutes }
         }
     }
 
-    private fun fetchDirections(
+    private fun fetchGoogleDirections(
         from: DirectionsLatLon,
-        to: Destination.Coordinate,
+        destinationStr: String,
         mode: DirectionsTravelMode,
         departureTime: Long,
         alternatives: Boolean,
     ): DirectionsResponse {
-        val destination = when (to) {
-            is Destination.Address -> to.address
-            else -> to.location.toGoogleCoords()
-        }
         val url = "https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=${from.toGoogleCoords()}" +
                 "&" +
-                "destination=$destination" +
+                "destination=$destinationStr" +
                 "&" +
                 "mode=${mode.value}" +
                 "&" +

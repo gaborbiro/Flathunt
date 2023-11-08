@@ -1,8 +1,7 @@
 package app.gaborbiro.flathunt.repo.validator
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.criteria.POI
-import app.gaborbiro.flathunt.directions.model.DirectionsResult
+import app.gaborbiro.flathunt.directions.model.POIResult
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -12,8 +11,8 @@ internal class LocationValidator : KoinComponent {
 
     private val console: ConsoleWriter by inject()
 
-    fun isValid(routes: Map<POI, DirectionsResult?>): Boolean {
-        val errors = validate(routes)
+    fun isValid(poiResults: Collection<POIResult>): Boolean {
+        val errors = validate(poiResults)
         return if (errors.isEmpty()) {
             true
         } else {
@@ -25,24 +24,39 @@ internal class LocationValidator : KoinComponent {
     /**
      * All POI's must be satisfied
      */
-    private fun validate(routes: Map<POI, DirectionsResult?>): List<String> {
-        val errors = mutableListOf<String>()
-        routes
-            .filterValues { it == null }
-            .toList()
-            .map { it.first.description }
-            .forEach {
-                errors.add("missing route to: $it")
-            }
-        routes
-            .forEach { (_, route) ->
-                if (route != null) {
-                    val maxMinutes = route.destination.limits.find { it.mode == route.mode }!!.maxMinutes
-                    if (route.route.timeMinutes > maxMinutes) {
-                        errors.add("${route.destination.description} is too far: best time is ${route.route.timeMinutes} minutes ${route.mode.description} (max is $maxMinutes minutes)")
-                    }
+    private fun validate(poiResults: Collection<POIResult>): List<String> {
+        val missingDestinationErrors = poiResults
+            .mapNotNull {
+                if (it.resolvedDestination == null) {
+                    it.originalDescription
+                } else {
+                    null
                 }
             }
-        return errors
+            .map {
+                "missing destination to: $it"
+            }
+        val missingRouteErrors = poiResults
+            .mapNotNull {
+                if (it.route == null) {
+                    it.resolvedDestination?.description
+                } else {
+                    null
+                }
+            }
+            .map {
+                "missing route to: $it"
+            }
+        val routeErrors = poiResults
+            .mapNotNull { it.route }
+            .mapNotNull { route ->
+                val maxMinutes = route.limit.maxMinutes
+                if (route.timeMinutes > maxMinutes) {
+                    "${route.description} is too far: best time is ${route.timeMinutes} minutes ${route.limit.mode.description} (max is $maxMinutes minutes)"
+                } else {
+                    null
+                }
+            }
+        return missingDestinationErrors + missingRouteErrors + routeErrors
     }
 }

@@ -42,7 +42,7 @@ internal class Mapper : KoinComponent {
             is POI.NearestRailStation -> {
                 Destination.NearestStation(
                     description = poi.description,
-                    maxMinutes = poi.max[0].maxMinutes,
+                    limit = map(poi.max[0]),
                 )
             }
         }
@@ -95,41 +95,40 @@ internal class Mapper : KoinComponent {
         }
     }
 
-    fun mapLinks(property: Property, directionsResults: List<DirectionsResult>): List<String> {
+    fun mapLinks(property: Property, poiResults: Collection<POIResult>): List<String> {
         val urls = mutableListOf<String>()
 
-        property.messageUrl?.let(urls::add)
+//        property.location?.toURL()?.let(urls::add)
 
-        property.location?.toURL()?.let(urls::add)
-
-        directionsResults.forEach { route ->
-            val destinationStr = when (val destination = route.destination) {
-                is Destination.Address -> destination.address
-                is Destination.Coordinate -> destination.location.toGoogleCoords()
-                is Destination.NearestStation -> escapeHTML(route.discoveredName!!)
-            }
+        poiResults.mapNotNull { it.resolvedDestination }.forEach { destination ->
             val url = "https://www.google.com/maps/dir/?api=1" +
                     "&origin=${property.location?.toGoogleCoords()}" +
-                    "&destination=$destinationStr" +
+                    "&destination=${destination.address}" +
 //                    (it.placeId?.let { "&destination_place_id=$it" } ?: "") +
-                    "&travelmode=${route.mode.value}"
+                    "&travelmode=${destination.limit.mode.value}"
             urls.add(url)
         }
 
         property.location?.let {
             urls.add("https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${it.toGoogleCoords()}&heading=13&pitch=0&fov=80")
         }
+        property.messageUrl?.let(urls::add)
         return urls
     }
 
-    fun mapStaticMap(propertyLocation: PropertyLatLon, directionsResults: List<DirectionsResult>): String {
-        val nearestStations =
-            directionsResults.filter { it.destination is Destination.NearestStation }.map { route ->
-                "&markers=size:mid|color:green|${route.to.toGoogleCoords()}"
+    fun mapStaticMap(propertyLocation: PropertyLatLon, poiResults: Collection<POIResult>): String {
+        val nearestStations = poiResults
+            .mapNotNull { it.resolvedDestination }
+            .filter { it.isNearestStation }
+            .map { destination ->
+                "&markers=size:mid|color:green|${destination.address}"
             }
-        val pois = directionsResults.map {
-            "&markers=size:mid|color:blue|${it.to.toGoogleCoords()}"
-        }
+        val pois = poiResults
+            .mapNotNull { it.resolvedDestination }
+            .filter { it.isNearestStation.not() }
+            .map { destination ->
+                "&markers=size:mid|color:blue|${destination.address}"
+            }
         return "http://maps.googleapis.com/maps/api/staticmap?" +
                 "&size=600x400" +
                 "&markers=size:mid|color:red|${propertyLocation.toGoogleCoords()}" +
@@ -138,25 +137,14 @@ internal class Mapper : KoinComponent {
                 "&key=${LocalProperties.googleApiKey}".replace(",", "%2C")
     }
 
-    fun mapCommuteScore(directionsResults: List<DirectionsResult>): Int {
-        val eligibleDirectionsResults: List<DirectionsResult> =
-            directionsResults.filter { it.mode != DirectionsTravelMode.WALKING }
-        return if (eligibleDirectionsResults.isNotEmpty()) eligibleDirectionsResults.map { it.route.timeMinutes }.average()
-            .toInt() else Int.MAX_VALUE
-    }
-
-    private fun escapeHTML(s: String): String {
-        val out = StringBuilder(16.coerceAtLeast(s.length))
-        for (element in s) {
-            if (element.code > 127 || element == '"' || element == '\'' || element == '<' || element == '>' || element == '&') {
-                out.append("&#")
-                out.append(element.code)
-                out.append(';')
-            } else {
-                out.append(element)
-            }
+    fun mapCommuteScore(poiResults: Collection<POIResult>): Int {
+        var score: Int? = null
+        if (poiResults.all { it.route != null }) {
+            score = poiResults.mapNotNull { it.route?.timeMinutes }.average().toInt()
         }
-        return out.toString()
+        if (score == null) {
+            score = 1000 + (poiResults.size - poiResults.count { it.resolvedDestination != null })
+        }
+        return score
     }
-
 }
