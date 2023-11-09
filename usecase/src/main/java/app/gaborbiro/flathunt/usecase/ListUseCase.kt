@@ -2,7 +2,6 @@ package app.gaborbiro.flathunt.usecase
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.nostrict
-import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
 import app.gaborbiro.flathunt.usecase.base.BaseUseCase
 import app.gaborbiro.flathunt.usecase.base.Command
@@ -18,9 +17,8 @@ class ListUseCase : BaseUseCase() {
 
     override val commands: List<Command<*>>
         get() = listOf(
-            listProperties,
             listIds,
-            listUrl,
+            listTable,
             listBlacklist,
             clearProperties,
             clearBlacklist,
@@ -28,23 +26,9 @@ class ListUseCase : BaseUseCase() {
             reindex,
         )
 
-    private val listProperties = command(
-        command = "list properties",
-        description = "Print all ${serviceName} properties"
-    )
-    {
-        val properties = propertyRepository.getProperties()
-        if (properties.isNotEmpty()) {
-            nostrict { console.d("${properties.size} properties in database\n") }
-            console.d(properties.joinToString("\n\n\n") { it.prettyPrint() })
-        } else {
-            nostrict { console.d("No saved properties") }
-        }
-    }
-
     private val listIds = command(
         command = "list ids",
-        description = "Print all ${serviceName} property ids"
+        description = "Print all $serviceName property ids"
     )
     {
         val properties = propertyRepository.getProperties()
@@ -56,9 +40,9 @@ class ListUseCase : BaseUseCase() {
         }
     }
 
-    private val listUrl = command(
-        command = "list urls",
-        description = "Print all ${serviceName} property urls"
+    private val listTable = command(
+        command = "list table",
+        description = "Print all $serviceName properties as table. Fields are: url, location, price, title"
     )
     {
         val properties = propertyRepository.getProperties()
@@ -78,28 +62,28 @@ class ListUseCase : BaseUseCase() {
 
     private val listBlacklist = command(
         command = "list blacklist",
-        description = "Print all blacklisted ${serviceName} ids"
+        description = "Print all blacklisted $serviceName ids"
     ) {
         propertyRepository.getBlacklist().forEach { console.d(it) }
     }
 
     private val clearProperties = command(
         command = "clear properties",
-        description = "Delete all properties from the ${serviceName} database"
+        description = "Delete all properties from the $serviceName database"
     ) {
         propertyRepository.clearProperties()
     }
 
     private val clearBlacklist = command(
         command = "clear blacklist",
-        description = "Remove all properties from the ${serviceName} blacklist"
+        description = "Remove all properties from the $serviceName blacklist"
     ) {
         propertyRepository.clearBlacklist()
     }
 
     private val clearAll = command(
         command = "clear all",
-        description = "Remove all properties from the ${serviceName} database and blacklist"
+        description = "Remove all properties from the $serviceName database and blacklist"
     ) {
         var count = propertyRepository.clearProperties()
         console.d("$count properties deleted")
@@ -109,7 +93,7 @@ class ListUseCase : BaseUseCase() {
 
     private val reindex = command(
         command = "reindex",
-        description = "Re-indexes all properties in the ${serviceName} database starting from 1"
+        description = "Re-indexes all properties in the $serviceName database starting from 1"
     )
     {
         propertyRepository.reindex()

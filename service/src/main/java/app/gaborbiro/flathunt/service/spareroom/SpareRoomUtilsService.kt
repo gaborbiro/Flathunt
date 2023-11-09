@@ -27,11 +27,11 @@ class SpareRoomUtilsService : BaseUtilsService() {
         }
     }
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+    override fun getNextPageUrl(page: PageInfo, offset: Int): String? {
         return if (page.page < page.pageCount) {
             var searchUrl = page.pageUrl.replace(Regex("&offset=[\\d]+"), "")
             searchUrl = searchUrl.replace(Regex("\\?offset=[\\d]+"), "")
-            searchUrl + "&offset=${page.page * 10 - markedAsUnsuitableCount}"
+            searchUrl + "&offset=${page.page * 10 - offset}"
         } else {
             null
         }

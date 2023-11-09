@@ -16,7 +16,7 @@ class IdealistaUtilsService : BaseUtilsService() {
     override val sessionCookieName = "cc"
     override val sessionCookieDomain = "www.idealista.pt"
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+    override fun getNextPageUrl(page: PageInfo, offset: Int): String? {
         return if (page.page < page.pageCount) {
             val uri = URI.create(page.pageUrl)
             val pathTokens = uri.path.split("/").filter { it.isNotBlank() }

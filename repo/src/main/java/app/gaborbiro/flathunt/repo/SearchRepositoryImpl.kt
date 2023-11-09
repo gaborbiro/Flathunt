@@ -4,6 +4,7 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
 import app.gaborbiro.flathunt.repo.domain.SearchRepository
+import app.gaborbiro.flathunt.repo.domain.model.FetchPropertyResult
 import app.gaborbiro.flathunt.repo.domain.model.SaveType
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
@@ -23,45 +24,59 @@ class SearchRepositoryImpl : SearchRepository, KoinComponent {
     private val console: ConsoleWriter by inject()
 
     override fun fetchPropertiesFromAllPages(url: String) {
-        val storedIds = store.getProperties().map { it.webId }.toSet()
         val addedIds = mutableListOf<String>()
+        val unsuitableIds = mutableListOf<String>()
         val failedIds = mutableListOf<String>()
         var currentSearchUrl: String? = url
-        var markedAsUnsuitableCount = 0
+        var failedCounter = 0
         do {
             val pageInfo: PageInfo = webService.getPageInfo(currentSearchUrl!!)
             console.d("Fetching page ${pageInfo.page}/${pageInfo.pageCount}")
+            val storedIds = store.getProperties().map { it.webId }.toSet()
             val blacklist = store.getBlacklistWebIds().toSet()
             val newIds: List<String> = pageInfo.propertyWebIds - blacklist - storedIds
-            val (suitable, unsuitable) = newIds.partition { webId ->
+            newIds.forEach { webId ->
                 console.d(
                     "\n=======> Fetching $webId (${newIds.indexOf(webId) + 1}/${newIds.size}, page ${pageInfo.page}/${pageInfo.pageCount}): ",
                     newLine = false
                 )
 
                 try {
-                    val property = fetchPropertyRepository.fetchProperty(webId, SaveType.SAVE)
-                    property != null
+                    val result = fetchPropertyRepository.fetchProperty(webId, SaveType.SAVE)
+                    when(result) {
+                        is FetchPropertyResult.Property -> {
+                            addedIds.add(result.property.webId)
+                        }
+                        is FetchPropertyResult.Unsuitable -> {
+                            unsuitableIds.add(webId)
+                            failedCounter++
+                        }
+                        is FetchPropertyResult.Failed -> {
+                            failedIds.add(webId)
+                            failedCounter++
+                        }
+                    }
                 } catch (t: Throwable) {
                     t.printStackTrace()
                     if (t is IOException) {
                         throw t
                     }
-                    false
+                    failedIds.add(webId)
+                    failedCounter++
                 }
             }
-            addedIds.addAll(suitable)
-            failedIds.addAll(unsuitable)
-            markedAsUnsuitableCount += unsuitable.size
-            currentSearchUrl = utilsService.getNextPageUrl(pageInfo, markedAsUnsuitableCount)
+            currentSearchUrl = utilsService.getNextPageUrl(pageInfo, failedCounter)
         } while (currentSearchUrl != null)
 
         console.d("\nFinished")
         if (addedIds.isNotEmpty()) {
             console.i("New ids: ${addedIds.joinToString(",")}")
         }
+        if (unsuitableIds.isNotEmpty()) {
+            console.i("Unsuitable ids: ${unsuitableIds.joinToString(",")}")
+        }
         if (failedIds.isNotEmpty()) {
-            console.i("Rejected ids: ${failedIds.joinToString(",")}")
+            console.i("Failed ids: ${failedIds.joinToString(",")}")
         }
     }
 }

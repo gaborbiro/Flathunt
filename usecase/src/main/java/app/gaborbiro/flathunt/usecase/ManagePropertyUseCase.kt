@@ -34,7 +34,7 @@ class ManagePropertyUseCase : BaseUseCase() {
 
     private val print = command<String>(
         command = "print",
-        description = "Print a property",
+        description = "Print property",
         argumentDescription = "idx",
     )
     { (idx) ->

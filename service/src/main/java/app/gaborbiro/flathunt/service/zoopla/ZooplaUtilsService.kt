@@ -15,7 +15,7 @@ class ZooplaUtilsService : BaseUtilsService() {
     override val sessionCookieName = "_cs_s"
     override val sessionCookieDomain = ".zoopla.co.uk"
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+    override fun getNextPageUrl(page: PageInfo, offset: Int): String? {
         return if (page.page < page.pageCount) {
             var searchUrl = page.pageUrl.replace(Regex("&pn=[\\d]+"), "")
             searchUrl = searchUrl.replace(Regex("\\?pn=[\\d]+"), "")

@@ -4,7 +4,7 @@ import app.gaborbiro.flathunt.service.domain.model.PageInfo
 
 interface UtilsService {
 
-    fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String?
+    fun getNextPageUrl(page: PageInfo, offset: Int): String?
 
     fun getPropertyIdFromUrl(url: String): String
 

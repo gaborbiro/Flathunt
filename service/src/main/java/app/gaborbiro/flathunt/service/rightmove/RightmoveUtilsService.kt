@@ -15,7 +15,7 @@ class RightmoveUtilsService : BaseUtilsService() {
     override val sessionCookieName = "rmsessionid"
     override val sessionCookieDomain = ".rightmove.co.uk"
 
-    override fun getNextPageUrl(page: PageInfo, markedAsUnsuitableCount: Int): String? {
+    override fun getNextPageUrl(page: PageInfo, offset: Int): String? {
         return if (page.page < page.pageCount) {
             var searchUrl = page.pageUrl.replace(Regex("&index=[\\d]+"), "")
             searchUrl = searchUrl.replace(Regex("\\?index=[\\d]+"), "")

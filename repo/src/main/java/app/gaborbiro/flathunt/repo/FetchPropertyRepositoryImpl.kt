@@ -2,11 +2,11 @@ package app.gaborbiro.flathunt.repo
 
 import app.gaborbiro.flathunt.GlobalVariables
 import app.gaborbiro.flathunt.console.ConsoleWriter
-import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.prettyPrint
 import app.gaborbiro.flathunt.repo.domain.DirectionsRepository
 import app.gaborbiro.flathunt.repo.domain.FetchPropertyRepository
 import app.gaborbiro.flathunt.repo.domain.PropertyRepository
+import app.gaborbiro.flathunt.repo.domain.model.FetchPropertyResult
 import app.gaborbiro.flathunt.repo.domain.model.SaveType
 import app.gaborbiro.flathunt.repo.validator.PropertyValidator
 import app.gaborbiro.flathunt.service.domain.UtilsService
@@ -28,7 +28,7 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
     /**
      * Ad-hoc scan of a property. Marks property as unsuitable if needed.
      */
-    override fun fetchProperty(idu: String, save: SaveType, safeMode: Boolean): Property? {
+    override fun fetchProperty(idu: String, save: SaveType, safeMode: Boolean): FetchPropertyResult {
         val cleanUrl = utilsService.parseWebIdOrUrl(idu)
 
         return if (cleanUrl != null) {
@@ -40,7 +40,12 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
 
             if (property.isBuddyUp && save != SaveType.FORCE_SAVE) {
                 console.d("\nBuddy up - skipping...")
-                return null
+                if (!property.markedUnsuitable) {
+                    if (!safeMode) {
+                        repository.markAsUnsuitable(webId, unsuitable = true)
+                    }
+                }
+                return FetchPropertyResult.Unsuitable
             }
             if (propertyValidator.isValid(property)) {
                 val propertyWithRoutes = directionsRepository.validateDirections(property)
@@ -51,34 +56,38 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                         SaveType.SAVE, SaveType.FORCE_SAVE -> repository.addOrUpdateProperty(propertyWithRoutes)
                         SaveType.CHECK -> {}
                     }
-                    propertyWithRoutes
+                    FetchPropertyResult.Property(propertyWithRoutes)
                 } else {
                     if (save == SaveType.FORCE_SAVE) {
                         repository.addOrUpdateProperty(property)
+                        FetchPropertyResult.Property(property)
                     } else if (!property.markedUnsuitable) {
                         if (!safeMode) {
                             repository.markAsUnsuitable(webId, unsuitable = true)
                         }
+                        FetchPropertyResult.Unsuitable
                     } else {
                         console.d("\nAlready marked unsuitable")
+                        FetchPropertyResult.Unsuitable
                     }
-                    null
                 }
             } else {
                 if (save == SaveType.FORCE_SAVE) {
                     repository.addOrUpdateProperty(property)
+                    FetchPropertyResult.Property(property)
                 } else if (!property.markedUnsuitable) {
                     if (!safeMode) {
                         repository.markAsUnsuitable(webId, unsuitable = true)
                     }
+                    FetchPropertyResult.Unsuitable
                 } else {
                     console.d("\nAlready marked unsuitable")
+                    FetchPropertyResult.Unsuitable
                 }
-                null
             }
         } else {
             console.e("Invalid id or url: $idu")
-            null
+            FetchPropertyResult.Failed
         }
     }
 }
