@@ -72,13 +72,13 @@ class RunnableJar extends org.gradle.jvm.tasks.Jar {
     RunnableJar(String serviceConfig, Project project) {
         manifest {
             attributes(
-                    "Main-Class": "app.gaborbiro.flathunt.FlatHuntKt",
+                    "Main-Class": "app.gaborbiro.flathunt.FlathuntKt",
                     "jar-build-timestamp": new Date().toString(),
                     "serviceConfig": serviceConfig,
             )
         }
         project.properties["serviceConfig"] = "idealista-exp"
-        archiveFileName.set("FlatHunt-${serviceConfig}.jar")
+        archiveFileName.set("Flathunt-${serviceConfig}.jar")
 
         from {} with project.jar
 

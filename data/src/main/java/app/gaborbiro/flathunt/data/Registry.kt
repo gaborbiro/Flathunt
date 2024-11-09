@@ -2,7 +2,7 @@ package app.gaborbiro.flathunt.data
 
 import java.util.prefs.Preferences
 
-object Preferences {
+object Registry {
 
     // Location on Windows: HKEY_CURRENT_USER\Software\JavaSoft\Prefs
     private val prefs by lazy { Preferences.userRoot().node("app/gaborbiro/flathunt") }

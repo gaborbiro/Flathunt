@@ -127,7 +127,7 @@ class SpareRoomWebService : BaseWebService() {
             }.getOrNull()?.mapNotNull {
                 val price = it.findElement(By.xpath("strong")).text
                 val comment = it.findElement(By.xpath("small")).text
-                if (!comment.contains("NOW LET")) price else null
+                if (comment.contains("NOW LET").not()) price else null
             }?.apply {
                 rawPrices.addAll(this)
             }
@@ -231,9 +231,25 @@ class SpareRoomWebService : BaseWebService() {
         }
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
+    // TODO assert correct outcome
+    override fun updateSuitability(driver: WebDriver, webId: String, suitable: Boolean, description: String) {
         ensurePageWithSession(utilsService.getUrlFromWebId(webId))
-        if (unsuitable) {
+        if (suitable) {
+            runCatching { driver.findElement(By.linkText("Marked as Unsuitable")) }.getOrNull()?.let {
+                it.click()
+                ensurePageWithSession(utilsService.getUrlFromWebId(webId))
+                runCatching { driver.findElement(By.linkText("Remove from saved")) }.getOrNull()
+                    ?.let {
+                        it.click()
+                        runCatching { driver.findElement(By.className("submit")) }.getOrNull()
+                            ?.let {
+                                it.click()
+                                console.d("$webId marked suitable=true $description")
+                                return
+                            }
+                    }
+            }
+        } else {
             runCatching { driver.findElement(By.linkText("Mark as unsuitable")) }.getOrNull()
                 ?.let {
                     it.click()
@@ -256,23 +272,8 @@ class SpareRoomWebService : BaseWebService() {
                 it.click()
                 runCatching { driver.findElement(By.xpath("//input[@value='unsuitable']")) }.getOrNull()?.click()
                 runCatching { driver.findElement(By.className("submit")) }.getOrNull()?.click()
-                console.d("$webId marked $description")
+                console.d("$webId marked suitable=false $description")
                 return
-            }
-        } else {
-            runCatching { driver.findElement(By.linkText("Marked as Unsuitable")) }.getOrNull()?.let {
-                it.click()
-                ensurePageWithSession(utilsService.getUrlFromWebId(webId))
-                runCatching { driver.findElement(By.linkText("Remove from saved")) }.getOrNull()
-                    ?.let {
-                        it.click()
-                        runCatching { driver.findElement(By.className("submit")) }.getOrNull()
-                            ?.let {
-                                it.click()
-                                console.d("$webId marked $description")
-                                return
-                            }
-                    }
             }
         }
         console.e("Failed to mark $webId $description")
@@ -303,7 +304,7 @@ class SpareRoomWebService : BaseWebService() {
                     if (getMessageTags(driver).isEmpty()) { // ignoring tagged messages
                         val message = fetchMessage(driver)
                         if (message.propertyUrls.isEmpty()) {
-                            if (!safeMode) tagMessage(driver.currentUrl, MessageTag.NO_LINKS)
+                            if (safeMode.not()) tagMessage(driver.currentUrl, MessageTag.NO_LINKS)
                         } else {
                             messages.add(message)
                         }

@@ -149,19 +149,20 @@ class RightmoveWebService : BaseWebService() {
         }
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
+    override fun updateSuitability(driver: WebDriver, webId: String, suitable: Boolean, description: String) {
         store.getCookies()?.let { cookies ->
             if (GlobalVariables.safeMode || requestCaller.post(
                     url = "https://my.rightmove.co.uk/property/status",
-                    payload = "[{\"id\": \"$webId\", \"action\": \"${if (unsuitable) "HIDE" else "UNHIDE"}\"}]",
+                    payload = "[{\"id\": \"$webId\", \"action\": \"${if (suitable.not()) "HIDE" else "UNHIDE"}\"}]",
                     cookies = cookies.cookies.joinToString("; ")
                 )
             ) {
-                console.d("$webId marked as unsuitable=$unsuitable $description")
+                console.d("$webId updated suitable=$suitable $description")
             }
         } ?: run {
             console.e("Unable to mark property. We don't have any cookies.")
         }
+        // TODO assert correct outcome
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {

@@ -81,15 +81,20 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
             if (cookies.isNotEmpty()) {
                 val cookieSet = CookieSet(cookies.toSet())
                 store.setCookies(cookieSet)
-                if (browser.initialised()) {
-                    browser.addOrUpdateCookies(cookieSet)
-                }
+                browser.addOrUpdateCookies(cookieSet)
             }
         }
     }
 
     override fun saveCookies() {
         store.setCookies(browser.getCookies())
+    }
+
+    override fun loadCookies() {
+        store.getCookies()
+            ?.let {
+                browser.addOrUpdateCookies(it)
+            }
     }
 
     override fun openRoot() {

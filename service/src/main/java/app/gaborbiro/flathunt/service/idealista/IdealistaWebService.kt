@@ -69,7 +69,7 @@ class IdealistaWebService : BaseWebService() {
         val priceStr = driver.findElements(By.className("info-data-price"))[0].text
         val priceRegex = Pattern.compile("([\\d,\\.]+)\\s€/month")
         val matcher = priceRegex.matcher(priceStr)
-        if (!matcher.find()) throw IllegalArgumentException("Cannot parse price: $priceStr")
+        if (matcher.find().not()) throw IllegalArgumentException("Cannot parse price: $priceStr")
         val price = DecimalFormat("#,###").parse(matcher.group(1)).toInt()
 
         // peek https://www.idealista.pt/en/imovel/31059949/
@@ -89,8 +89,11 @@ class IdealistaWebService : BaseWebService() {
 
         val heating = features.any { it.contains("heating", ignoreCase = true) }
         val airConditioning = features.any { it.contains("Air conditioning", ignoreCase = true) }
-        val energyCertificationElement = driver.findElements(By.xpath("//*[contains(text(), \"Energy performance certificate\")]/following-sibling::*/ul/li/*[last()]")).lastOrNull()
-        val energyCertification = energyCertificationElement?.let { it.getAttribute("title").or() ?: it.text } ?: "Unknown"
+        val energyCertificationElement =
+            driver.findElements(By.xpath("//*[contains(text(), \"Energy performance certificate\")]/following-sibling::*/ul/li/*[last()]"))
+                .lastOrNull()
+        val energyCertification =
+            energyCertificationElement?.let { it.getAttribute("title").or() ?: it.text } ?: "Unknown"
         val mapURL = (driver as JavascriptExecutor)
             .executeScript("return config['multimediaCarrousel']['map']['src'];") as String
         val center: List<String> = URI.create(mapURL).query.split("&")
@@ -113,10 +116,14 @@ class IdealistaWebService : BaseWebService() {
         )
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
+    override fun updateSuitability(driver: WebDriver, webId: String, suitable: Boolean, description: String) {
         ensurePageWithSession(utilsService.getUrlFromWebId(webId))
         driver.findElements(By.className("discard-btn"))[1].click()
-        assert(driver.findElements(By.className("icon-recover")).isNotEmpty())
+        if (suitable) {
+            assert(driver.findElements(By.className("icon-delete")).isNotEmpty())
+        } else {
+            assert(driver.findElements(By.className("icon-recover")).isNotEmpty())
+        }
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {

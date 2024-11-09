@@ -10,7 +10,7 @@ interface PropertyRepository {
 
     fun addOrUpdateProperty(property: Property): Boolean
 
-    fun deleteProperty(index: Int, markAsUnsuitable: Boolean): Boolean
+    fun deleteProperty(index: Int): Boolean
 
     fun getPropertyUrl(webId: String): String
 
@@ -26,7 +26,7 @@ interface PropertyRepository {
 
     fun openLinks(property: Property)
 
-    fun markAsUnsuitable(webId: String, unsuitable: Boolean)
+    fun updateSuitability(webId: String, suitable: Boolean)
 
     fun getNextProperty(idx: String): Property?
 

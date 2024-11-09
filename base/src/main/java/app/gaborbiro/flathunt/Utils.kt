@@ -84,7 +84,7 @@ fun String.or(default: String? = null) = if (isBlank()) default else trim()
 fun Collection<*>.orNull() = if (this.isEmpty()) null else this
 
 fun nostrict(lambda: () -> Unit) {
-    if (!GlobalVariables.strict) {
+    if (GlobalVariables.strict.not()) {
         lambda()
     }
 }

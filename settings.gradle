@@ -1,4 +1,4 @@
-rootProject.name = 'FlatHunt'
+rootProject.name = 'Flathunt'
 include 'data'
 include 'data:domain'
 include 'service'

@@ -1,8 +1,9 @@
 package app.gaborbiro.flathunt.service.domain
 
 import app.gaborbiro.flathunt.data.domain.model.CookieSet
+import org.openqa.selenium.WebDriver
 
-interface Browser {
+interface Browser : WebDriver {
 
     fun openNewTab(retry: Boolean = true): String?
 
@@ -21,6 +22,4 @@ interface Browser {
     fun addOrUpdateCookies(cookies: CookieSet)
 
     fun getCookies(): CookieSet
-
-    fun initialised(): Boolean
 }

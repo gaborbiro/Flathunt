@@ -25,7 +25,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     private val fetch = command<String>(
         command = "fetch",
         description = "Fetch property, validate it and label it as needed. If suitable, open it in a browser",
-        argumentDescription = "idu",
+        argumentName1 = "idu",
     )
     { (idu) ->
         val result = fetchPropertyRepository.fetchProperty(
@@ -41,7 +41,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     private val peek = command<String>(
         command = "peek",
         description = "Fetch property, validate it and label it as needed. If suitable, open it in a browser.",
-        argumentDescription = "idu",
+        argumentName1 = "idu",
     )
     { (idu) ->
         val result = fetchPropertyRepository.fetchProperty(
@@ -58,7 +58,7 @@ class FetchPropertyUseCase : BaseUseCase() {
     private val forceFetch = command<String>(
         command = "force fetch",
         description = "Fetch property and add it to the database (regardless of suitability). If suitable open it in browser.",
-        argumentDescription = "idu",
+        argumentName1 = "idu",
     )
     { (idu) ->
         val result = fetchPropertyRepository.fetchProperty(

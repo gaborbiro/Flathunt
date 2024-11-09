@@ -6,7 +6,7 @@ private val poiCW = POI.Coordinate(
     description = "Canada Water Station",
     location = POILocation(
         latitude = "51.4988863",
-        longitude = "-0.1322229"
+        longitude = "-0.1322229",
     ),
     max = 20 minutes CYCLING or 30 minutes TRANSIT,
 )
@@ -15,7 +15,7 @@ private val poiSoho = POI.Coordinate(
     description = "Dean Street",
     location = POILocation(
         latitude = "51.5142306",
-        longitude = "-0.1300049"
+        longitude = "-0.1300049",
     ),
     max = 45 minutes TRANSIT,
 )
@@ -24,9 +24,19 @@ private val poiBaixaChiado = POI.Address(
     description = "Baixa-Chiado",
     location = POILocation(
         latitude = "38.710879111221196",
-        longitude = "-9.140458860931528"
+        longitude = "-9.140458860931528",
     ),
     address = "Baixa-Chiado",
+    max = 25 minutes TRANSIT or 10 minutes WALKING,
+)
+
+private val poiGabor = POI.Address(
+    description = "Gabor",
+    location = POILocation(
+        latitude = "38.7244735",
+        longitude = "-9.1318743",
+    ),
+    address = "Rua de Macau 30, 1170-065 Lisboa",
     max = 25 minutes TRANSIT or 10 minutes WALKING,
 )
 
@@ -34,7 +44,7 @@ private val poiRnD = POI.Address(
     description = "Rahul and David",
     location = POILocation(
         latitude = "38.72430133625508",
-        longitude = "-9.15469834724955"
+        longitude = "-9.15469834724955",
     ),
     address = "R.+Rodrigo+da+Fonseca+97,+1250-190+Lisboa",
     max = 25 minutes TRANSIT or 15 minutes WALKING,
@@ -50,7 +60,7 @@ private val poiMartha = POI.Address(
     max = 25 minutes TRANSIT or 15 minutes WALKING,
 )
 
-private val poiGyms = POI.CoordinateSet(
+private val poiFitnessHut = POI.CoordinateSet(
     description = "Fitness Huts in Lisbon",
     locations = listOf(
         POI.Address(
@@ -126,15 +136,65 @@ private val poiGyms = POI.CoordinateSet(
             address = "Hyatt+Regency+Lisbon",
         )
     ),
-    max = 12 minutes WALKING,
+    max = 10 minutes WALKING,
+)
+
+private val poiCrossFit = POI.CoordinateSet(
+    description = "Cross Fits in Lisbon",
+    locations = listOf(
+        POI.Address(
+            description = "The Bakery CrossFit",
+            location = POILocation(latitude = "38.723636162765175", longitude = "-9.139565886508088"),
+            address = "The Bakery CrossFit",
+        ),
+        POI.Address(
+            description = "Off Limits CrossFit",
+            location = POILocation(latitude = "38.72018149425185", longitude = "-9.159769497792343"),
+            address = "Off Limits CrossFit",
+        ),
+        POI.Address(
+            description = "CrossFit Alvalade IV",
+            location = POILocation(latitude = "38.74061416724753", longitude = "-9.103452213491906"),
+            address = "CrossFit Alvalade IV",
+        ),
+        POI.Address(
+            description = "Matchbox CrossFit",
+            location = POILocation(latitude = "38.73900802822198", longitude = "-9.156292700000002"),
+            address = "Matchbox CrossFit",
+        ),
+        POI.Address(
+            description = "Trend CrossFit & Pilates Studio",
+            location = POILocation(latitude = "38.74656124727494", longitude = "-9.13888874232794"),
+            address = "Trend CrossFit & Pilates Studio",
+        ),
+        POI.Address(
+            description = "QF CrossFit",
+            location = POILocation(latitude = "38.719586829028245", longitude = "-9.166317884655877"),
+            address = "QF CrossFit",
+        ),
+        POI.Address(
+            description = "CrossFit Park of Nations",
+            location = POILocation(latitude = "38.78445569817578", longitude = "-9.13099638942564"),
+            address = "CrossFit Parque das Nações",
+        ),
+        POI.Address(
+            description = "Off Limits CrossFit",
+            location = POILocation(latitude = "38.7201042747466", longitude = "-9.159802433608442"),
+            address = "Off Limits CrossFit",
+        ),
+        POI.Address(
+            description = "CrossFit Caravelas",
+            location = POILocation(latitude = "38.70894482520217", longitude = "-9.1653065"),
+            address = "CrossFit Caravelas",
+        ),
+    ),
+    max = 10 minutes WALKING,
 )
 
 val EXP = ValidationCriteria(
     pointsOfInterest = listOf(
-        poiBaixaChiado,
-        poiRnD,
-//        poiMartha,
-        poiGyms,
+        poiGabor,
+        poiCrossFit,
     ),
     maxPrice = 1400,
     minBedrooms = 1,

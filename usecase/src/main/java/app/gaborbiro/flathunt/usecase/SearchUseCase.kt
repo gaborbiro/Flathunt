@@ -18,7 +18,7 @@ class SearchUseCase : BaseUseCase() {
         command = "search",
         description = "Read new properties from the search url. Saves and prints properties that are valid. " +
                 "Marks them as unsuitable if needed",
-        argumentDescription = "url",
+        argumentName1 = "url",
     )
     { (url) ->
         searchRepository.fetchPropertiesFromAllPages(url)

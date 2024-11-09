@@ -1,25 +1,27 @@
 package app.gaborbiro.flathunt.service
 
+import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.service.domain.Browser
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
-import org.openqa.selenium.Cookie
-import org.openqa.selenium.NoSuchWindowException
-import org.openqa.selenium.WebDriver
+import org.koin.core.component.inject
+import org.openqa.selenium.*
 import org.openqa.selenium.remote.RemoteWebDriver
 import java.util.*
 
 @Singleton
 class BrowserImpl : Browser, KoinComponent {
 
+    private val console: ConsoleWriter by inject()
+
     private val tabHandleStack = Stack<Set<String>>()
 
-    private var browserLaunched: Boolean = false
+    private var driverInitialized = false
 
     private val driver: WebDriver by lazy {
-        browserLaunched = true
+        driverInitialized = true
         get()
     }
 
@@ -68,7 +70,8 @@ class BrowserImpl : Browser, KoinComponent {
     }
 
     override fun cleanup() {
-        if (browserLaunched) {
+        if (driverInitialized) {
+            console.d("Cleanup")
             driver.quit()
         }
     }
@@ -114,10 +117,6 @@ class BrowserImpl : Browser, KoinComponent {
         return CookieSet(driver.manage().cookies)
     }
 
-    override fun initialised(): Boolean {
-        return browserLaunched
-    }
-
     /**
      * The window handle of the new tab is the last item in driver.windowHandles
      */
@@ -145,5 +144,57 @@ class BrowserImpl : Browser, KoinComponent {
             ?.firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
             ?.let { it.expiry == null || it.expiry > Date() }
             ?: false
+    }
+
+    override fun findElements(by: By?): MutableList<WebElement> {
+        return driver.findElements(by)
+    }
+
+    override fun findElement(by: By?): WebElement {
+        return driver.findElement(by)
+    }
+
+    override fun get(url: String?) {
+        driver.get(url)
+    }
+
+    override fun getCurrentUrl(): String {
+        return driver.currentUrl
+    }
+
+    override fun getTitle(): String {
+        return driver.title
+    }
+
+    override fun getPageSource(): String {
+        return driver.pageSource
+    }
+
+    override fun close() {
+        driver.close()
+    }
+
+    override fun quit() {
+        driver.quit()
+    }
+
+    override fun getWindowHandles(): MutableSet<String> {
+        return driver.windowHandles
+    }
+
+    override fun getWindowHandle(): String {
+        return driver.windowHandle
+    }
+
+    override fun switchTo(): WebDriver.TargetLocator {
+        return driver.switchTo()
+    }
+
+    override fun navigate(): WebDriver.Navigation {
+        return driver.navigate()
+    }
+
+    override fun manage(): WebDriver.Options {
+        return driver.manage()
     }
 }

@@ -40,16 +40,16 @@ fun command(
 inline fun <reified A> command(
     command: String,
     description: String,
-    argumentDescription: String,
+    argumentName1: String,
     noinline exec: (Single<A>) -> Unit,
 ): Command<Single<A>> {
     return object : Command<Single<A>>(
         command,
         description,
-        listOf(argumentDescription),
+        listOf(argumentName1),
         exec
     ) {
-        override fun argumentsDescription(): String = "($argumentDescription: ${A::class.simpleName})"
+        override fun argumentsDescription(): String = "($argumentName1: ${A::class.simpleName})"
     }
 }
 

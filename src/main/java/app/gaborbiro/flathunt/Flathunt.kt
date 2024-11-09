@@ -13,10 +13,10 @@ import java.io.InputStreamReader
 
 
 fun main(args: Array<String>) {
-    FlatHunt().main(args)
+    Flathunt().main(args)
 }
 
-class FlatHunt {
+class Flathunt {
 
     fun main(args: Array<String>) {
         java.util.logging.LogManager.getLogManager().reset() // disable all logging

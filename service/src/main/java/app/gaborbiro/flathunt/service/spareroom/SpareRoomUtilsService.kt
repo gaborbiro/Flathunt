@@ -20,7 +20,7 @@ class SpareRoomUtilsService : BaseUtilsService() {
     private fun getLinksFromMessage(element: WebElement, output: MutableList<String>) {
         element.findElements(By.xpath("*")).forEach {
             val href = it.getAttribute("href")
-            if (!href.isNullOrBlank()) {
+            if (href.isNullOrBlank().not()) {
                 output.add(cleanUrl(href))
             }
             getLinksFromMessage(it, output)

@@ -37,7 +37,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
 
     private val clearStoredCookies = command(
         command = "clear stored cookies",
-        description = "Delete cookies from database (will re-login on next launch)",
+        description = "Delete cookies from registry (will re-login on next launch)",
         exec = { repo.clearStoredCookies() }
     )
 
@@ -49,14 +49,20 @@ class MaintenanceUseCase : UseCase, KoinComponent {
 
     private val saveCookies = command(
         command = "save cookies",
-        description = "Override currently stored cookies with the ones from the browser. Requires open browser.",
+        description = "Override cookies in the registry with the ones from the browser. Requires open browser.",
         exec = { repo.saveCookies() }
+    )
+
+    private val applyCookies = command(
+        command = "load cookies",
+        description = "Add or update browser with cookies saved to the register. Browser must be open to root url",
+        exec = { repo.loadCookies() }
     )
 
     private val export = command<String>(
         command = "export",
         description = "Export saved properties to the specified path",
-        argumentDescription = "filepath",
+        argumentName1 = "filepath",
         exec = { (filepath) ->
             repo.backup(filepath)
         }
@@ -66,7 +72,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
         command = "import",
         description = "Import properties from specified path. Warning: this will irrevocably override all your data. " +
                 "Make sure to back your data up first by using the 'export' command.",
-        argumentDescription = "filepath",
+        argumentName1 = "filepath",
     ) { (filepath) ->
         try {
             val size = repo.restore(filepath)
@@ -88,7 +94,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
 
     private val regedit = command(
         command = "regedit",
-        description = "Open Windows regedit to Flathunt"
+        description = "Open Windows regedit"
     ) {
         Runtime.getRuntime()
             .exec("REG ADD \"HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\" /v \"LastKey\" /d \"HKEY_CURRENT_USER\\SOFTWARE\\JavaSoft\\Prefs\\app\\gaborbiro\\flathunt\" /f")

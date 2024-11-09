@@ -8,7 +8,7 @@ object Dependencies {
     }
 
     object Selenium {
-        const val java = "org.seleniumhq.selenium:selenium-java:4.10.0"
+        const val java = "org.seleniumhq.selenium:selenium-java:4.26.0"
     }
 
     object slf4j {

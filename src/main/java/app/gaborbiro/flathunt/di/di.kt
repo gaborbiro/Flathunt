@@ -1,10 +1,10 @@
 package app.gaborbiro.flathunt.di
 
-import app.gaborbiro.flathunt.criteria.EXP
 import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.console.ConsoleWriterFactory
 import app.gaborbiro.flathunt.console.di.ConsoleModule
+import app.gaborbiro.flathunt.criteria.EXP
 import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.di.DataModule
 import app.gaborbiro.flathunt.directions.di.DirectionsModule
@@ -52,17 +52,27 @@ fun setupKoin(serviceConfig: String): KoinApplication {
     }
     val serviceModule = module {
         single<WebDriver> {
+//            RemoteWebDriver((driver.commandExecutor as ChromeDriverCommandExecutor).addressOfRemoteServer, DesiredCapabilities())
+
             System.setProperty("webdriver.chrome.driver", Paths.get("chromedriver.exe").toString())
-            ChromeDriver(
+            val driver = ChromeDriver(
                 ChromeOptions().apply {
                     // https://peter.sh/experiments/chromium-command-line-switches/
                     // start-maximized
                     // window-position=0,0", "window-size=1,1
-                    addArguments("start-maximized")
+                    addArguments(
+                        "start-maximized",
+                        "disable-gpu",
+//                        "headless",
+                        "debuggerAddress=localhost:9222",
+                        "disable-infobars"
+                    )
                     setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
                     addExtensions(File("EditThisCookie.crx"))
                 }
             )
+            println("Session Id: ${driver.sessionId}")
+            driver
         }
     }
     app.modules(serviceModule)

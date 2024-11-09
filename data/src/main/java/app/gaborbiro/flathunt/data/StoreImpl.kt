@@ -28,7 +28,7 @@ class StoreImpl(
     // START Properties
 
     override fun getJsonProperties(): String? {
-        return Preferences.get(prefPropertiesKey, null)
+        return Registry.get(prefPropertiesKey, null)
     }
 
     override fun getProperties(): List<Property> {
@@ -48,12 +48,12 @@ class StoreImpl(
     }
 
     override fun overrideJsonProperties(json: String) {
-        Preferences.save(prefPropertiesKey, json)
+        Registry.save(prefPropertiesKey, json)
     }
 
     override fun clearProperties(): Int {
         val count = getProperties().size
-        Preferences.clear(prefPropertiesKey)
+        Registry.clear(prefPropertiesKey)
         return count
     }
 
@@ -61,16 +61,16 @@ class StoreImpl(
 
     // START Blacklist
     override fun getBlacklistWebIds(): List<String> {
-        return Preferences.get(prefBlacklistKey, null)?.split(",") ?: emptyList()
+        return Registry.get(prefBlacklistKey, null)?.split(",") ?: emptyList()
     }
 
     override fun saveBlacklistWebIds(webIds: List<String>) {
-        Preferences.save(prefBlacklistKey, webIds.joinToString(","))
+        Registry.save(prefBlacklistKey, webIds.joinToString(","))
     }
 
     override fun clearBlacklist(): Int {
         val count = getBlacklistWebIds().size
-        Preferences.clear(prefBlacklistKey)
+        Registry.clear(prefBlacklistKey)
         return count
     }
 
@@ -78,28 +78,28 @@ class StoreImpl(
 
     private fun nextIndex(): Int {
         return synchronized(this) {
-            val index = Preferences.getInt(prefIndexKey, 0)
-            Preferences.setInt(prefIndexKey, index + 1)
+            val index = Registry.getInt(prefIndexKey, 0)
+            Registry.setInt(prefIndexKey, index + 1)
             index + 1
         }
     }
 
     override fun setCookies(cookies: CookieSet) {
-        Preferences.save(prefCookiesKey, gson.toJson(cookies))
+        Registry.save(prefCookiesKey, gson.toJson(cookies))
     }
 
     override fun getCookies(): CookieSet? {
-        return Preferences.get(prefCookiesKey, null)?.let {
+        return Registry.get(prefCookiesKey, null)?.let {
             gson.fromJson(it, CookieSet::class.java)
         }
     }
 
     override fun clearCookies() {
-        Preferences.clear(prefCookiesKey)
+        Registry.clear(prefCookiesKey)
     }
 
     override fun resetIndexCounter() {
-        Preferences.clear(prefIndexKey)
+        Registry.clear(prefIndexKey)
     }
 }
 

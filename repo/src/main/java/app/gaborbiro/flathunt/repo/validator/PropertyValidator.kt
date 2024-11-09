@@ -97,7 +97,7 @@ internal class PropertyValidator : KoinComponent {
         criteria.noBedsit?.also {
             if (it && property.title.contains("bedsit", ignoreCase = true)) {
                 errors.add("bedsit")
-            } else if (!it && !property.title.contains("bedsit", ignoreCase = true)) {
+            } else if (it.not() && property.title.contains("bedsit", ignoreCase = true).not()) {
                 errors.add("need bedsit")
             }
         }

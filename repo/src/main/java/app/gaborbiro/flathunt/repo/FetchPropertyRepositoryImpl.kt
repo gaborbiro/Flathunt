@@ -40,10 +40,8 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
 
             if (property.isBuddyUp && save != SaveType.FORCE_SAVE) {
                 console.d("\nBuddy up - skipping...")
-                if (!property.markedUnsuitable) {
-                    if (!safeMode) {
-                        repository.markAsUnsuitable(webId, unsuitable = true)
-                    }
+                if (property.markedUnsuitable.not() && safeMode.not()) {
+                    repository.updateSuitability(webId, suitable = false)
                 }
                 return FetchPropertyResult.Unsuitable
             }
@@ -61,9 +59,9 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                     if (save == SaveType.FORCE_SAVE) {
                         repository.addOrUpdateProperty(property)
                         FetchPropertyResult.Property(property)
-                    } else if (!property.markedUnsuitable) {
-                        if (!safeMode) {
-                            repository.markAsUnsuitable(webId, unsuitable = true)
+                    } else if (property.markedUnsuitable.not()) {
+                        if (safeMode.not()) {
+                            repository.updateSuitability(webId, suitable = false)
                         }
                         FetchPropertyResult.Unsuitable
                     } else {
@@ -75,9 +73,9 @@ class FetchPropertyRepositoryImpl : FetchPropertyRepository, KoinComponent {
                 if (save == SaveType.FORCE_SAVE) {
                     repository.addOrUpdateProperty(property)
                     FetchPropertyResult.Property(property)
-                } else if (!property.markedUnsuitable) {
-                    if (!safeMode) {
-                        repository.markAsUnsuitable(webId, unsuitable = true)
+                } else if (property.markedUnsuitable.not()) {
+                    if (safeMode.not()) {
+                        repository.updateSuitability(webId, suitable = false)
                     }
                     FetchPropertyResult.Unsuitable
                 } else {

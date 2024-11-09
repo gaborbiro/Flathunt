@@ -167,7 +167,7 @@ class ZooplaWebService : BaseWebService() {
         return images
     }
 
-    override fun markAsUnsuitable(driver: WebDriver, webId: String, unsuitable: Boolean, description: String) {
+    override fun updateSuitability(driver: WebDriver, webId: String, suitable: Boolean, description: String) {
         throw NotImplementedError()
     }
 }

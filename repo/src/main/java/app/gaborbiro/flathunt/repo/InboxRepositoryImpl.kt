@@ -37,21 +37,23 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
                 val webId = utilsService.getPropertyIdFromUrl(propertyLink)
                 val property = savedProperties[webId] ?: run {
                     console.d("=======> Fetching property $propertyLink (sent by ${message.senderName})")
-                    webService.fetchProperty(webId).copy(senderName = message.senderName, messageUrl = message.messageLink)
+                    webService.fetchProperty(webId)
+                        .copy(senderName = message.senderName, messageUrl = message.messageLink)
                 }
                 if (property.isBuddyUp) {
-                    if (!GlobalVariables.safeMode) webService.tagMessage(message.messageLink, MessageTag.BUDDY_UP)
-                } else if (!validator.isValid(property)) {
-                    if (!property.markedUnsuitable) { // not yet marked as unsuitable
-                        if (!GlobalVariables.safeMode) {
-                            webService.markAsUnsuitable(webId, unsuitable = true)
-                        }
+                    if (GlobalVariables.safeMode.not()) webService.tagMessage(message.messageLink, MessageTag.BUDDY_UP)
+                } else if (validator.isValid(property).not()) {
+                    if (property.markedUnsuitable.not() && GlobalVariables.safeMode.not()) {
+                        webService.updateSuitability(webId, suitable = false)
                     }
                     messageRejection[propertyLink] = true
                 } else {
                     if (property.prices.isEmpty()) {
                         console.d("Price missing")
-                        if (!GlobalVariables.safeMode) webService.tagMessage(message.messageLink, MessageTag.PRICE_MISSING)
+                        if (GlobalVariables.safeMode.not()) webService.tagMessage(
+                            message.messageLink,
+                            MessageTag.PRICE_MISSING
+                        )
                     } else {
                         newProperties.add(property)
                     }
@@ -62,9 +64,12 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
         }
         if (messageRejection.values.any { it }) {
             if (messageRejection.values.all { it }) {
-                if (!GlobalVariables.safeMode) webService.tagMessage(message.messageLink, MessageTag.REJECTED)
+                if (GlobalVariables.safeMode.not()) webService.tagMessage(message.messageLink, MessageTag.REJECTED)
             } else if (messageRejection.values.any { it }) {
-                if (!GlobalVariables.safeMode) webService.tagMessage(message.messageLink, MessageTag.PARTIALLY_REJECTED)
+                if (GlobalVariables.safeMode.not()) webService.tagMessage(
+                    message.messageLink,
+                    MessageTag.PARTIALLY_REJECTED
+                )
                 console.d("Partial rejection:\n" + messageRejection.map { it.key + " -> " + if (it.value) "rejected" else "fine" }
                     .joinToString("\n"))
             }
@@ -73,6 +78,6 @@ class InboxRepositoryImpl : InboxRepository, KoinComponent {
     }
 
     override fun tagMessage(url: String, tag: MessageTag) {
-        if (!GlobalVariables.safeMode) webService.tagMessage(url, MessageTag.REJECTED)
+        if (GlobalVariables.safeMode.not()) webService.tagMessage(url, MessageTag.REJECTED)
     }
 }

@@ -64,14 +64,14 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
                     addOrUpdateProperty(propertyWithRoutes)
                     true
                 } else {
-                    if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
-                        markAsUnsuitable(property.webId, unsuitable = true)
+                    if (property.markedUnsuitable.not() && GlobalVariables.safeMode.not()) {
+                        updateSuitability(property.webId, suitable = false)
                     }
                     false
                 }
             } else {
-                if (!property.markedUnsuitable && !GlobalVariables.safeMode) {
-                    markAsUnsuitable(property.webId, unsuitable = true)
+                if (property.markedUnsuitable.not() && GlobalVariables.safeMode.not()) {
+                    updateSuitability(property.webId, suitable = false)
                 }
                 false
             }
@@ -81,18 +81,15 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         console.d(unsuitableStr.or("none"))
     }
 
-    override fun deleteProperty(index: Int, markAsUnsuitable: Boolean): Boolean {
+    override fun deleteProperty(index: Int): Boolean {
         val properties = store.getProperties().toMutableList()
         return properties.firstOrNull { it.index == index }?.let { property ->
-            if (markAsUnsuitable && !GlobalVariables.safeMode) {
-                webService.markAsUnsuitable(property.webId, unsuitable = true)
-            }
             properties.removeIf { it.webId == property.webId }
             store.overrideProperties(properties)
             console.d("Property deleted")
-
             true
         } ?: run {
+            console.d("Index $index not found")
             false
         }
     }
@@ -110,8 +107,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     }
 
     override fun addToBlacklist(webId: String) {
-        val blacklist = getBlacklist()
-        store.saveBlacklistWebIds((blacklist + webId).distinct())
+        val newBlacklist = getBlacklist() + webId
+        store.saveBlacklistWebIds(newBlacklist.distinct())
     }
 
     override fun clearBlacklist(): Int {
@@ -134,8 +131,8 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
         }
     }
 
-    override fun markAsUnsuitable(webId: String, unsuitable: Boolean) {
-        webService.markAsUnsuitable(webId, unsuitable)
+    override fun updateSuitability(webId: String, suitable: Boolean) {
+        webService.updateSuitability(webId, suitable)
     }
 
     override fun getNextProperty(idx: String): Property? {
@@ -147,7 +144,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     override fun reindex() {
         val properties: List<Property> = store.getProperties()
         store.resetIndexCounter()
-        if (!GlobalVariables.safeMode) {
+        if (GlobalVariables.safeMode.not()) {
             store.overrideProperties(properties.map { it.copy(index = null) })
         }
     }

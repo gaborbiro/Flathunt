@@ -22,7 +22,7 @@ abstract class BaseUtilsService : UtilsService, KoinComponent {
 
     override fun parseWebIdOrUrl(idu: String): String? {
         var cleanUrl = cleanUrl(idu)
-        if (!isValidUrl(cleanUrl)) {
+        if (isValidUrl(cleanUrl).not()) {
             val matcher = cleanUrl.matcher("^([\\d]+)$")
             if (matcher.find()) {
                 cleanUrl = getUrlFromWebId(idu)

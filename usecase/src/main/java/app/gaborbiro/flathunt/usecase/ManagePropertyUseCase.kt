@@ -24,7 +24,7 @@ class ManagePropertyUseCase : BaseUseCase() {
             next,
             tyn,
             delete,
-            unsuitable,
+            suitable,
             blacklist,
             comment,
             commentAppend,
@@ -35,7 +35,7 @@ class ManagePropertyUseCase : BaseUseCase() {
     private val print = command<String>(
         command = "print",
         description = "Print property",
-        argumentDescription = "idx",
+        argumentName1 = "idx",
     )
     { (idx) ->
         val nonWildIdx = idx.checkLastUsedIdx()
@@ -51,7 +51,7 @@ class ManagePropertyUseCase : BaseUseCase() {
     private val open = command<String>(
         command = "open",
         description = "Open properties in browser",
-        argumentDescription = "idx (comma separated)",
+        argumentName1 = "idx (comma separated)",
     )
     { (idxs) ->
         getPropertiesByIdxs(idxs.checkLastUsedIdx())
@@ -76,14 +76,18 @@ class ManagePropertyUseCase : BaseUseCase() {
 
     private val tyn = command(
         command = "tyn",
-        description = "(Thank You Next) Delete last viewed property, mark it as unsuitable " +
+        description = "(Thank You Next) Delete last viewed property, mark it as unsuitable, blacklist it " +
                 "and open next available index in browser",
     )
     {
         val next = propertyRepository.getNextProperty(GlobalVariables.lastIdx!!)
         getPropertiesByIdxs(GlobalVariables.lastIdx!!)
             .forEach {
-                propertyRepository.deleteProperty(it.index!!, markAsUnsuitable = true)
+                if (it.markedUnsuitable.not() && GlobalVariables.safeMode.not()) {
+                    propertyRepository.updateSuitability(it.webId, suitable = false)
+                }
+                propertyRepository.addToBlacklist(it.webId)
+                propertyRepository.deleteProperty(it.index!!)
             }
         next?.let {
             it.prettyPrint().let(::println)
@@ -92,34 +96,39 @@ class ManagePropertyUseCase : BaseUseCase() {
         } ?: run { console.d("Nothing to open") }
     }
 
-    private val delete = command<String, Boolean>(
+    private val delete = command<String>(
         command = "delete",
         description = "Delete one or more properties from the database",
         argumentName1 = "idx (comma separated)",
-        argumentName2 = "unsuitable",
     )
-    { (idxs, unsuitable) ->
+    { (idxs) ->
         getPropertiesByIdxs(idxs.checkLastUsedIdx())
             .forEach {
-                propertyRepository.deleteProperty(it.index!!, markAsUnsuitable = unsuitable)
+                propertyRepository.deleteProperty(it.index!!)
             }
     }
 
-    private val unsuitable = command<String, Boolean>(
-        command = "unsuitable",
-        description = "Marks one or more properties as unsuitable/suitable",
+    private val suitable = command<String, Boolean>(
+        command = "suitable",
+        description = "Marks one or more properties as suitable/unsuitable",
         argumentName1 = "idx (comma separated)",
-        argumentName2 = "unsuitable",
+        argumentName2 = "suitable",
     )
-    { (idxs, unsuitable) ->
+    { (idxs, suitable) ->
         getPropertiesByIdxs(idxs.checkLastUsedIdx())
-            .forEach { propertyRepository.markAsUnsuitable(it.webId, unsuitable) }
+            .forEach {
+                if (GlobalVariables.safeMode.not()) {
+                    if (suitable != it.markedUnsuitable.not()) {
+                        propertyRepository.updateSuitability(it.webId, suitable = suitable)
+                    }
+                }
+            }
     }
 
     private val blacklist = command<String>(
         command = "blacklist",
-        description = "Add ids to the ${serviceName} blacklist",
-        argumentDescription = "idx (comma separated)"
+        description = "Add ids to the $serviceName blacklist",
+        argumentName1 = "idx (comma separated)"
     ) { (idxs) ->
         getPropertiesByIdxs(idxs.checkLastUsedIdx())
             .forEach {

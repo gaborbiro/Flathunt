@@ -14,7 +14,7 @@ interface WebService {
 
     fun fetchProperty(webId: String): Property
 
-    fun markAsUnsuitable(webId: String, unsuitable: Boolean)
+    fun updateSuitability(webId: String, suitable: Boolean)
 
     fun getPhotoUrls(webId: String): List<String>
 
