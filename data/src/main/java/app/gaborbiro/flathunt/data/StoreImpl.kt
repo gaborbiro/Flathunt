@@ -4,11 +4,12 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.data.domain.model.Property
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.util.*
 
 @Singleton
 class StoreImpl(
@@ -18,7 +19,9 @@ class StoreImpl(
 
     private val console: ConsoleWriter by inject()
 
-    private val gson = Gson()
+    private val gson = GsonBuilder()
+//        .registerTypeAdapter(Date::class.java, DateTypeAdapter())
+        .create()
 
     private val prefPropertiesKey = "${PREF_PROPERTIES_KEY_BASE}_${serviceName}_$criteria"
     private val prefIndexKey = "${PREF_INDEX_KEY_BASE}_${serviceName}_$criteria"
@@ -90,7 +93,7 @@ class StoreImpl(
 
     override fun getCookies(): CookieSet? {
         return Registry.get(prefCookiesKey, null)?.let {
-            gson.fromJson(it, CookieSet::class.java)
+            gson.fromJson(it.replace(Regex("\\u202f"), " "), CookieSet::class.java)
         }
     }
 

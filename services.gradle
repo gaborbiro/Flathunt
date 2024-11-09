@@ -7,6 +7,7 @@ def SERVICES = [
 
 def CRITERIA = [
         "exp",
+        "tiago",
 ]
 
 ext.SERVICE_CONFIGS = SERVICES.collect { service -> CRITERIA.collect { criteria -> service + "-" + criteria } }.flatten()

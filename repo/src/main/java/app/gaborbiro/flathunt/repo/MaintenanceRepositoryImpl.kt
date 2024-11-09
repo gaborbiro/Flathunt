@@ -7,13 +7,13 @@ import app.gaborbiro.flathunt.repo.domain.MaintenanceRepository
 import app.gaborbiro.flathunt.service.domain.Browser
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openqa.selenium.Cookie
 import java.io.*
-import java.util.stream.Collectors
-import java.util.stream.Stream
 
 @Singleton
 class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
@@ -55,28 +55,31 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
         val cookieFile = File(filepath)
         if (cookieFile.exists() && cookieFile.isFile) {
             val reader = BufferedReader(InputStreamReader(FileInputStream(cookieFile)))
-            val cookies: MutableList<Cookie> = reader.lines()
-                .filter { it.startsWith("//").not() }
-                .flatMap {
-                    Stream.of(*it.split(";").toTypedArray())
-                }
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .map { it.split("=") }
-                .filter { it.isNotEmpty() && it[0].isNotBlank() }
-                .map {
-                    if (it.size < 2) {
-                        listOf(it[0], "")
-                    } else {
-                        it
-                    }
-                }
-                .map { (key, value) ->
-                    Cookie.Builder(key, value)
-                        .domain(utilsService.domain())
-                        .build()
-                }
-                .collect(Collectors.toUnmodifiableList())
+//            val cookies: MutableList<Cookie> = reader.lines()
+//                .filter { it.startsWith("//").not() }
+//                .flatMap {
+//                    Stream.of(*it.split(";").toTypedArray())
+//                }
+//                .map { it.trim() }
+//                .filter { it.isNotBlank() }
+//                .map { it.split("=") }
+//                .filter { it.isNotEmpty() && it[0].isNotBlank() }
+//                .map {
+//                    if (it.size < 2) {
+//                        listOf(it[0], "")
+//                    } else {
+//                        it
+//                    }
+//                }
+//                .map { (key, value) ->
+//                    Cookie.Builder(key, value)
+//                        .domain(utilsService.domain())
+//                        .build()
+//                }
+//                .collect(Collectors.toUnmodifiableList())
+
+            val typeToken = object : TypeToken<List<Cookie>>() {}.type
+            val cookies = Gson().fromJson<List<Cookie>>(reader.readText().replace(Regex("\\u202f"), " "), typeToken)
 
             if (cookies.isNotEmpty()) {
                 val cookieSet = CookieSet(cookies.toSet())

@@ -5,6 +5,7 @@ import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.console.ConsoleWriterFactory
 import app.gaborbiro.flathunt.console.di.ConsoleModule
 import app.gaborbiro.flathunt.criteria.EXP
+import app.gaborbiro.flathunt.criteria.TIAGO
 import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.di.DataModule
 import app.gaborbiro.flathunt.directions.di.DirectionsModule
@@ -23,8 +24,13 @@ import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
-import org.openqa.selenium.remote.CapabilityType
+import org.openqa.selenium.remote.*
+import org.openqa.selenium.remote.codec.w3c.W3CHttpCommandCodec
+import org.openqa.selenium.remote.codec.w3c.W3CHttpResponseCodec
 import java.io.File
+import java.io.IOException
+import java.lang.reflect.Field
+import java.net.URL
 import java.nio.file.Paths
 
 
@@ -64,14 +70,31 @@ fun setupKoin(serviceConfig: String): KoinApplication {
                         "start-maximized",
                         "disable-gpu",
 //                        "headless",
-                        "debuggerAddress=localhost:9222",
-                        "disable-infobars"
-                    )
+                        "no-sandbox",
+                        "disable-infobars",
+                        "disable-dev-shm-usage",
+                        "disable-browser-side-navigation",
+                        "enable-automation",
+                        "ignore-ssl-errors=yes",
+                        "ignore-certificate-errors",
+
+                        )
                     setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
                     addExtensions(File("EditThisCookie.crx"))
                 }
             )
-            println("Session Id: ${driver.sessionId}")
+//            val executor = (driver.commandExecutor as HttpCommandExecutor)
+//            println("Session: ${driver.sessionId} ${executor.addressOfRemoteServer}")
+//            val driver2 = createDriverFromSession(driver.sessionId, executor.addressOfRemoteServer)
+//            driver2["https://www.idealista.pt/en"]
+
+//            val driver3 = RemoteWebDriver
+//                .builder()
+//                .address(URL("http://127.0.0.1:9222"))
+//                .addAlternative(DesiredCapabilities())
+//                .build()
+//            driver3["http://www.google.com"]
+
             driver
         }
     }
@@ -96,9 +119,41 @@ fun setupKoin(serviceConfig: String): KoinApplication {
     return app
 }
 
+private fun createDriverFromSession(sessionId: SessionId, command_executor: URL?): RemoteWebDriver {
+    val executor: CommandExecutor = object : HttpCommandExecutor(command_executor) {
+        @Throws(IOException::class)
+        override fun execute(command: Command): Response? {
+            return if (command.name === "newSession") {
+                val response = Response()
+                response.sessionId = sessionId.toString()
+                response.status = 0
+                response.value = emptyMap<String, String>()
+
+                try {
+                    val commandCodec: Field = this.javaClass.superclass.getDeclaredField("commandCodec")
+                    commandCodec.setAccessible(true)
+                    commandCodec.set(this, W3CHttpCommandCodec())
+                    val responseCodec: Field = this.javaClass.superclass.getDeclaredField("responseCodec")
+                    responseCodec.setAccessible(true)
+                    responseCodec.set(this, W3CHttpResponseCodec())
+                } catch (e: NoSuchFieldException) {
+                    e.printStackTrace()
+                } catch (e: IllegalAccessException) {
+                    e.printStackTrace()
+                }
+                response
+            } else {
+                super.execute(command)
+            }
+        }
+    }
+    return RemoteWebDriver(executor, DesiredCapabilities())
+}
+
 private fun getValidationCriteria(serviceConfig: String): ValidationCriteria {
     return when (serviceConfig) {
         Constants.`idealista-exp`, Constants.`spareroom-exp`, Constants.`rightmove-exp`, Constants.`zoopla-exp` -> EXP
+        Constants.`idealista-tiago`, Constants.`spareroom-tiago`, Constants.`rightmove-tiago`, Constants.`zoopla-tiago` -> TIAGO
         else -> throw IllegalArgumentException("Unknown service configuration $serviceConfig")
     }
 }

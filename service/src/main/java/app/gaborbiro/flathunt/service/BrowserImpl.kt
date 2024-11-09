@@ -12,7 +12,7 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import java.util.*
 
 @Singleton
-class BrowserImpl : Browser, KoinComponent {
+class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
 
     private val console: ConsoleWriter by inject()
 
@@ -196,5 +196,13 @@ class BrowserImpl : Browser, KoinComponent {
 
     override fun manage(): WebDriver.Options {
         return driver.manage()
+    }
+
+    override fun executeScript(script: String?, vararg args: Any?): Any {
+        return (driver as JavascriptExecutor).executeScript(script, *args)
+    }
+
+    override fun executeAsyncScript(script: String?, vararg args: Any?): Any {
+        return (driver as JavascriptExecutor).executeAsyncScript(script, *args)
     }
 }

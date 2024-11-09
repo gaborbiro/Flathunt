@@ -20,6 +20,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
             clearStoredCookies,
             importCookies,
             saveCookies,
+            loadCookies,
             export,
             import,
             cls,
@@ -53,7 +54,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
         exec = { repo.saveCookies() }
     )
 
-    private val applyCookies = command(
+    private val loadCookies = command(
         command = "load cookies",
         description = "Add or update browser with cookies saved to the register. Browser must be open to root url",
         exec = { repo.loadCookies() }

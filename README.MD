@@ -21,7 +21,7 @@ A service config is always a service name and a validation criteria name separat
 
 Sometimes websites are iffy about being scraped. Flathunt does its best to log in, persist cookies and re-use them between sessions. 
 If a website still doesn't want to work, disable auto-login.
-<br>Log in to the website in your regular browser (anti-bot services can detect Selenium) and "steal" the cookies. 
+<br>Log in to the website in your regular browser (anti-bot services can detect Selenium) and "steal" the cookies (for idealista the "datadome" cookie is most important).
 <br>I recommend this plugin (if you use Chrome): https://chrome.google.com/webstore/search/editthiscookie. 
 The app's Chrome instance always has it installed.
 <br>Figuring out the cookies might require some trial and error. 
@@ -41,10 +41,12 @@ Google services needed: Directions API, Maps Static API (both billable).
 #### How to add a new service:
 - Add the name of the new service to services.gradle. This name will be combined with all available criteria-set names (see also services.gradle) and a runtime variable will be generated.
 - Use this new runtime variable (Constants.kt) with a koin @Named annotation on your new Service. Check existing services to see how to do it. Convenient runnable jar files are automatically built for all your service-criteria combinations.
+- Run allJars gradle task to generate the new jars
 
 #### How to add a new criteria-set:
 - Add the name of the new criteria-set to services.gradle. This name will be combined with all available services names (see also services.gradle) and runtime variables will be generated.
-- In <project folder>\src\main\java\app\gaborbiro\flathunt\di\di.kt#getValidationCriteria(String) add entries for all the new service configuration names that contain your new criteria-set.
+- In <project folder>\src\main\java\app\gaborbiro\flathunt\di\di.kt#getValidationCriteria(String) add entries for all the new service configuration names that contain your new criteria-set. Same in src/main/java/app/gaborbiro/flathunt/Flathunt.kt#getUseCases(String).
+- Run allJars gradle task to generate the new jars
 
 ### How to use:
 

@@ -36,7 +36,7 @@ private val poiGabor = POI.Address(
         latitude = "38.7244735",
         longitude = "-9.1318743",
     ),
-    address = "Rua de Macau 30, 1170-065 Lisboa",
+    address = "Rua+de+Macau+30,+1170-065+Lisboa",
     max = 25 minutes TRANSIT or 10 minutes WALKING,
 )
 
@@ -193,12 +193,26 @@ private val poiCrossFit = POI.CoordinateSet(
 
 val EXP = ValidationCriteria(
     pointsOfInterest = listOf(
-        poiGabor,
-        poiCrossFit,
+        poiBaixaChiado,
+        poiRnD,
+//        poiMartha,
+        poiFitnessHut,
     ),
     maxPrice = 1400,
     minBedrooms = 1,
     maxBedrooms = 2,
+    furnished = true,
+    allowedEnergyCertification = listOf("a+", "a+", "a", "b", "b-", "c", "d", "In process", "Not indicated", "Unknown")
+)
+
+val TIAGO = ValidationCriteria(
+    pointsOfInterest = listOf(
+        poiGabor,
+        poiCrossFit,
+    ),
+    maxPrice = 1000,
+    minBedrooms = 0,
+    maxBedrooms = 1,
     furnished = true,
     allowedEnergyCertification = listOf("a+", "a+", "a", "b", "b-", "c", "d", "In process", "Not indicated", "Unknown")
 )

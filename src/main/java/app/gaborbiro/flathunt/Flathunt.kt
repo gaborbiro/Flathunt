@@ -126,7 +126,7 @@ class Flathunt {
 
     private fun getUseCases(serviceConfig: String): Set<UseCase> {
         return when (serviceConfig) {
-            Constants.`idealista-exp` -> setOf(
+            Constants.`idealista-exp`, Constants.`idealista-tiago` -> setOf(
                 SearchUseCase(),
                 MaintenanceUseCase(),
                 ListUseCase(),
@@ -134,7 +134,7 @@ class Flathunt {
                 ManagePropertyUseCase(),
             )
 
-            Constants.`spareroom-exp` -> setOf(
+            Constants.`spareroom-exp`, Constants.`spareroom-tiago` -> setOf(
                 InboxUseCase(),
                 SearchUseCase(),
                 FetchPropertyUseCase(),
@@ -143,7 +143,7 @@ class Flathunt {
                 MaintenanceUseCase(),
             )
 
-            Constants.`rightmove-exp` -> setOf(
+            Constants.`rightmove-exp`, Constants.`rightmove-tiago` -> setOf(
                 SearchUseCase(),
                 FetchPropertyUseCase(),
                 ListUseCase(),
@@ -151,7 +151,7 @@ class Flathunt {
                 MaintenanceUseCase(),
             )
 
-            Constants.`zoopla-exp` -> setOf(
+            Constants.`zoopla-exp`, Constants.`zoopla-tiago` -> setOf(
                 SearchUseCase(),
                 FetchPropertyUseCase(),
                 ListUseCase(),
