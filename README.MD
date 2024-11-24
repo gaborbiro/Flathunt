@@ -48,6 +48,9 @@ Google services needed: Directions API, Maps Static API (both billable).
 - In <project folder>\src\main\java\app\gaborbiro\flathunt\di\di.kt#getValidationCriteria(String) add entries for all the new service configuration names that contain your new criteria-set. Same in src/main/java/app/gaborbiro/flathunt/Flathunt.kt#getUseCases(String).
 - Run allJars gradle task to generate the new jars
 
+#### How to verify library versions:
+- Run gradle task dependencyUpdates (Tasks > help > dependencyUpdates)
+
 ### How to use:
 
 Welcome to Flathunt!

@@ -1,9 +1,10 @@
 package app.gaborbiro.flathunt
 
+@Suppress("ConstPropertyName")
 object Dependencies {
 
     object Google {
-        const val gson = "com.google.code.gson:gson:2.10.1"
+        const val gson = "com.google.code.gson:gson:2.11.0"
         const val ksp = "com.google.devtools.ksp:1.9.20-1.0.14"
     }
 
@@ -12,26 +13,21 @@ object Dependencies {
     }
 
     object slf4j {
-        const val api = "org.slf4j:slf4j-api:1.7.+"
-        const val jdk14 = "org.slf4j:slf4j-jdk14:1.7.+"
+        const val api = "org.slf4j:slf4j-api:2.0.+"
+        const val jdk14 = "org.slf4j:slf4j-jdk14:2.0.+"
     }
 
     object OkHttp {
-        const val okhttp = "com.squareup.okhttp3:okhttp:4.11.0"
+        const val okhttp = "com.squareup.okhttp3:okhttp:4.12.0"
     }
 
     object Jcabi {
-        const val mainfests = "com.jcabi:jcabi-manifests:1.1"
+        const val mainfests = "com.jcabi:jcabi-manifests:2.1.0"
     }
 
     object Koin {
-        const val core = "io.insert-koin:koin-core:3.1.2"
-        const val annotations = "io.insert-koin:koin-annotations:1.2.2"
-        const val ksp = "io.insert-koin:koin-ksp-compiler:1.2.2"
-    }
-
-    object CompileTimeConstants {
-        const val version = "1.0.5"
-        const val lib = "com.anatawa12.compile-time-constant"
+        const val core = "io.insert-koin:koin-core:4.0.0"
+        const val annotations = "io.insert-koin:koin-annotations:1.4.0"
+        const val ksp = "io.insert-koin:koin-ksp-compiler:1.4.0"
     }
 }

@@ -33,7 +33,7 @@ class DirectionsServiceImpl : DirectionsService, KoinComponent {
         return when (to) {
             is Destination.Coordinate -> {
                 val destinationStr = when (to) {
-                    is Destination.Address -> to.address
+                    is Destination.Address -> to.address.replace(" ",  "+")
                     else -> to.location.toGoogleCoords()
                 }
                 val (limit, route) = directions(

@@ -18,7 +18,7 @@ class ValidationCriteria(
     val canMoveEarliest: LocalDate? = null,
     val canMoveLatest: LocalDate? = null,
     /**
-     * Number of months I want to stay ad minimum
+     * Number of months I want to stay at minimum
      */
     val minRequiredMonths: Int? = null,
     val noBedsit: Boolean? = null,

@@ -3,9 +3,10 @@ import app.gaborbiro.flathunt.Dependencies
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version '1.9.0'
+    id("org.jetbrains.kotlin.jvm") version '2.0.21'
     id("com.anatawa12.compile-time-constant") version "1.0.5"
-    id("com.google.devtools.ksp") version "1.9.0-1.0.11"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+    id("com.github.ben-manes.versions") version "0.51.0"
 }
 
 apply from: "$project.rootDir/services.gradle"
@@ -51,7 +52,7 @@ dependencies {
 }
 
 apply plugin: "com.anatawa12.compile-time-constant"
-def createCompileTimeConstant = tasks.withType(CreateConstantsTask) {
+tasks.withType(CreateConstantsTask) {
     constantsClass = "app.gaborbiro.flathunt.compileTimeConstant.Constants"
     values(
             SERVICE_CONSTANTS.collectEntries { [it, it] }
@@ -90,4 +91,18 @@ class RunnableJar extends org.gradle.jvm.tasks.Jar {
 
 jar {
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
+def isNonStable = { String version ->
+    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
+    def regex = /^[0-9,.v-]+(-r)?$/
+    return !stableKeyword && !(version ==~ regex)
+}
+
+tasks.named("dependencyUpdates").configure {
+    gradleReleaseChannel = "release"
+    rejectVersionIf {
+        isNonStable(it.candidate.version)
+    }
 }

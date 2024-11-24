@@ -8,7 +8,7 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named(Constants.rightmove + "_utils")
+//@Named(Constants.rightmove + "_utils")
 class RightmoveUtilsService : BaseUtilsService() {
 
     override val rootUrl = "https://www.rightmove.co.uk"

@@ -10,7 +10,7 @@ import org.openqa.selenium.By
 import org.openqa.selenium.WebElement
 
 @Singleton
-@Named(Constants.spareroom + "_utils")
+//@Named(Constants.spareroom + "_utils")
 class SpareRoomUtilsService : BaseUtilsService() {
 
     override val rootUrl = "https://www.spareroom.co.uk"

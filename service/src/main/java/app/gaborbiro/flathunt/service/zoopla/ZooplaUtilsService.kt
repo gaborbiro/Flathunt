@@ -8,7 +8,7 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named(Constants.zoopla + "_utils")
+//@Named(Constants.zoopla + "_utils")
 class ZooplaUtilsService : BaseUtilsService() {
 
     override val rootUrl = "https://www.zoopla.co.uk"

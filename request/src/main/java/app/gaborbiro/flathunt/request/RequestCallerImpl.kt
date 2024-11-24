@@ -11,6 +11,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
+import java.nio.charset.Charset
 
 @Singleton
 class RequestCallerImpl : RequestCaller, KoinComponent {
@@ -42,10 +44,6 @@ class RequestCallerImpl : RequestCaller, KoinComponent {
     override fun get(url: String): String {
 //        console.d()
 //        console.d(url, newLine = false)
-        val connection = URL(url).openConnection()
-        return connection.inputStream.bufferedReader().use { it.readText() }.also {
-            (connection as HttpURLConnection).disconnect()
-//            console.d(" - ${it.length}")
-        }
+        return URL(url).readText(Charset.forName("utf-8"))
     }
 }

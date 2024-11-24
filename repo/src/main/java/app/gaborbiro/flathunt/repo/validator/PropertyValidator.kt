@@ -57,7 +57,7 @@ internal class PropertyValidator : KoinComponent {
             errors.add("more than ${criteria.maxBedrooms} bedrooms")
         }
         if (criteria.minBedrooms != null && property.totalRooms?.let { it < criteria.minBedrooms!! } == true) {
-            errors.add("less than ${criteria.maxBedrooms} bedrooms")
+            errors.add("less than ${criteria.minBedrooms} bedrooms")
         }
         if (property.minTerm == "Short term") {
             errors.add("short term let")

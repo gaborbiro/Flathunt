@@ -67,7 +67,7 @@ class IdealistaWebService : BaseWebService() {
 
     override fun fetchProperty(driver: WebDriver, webId: String): Property {
         val priceStr = driver.findElements(By.className("info-data-price"))[0].text
-        val priceRegex = Pattern.compile("([\\d,\\.]+)\\s€/month")
+        val priceRegex = Pattern.compile("([\\d,\\.]+)\\s€/m")
         val matcher = priceRegex.matcher(priceStr)
         if (matcher.find().not()) throw IllegalArgumentException("Cannot parse price: $priceStr")
         val price = DecimalFormat("#,###").parse(matcher.group(1)).toInt()
@@ -127,7 +127,7 @@ class IdealistaWebService : BaseWebService() {
     }
 
     override fun getPhotoUrls(driver: WebDriver, webId: String): List<String> {
-        return driver.findElements(By.className("detail-image-gallery")).map { it.getAttribute("data-ondemand-img") }
+        return driver.findElements(By.tagName("img")).mapNotNull { it.getAttribute("src") }
     }
 
     override fun login(driver: WebDriver): Boolean {

@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Singleton
-@Named(Constants.zoopla + "_web")
+//@Named(Constants.zoopla + "_web")
 class ZooplaWebService : BaseWebService() {
 
     override val rootUrl = "https://www.zoopla.co.uk"

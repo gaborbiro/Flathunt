@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Singleton
-@Named(Constants.rightmove + "_web")
+//@Named(Constants.rightmove + "_web")
 class RightmoveWebService : BaseWebService() {
 
     override val rootUrl = "https://www.rightmove.co.uk"

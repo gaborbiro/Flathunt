@@ -151,9 +151,9 @@ private fun createDriverFromSession(sessionId: SessionId, command_executor: URL?
 }
 
 private fun getValidationCriteria(serviceConfig: String): ValidationCriteria {
-    return when (serviceConfig) {
-        Constants.`idealista-exp`, Constants.`spareroom-exp`, Constants.`rightmove-exp`, Constants.`zoopla-exp` -> EXP
-        Constants.`idealista-tiago`, Constants.`spareroom-tiago`, Constants.`rightmove-tiago`, Constants.`zoopla-tiago` -> TIAGO
+    return when {
+        serviceConfig.endsWith(Constants.exp) -> EXP
+        serviceConfig.endsWith(Constants.tiago) -> TIAGO
         else -> throw IllegalArgumentException("Unknown service configuration $serviceConfig")
     }
 }

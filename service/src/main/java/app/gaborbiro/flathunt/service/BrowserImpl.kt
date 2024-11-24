@@ -71,7 +71,6 @@ class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
 
     override fun cleanup() {
         if (driverInitialized) {
-            console.d("Cleanup")
             driver.quit()
         }
     }

@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Singleton
-@Named(Constants.spareroom + "_web")
+//@Named(Constants.spareroom + "_web")
 class SpareRoomWebService : BaseWebService() {
 
     companion object {

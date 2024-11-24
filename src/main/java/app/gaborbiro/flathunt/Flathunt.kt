@@ -125,40 +125,36 @@ class Flathunt {
     }
 
     private fun getUseCases(serviceConfig: String): Set<UseCase> {
-        return when (serviceConfig) {
-            Constants.`idealista-exp`, Constants.`idealista-tiago` -> setOf(
+        return when {
+            serviceConfig.startsWith(Constants.idealista) -> setOf(
                 SearchUseCase(),
                 MaintenanceUseCase(),
                 ListUseCase(),
                 FetchPropertyUseCase(),
                 ManagePropertyUseCase(),
             )
-
-            Constants.`spareroom-exp`, Constants.`spareroom-tiago` -> setOf(
-                InboxUseCase(),
-                SearchUseCase(),
-                FetchPropertyUseCase(),
-                ListUseCase(),
-                ManagePropertyUseCase(),
-                MaintenanceUseCase(),
-            )
-
-            Constants.`rightmove-exp`, Constants.`rightmove-tiago` -> setOf(
-                SearchUseCase(),
-                FetchPropertyUseCase(),
-                ListUseCase(),
-                ManagePropertyUseCase(),
-                MaintenanceUseCase(),
-            )
-
-            Constants.`zoopla-exp`, Constants.`zoopla-tiago` -> setOf(
-                SearchUseCase(),
-                FetchPropertyUseCase(),
-                ListUseCase(),
-                ManagePropertyUseCase(),
-                MaintenanceUseCase(),
-            )
-
+//            serviceConfig.startsWith(Constants.spareroom) -> setOf(
+//                InboxUseCase(),
+//                SearchUseCase(),
+//                FetchPropertyUseCase(),
+//                ListUseCase(),
+//                ManagePropertyUseCase(),
+//                MaintenanceUseCase(),
+//            )
+//            serviceConfig.startsWith(Constants.rightmove) -> setOf(
+//                SearchUseCase(),
+//                FetchPropertyUseCase(),
+//                ListUseCase(),
+//                ManagePropertyUseCase(),
+//                MaintenanceUseCase(),
+//            )
+//            serviceConfig.startsWith(Constants.zoopla) -> setOf(
+//                SearchUseCase(),
+//                FetchPropertyUseCase(),
+//                ListUseCase(),
+//                ManagePropertyUseCase(),
+//                MaintenanceUseCase(),
+//            )
             else -> throw IllegalArgumentException("Missing service parameter from Manifest")
         }
     }
