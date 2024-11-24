@@ -9,7 +9,8 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
+import org.openqa.selenium.Dimension
+import org.openqa.selenium.Point
 
 @Singleton
 class StoreImpl(
@@ -104,9 +105,37 @@ class StoreImpl(
     override fun resetIndexCounter() {
         Registry.clear(prefIndexKey)
     }
+
+    override fun setWindowPosition(point: Point) {
+        Registry.setInt(PREF_WINDOW_POSITION_KEY_X, point.x)
+        Registry.setInt(PREF_WINDOW_POSITION_KEY_Y, point.y)
+    }
+
+    override fun getWindowPosition(): Point {
+        return Point(
+            Registry.getInt(PREF_WINDOW_POSITION_KEY_X, 0),
+            Registry.getInt(PREF_WINDOW_POSITION_KEY_Y, 0),
+        )
+    }
+
+    override fun setWindowSize(size: Dimension) {
+        Registry.setInt(PREF_WINDOW_SIZE_KEY_WIDTH, size.width)
+        Registry.setInt(PREF_WINDOW_SIZE_KEY_HEIGHT, size.height)
+    }
+
+    override fun getWindowSize(): Dimension {
+        return Dimension(
+            /* width = */ Registry.getInt(PREF_WINDOW_SIZE_KEY_WIDTH, -1),
+            /* height = */ Registry.getInt(PREF_WINDOW_SIZE_KEY_HEIGHT, -1),
+        )
+    }
 }
 
 private const val PREF_PROPERTIES_KEY_BASE = "properties"
 private const val PREF_INDEX_KEY_BASE = "index"
 private const val PREF_COOKIES_KEY_BASE = "cookies"
 private const val PREF_BLACKLIST_KEY_BASE = "blacklist"
+private const val PREF_WINDOW_POSITION_KEY_X = "window_position_x"
+private const val PREF_WINDOW_POSITION_KEY_Y = "window_position_y"
+private const val PREF_WINDOW_SIZE_KEY_HEIGHT = "window_size_height"
+private const val PREF_WINDOW_SIZE_KEY_WIDTH = "window_size_width"

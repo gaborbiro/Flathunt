@@ -32,8 +32,7 @@ class SpareRoomWebService : BaseWebService() {
     }
 
     override val rootUrl = "https://www.spareroom.co.uk"
-    override val sessionCookieName = "session_id"
-    override val sessionCookieDomain = ".spareroom.co.uk"
+    override val importantCookies = listOf("session_id" to ".spareroom.co.uk")
 
     private val console: ConsoleWriter by inject()
 

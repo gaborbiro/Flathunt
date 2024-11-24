@@ -5,12 +5,10 @@ import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.Message
 import app.gaborbiro.flathunt.data.domain.model.Property
 import app.gaborbiro.flathunt.repo.domain.model.MessageTag
-import app.gaborbiro.flathunt.service.domain.Browser
 import app.gaborbiro.flathunt.service.domain.UtilsService
 import app.gaborbiro.flathunt.service.domain.WebService
 import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.openqa.selenium.NoSuchWindowException
 import org.openqa.selenium.WebDriver
@@ -18,8 +16,16 @@ import org.openqa.selenium.WebDriver
 abstract class BaseWebService : WebService, KoinComponent {
 
     protected abstract val rootUrl: String
-    protected abstract val sessionCookieName: String
-    protected abstract val sessionCookieDomain: String
+
+    /**
+     * If any of these are missing from session, will try to set them from store, but only if all are present in store
+     */
+    protected open val importantCookies: List<Pair<String, String>> = emptyList()
+
+    /**
+     * Will override from store, even if partially
+     */
+    protected open val overrideCookies: List<Pair<String, String>> = emptyList()
 
     private val store: Store by inject()
     private val console: ConsoleWriter by inject()
@@ -103,20 +109,20 @@ abstract class BaseWebService : WebService, KoinComponent {
         }
 
         beforeEnsureSession(browser)
-        val (sessionAvailable, refresh) = browser.ensureSession(
-            sessionCookieName,
-            sessionCookieDomain,
-            store.getCookies(),
+        val (importantCookiesAvailable, refresh) = browser.ensureImportantCookies(
+            importantCookies = importantCookies,
+            overrideCookies = overrideCookies,
+            storedCookies = store.getCookies(),
         )
-        afterEnsureSession(browser)
 
-        if (sessionAvailable.not() && login(browser)) {
+        if (importantCookiesAvailable.not() && login(browser)) {
             Thread.sleep(500)
             browser.getCookies()
         }
         if (refresh) {
             browser[finalUrls[0]]
         }
+        afterEnsureSession(browser)
     }
 
     override fun openRoot() {

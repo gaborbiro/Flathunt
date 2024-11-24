@@ -28,8 +28,7 @@ import kotlin.math.ceil
 class RightmoveWebService : BaseWebService() {
 
     override val rootUrl = "https://www.rightmove.co.uk"
-    override val sessionCookieName = "rmsessionid"
-    override val sessionCookieDomain = ".rightmove.co.uk"
+    override val importantCookies = listOf("rmsessionid" to ".rightmove.co.uk")
 
     private val store: Store by inject()
     private val requestCaller: RequestCaller by inject()

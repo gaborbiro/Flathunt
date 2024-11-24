@@ -4,7 +4,6 @@ import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.di.setupKoin
 import app.gaborbiro.flathunt.service.domain.Browser
-import app.gaborbiro.flathunt.service.spareroom.usecase.InboxUseCase
 import app.gaborbiro.flathunt.usecase.*
 import app.gaborbiro.flathunt.usecase.base.UseCase
 import com.jcabi.manifests.Manifests
@@ -55,7 +54,10 @@ class Flathunt {
             processInput(reader, parseCommandUseCase, commandUseCase, console)
         }
 
-        app.koin.get<Browser>().cleanup()
+        app.koin.get<Browser>().let {
+            it.savePositionAndSize()
+            it.cleanup()
+        }
     }
 
     private fun processInput(
@@ -70,11 +72,11 @@ class Flathunt {
             reader.readLine()
         }
         do {
-            console.d("==========================================================================")
             if (hintShown.not()) {
                 hintShown = true
                 console.d("Type 'help' for a list of available commands")
             }
+            console.d("> ", newLine = false)
             input = reader.readLine()
             if (input == CommandSetBuilder.EXIT_COMMAND_CODE) {
                 return

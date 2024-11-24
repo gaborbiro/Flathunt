@@ -1,6 +1,5 @@
 package app.gaborbiro.flathunt.service.zoopla
 
-import app.gaborbiro.flathunt.compileTimeConstant.Constants
 import app.gaborbiro.flathunt.console.ConsoleWriter
 import app.gaborbiro.flathunt.data.domain.model.Price
 import app.gaborbiro.flathunt.data.domain.model.Property
@@ -11,7 +10,6 @@ import app.gaborbiro.flathunt.service.domain.model.PageInfo
 import app.gaborbiro.flathunt.service.ensurePriceIsPerMonth
 import app.gaborbiro.flathunt.splitQuery
 import com.google.gson.Gson
-import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.inject
 import org.openqa.selenium.By
@@ -25,8 +23,7 @@ import kotlin.math.ceil
 class ZooplaWebService : BaseWebService() {
 
     override val rootUrl = "https://www.zoopla.co.uk"
-    override val sessionCookieName = "_cs_s"
-    override val sessionCookieDomain = ".zoopla.co.uk"
+    override val importantCookies = listOf("_cs_s" to ".zoopla.co.uk")
 
     private val console: ConsoleWriter by inject()
 

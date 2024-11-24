@@ -1,6 +1,7 @@
 package app.gaborbiro.flathunt.service
 
 import app.gaborbiro.flathunt.console.ConsoleWriter
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.service.domain.Browser
 import org.koin.core.annotation.Singleton
@@ -15,6 +16,7 @@ import java.util.*
 class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
 
     private val console: ConsoleWriter by inject()
+    private val store: Store by inject()
 
     private val tabHandleStack = Stack<Set<String>>()
 
@@ -25,34 +27,44 @@ class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
         get()
     }
 
-    fun ensureSession(
-        sessionCookieName: String,
-        sessionCookieDomain: String,
-        cookieSet: CookieSet?
+    fun ensureImportantCookies(
+        importantCookies: List<Pair<String, String>>,
+        overrideCookies: List<Pair<String, String>>,
+        storedCookies: CookieSet?,
     ): Pair<Boolean, Boolean> {
         var needsRefresh = false
-        var sessionAvailable = false
-        val cookies = cookieSet?.cookies
+        var importantCookiesAvailable = false
+        val cookies = storedCookies?.cookies
         if (cookies != null) {
             runCatching {
-                if (driver.manage().cookies.hasSession(sessionCookieName, sessionCookieDomain)) {
+                val options = driver.manage()
+                val browserCookies = options.cookies
+
+                overrideCookies.forEach { (name, _) ->
+                    cookies.firstOrNull { it.name == name }
+                        ?.let {
+                            options.addCookie(it)
+                            needsRefresh = true
+                        }
+                }
+
+                if (importantCookies.all { (name, domain) -> browserCookies.containsCookie(name, domain) }) {
                     // browser already has valid session cookies, nothing to do
-                    sessionAvailable = true
+                    importantCookiesAvailable = true
                 } else {
                     // browser has no session cookies
-                    if (cookies.hasSession(sessionCookieName, sessionCookieDomain)) {
+                    if (importantCookies.all { (name, domain) -> cookies.containsCookie(name, domain) }) {
                         // we have session cookies stored
-                        val options = driver.manage()
                         options.deleteAllCookies()
                         cookies.forEach { options.addCookie(it) }
-                        sessionAvailable = true
+                        importantCookiesAvailable = true
                         needsRefresh = true
                     }
                 }
             }
         }
 
-        return sessionAvailable to needsRefresh
+        return importantCookiesAvailable to needsRefresh
     }
 
     override fun openTabs(urls: List<String>): List<String> {
@@ -67,6 +79,11 @@ class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
     override fun openHTML(html: String) {
         openNewTab()
         driver["data:text/html;charset=utf-8,${String(html.toByteArray())}"]
+    }
+
+    override fun savePositionAndSize() {
+        store.setWindowPosition(driver.manage().window().position)
+        store.setWindowSize(driver.manage().window().size)
     }
 
     override fun cleanup() {
@@ -138,9 +155,9 @@ class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
         }
     }
 
-    private fun Set<Cookie>?.hasSession(sessionCookieName: String, sessionCookieDomain: String): Boolean {
+    private fun Set<Cookie>?.containsCookie(name: String, domain: String): Boolean {
         return this
-            ?.firstOrNull { it.name == sessionCookieName && it.domain == sessionCookieDomain }
+            ?.firstOrNull { it.name == name && it.domain == domain }
             ?.let { it.expiry == null || it.expiry > Date() }
             ?: false
     }

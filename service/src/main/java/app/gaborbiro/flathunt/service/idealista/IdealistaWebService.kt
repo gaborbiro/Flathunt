@@ -23,8 +23,20 @@ import java.util.regex.Pattern
 class IdealistaWebService : BaseWebService() {
 
     override val rootUrl = "https://www.idealista.pt/en"
-    override val sessionCookieName = "cc"
-    override val sessionCookieDomain = "www.idealista.pt"
+    override val importantCookies = listOf("datadome" to ".idealista.pt")
+    override val overrideCookies = listOf("datadome" to ".idealista.pt")
+
+    companion object {
+        private const val USERNAME = "gabor.biro@yahoo.com"
+        private const val PASSWORD = "1qazse45rdxSW2"
+    }
+
+    override fun afterEnsureSession(driver: WebDriver) {
+        if (driver.findElements(By.className("show-user-auth-popup")).isNotEmpty()) {
+            // old session
+            login(driver)
+        }
+    }
 
     override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
         val pagerRegex = Pattern.compile("pagina-([\\d]+)")
@@ -131,6 +143,12 @@ class IdealistaWebService : BaseWebService() {
     }
 
     override fun login(driver: WebDriver): Boolean {
-        return false
+        driver.findElement(By.className("sign-in-link")).click()
+        driver.findElement(By.id("email-input")).click()
+        driver.findElement(By.id("email-input")).sendKeys(USERNAME)
+        driver.findElement(By.id("password-input")).click()
+        driver.findElement(By.id("password-input")).sendKeys(PASSWORD)
+        driver.findElement(By.id("submit")).click()
+        return true
     }
 }

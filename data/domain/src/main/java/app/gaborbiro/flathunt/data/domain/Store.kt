@@ -2,6 +2,8 @@ package app.gaborbiro.flathunt.data.domain
 
 import app.gaborbiro.flathunt.data.domain.model.CookieSet
 import app.gaborbiro.flathunt.data.domain.model.Property
+import org.openqa.selenium.Dimension
+import org.openqa.selenium.Point
 
 interface Store {
     fun getJsonProperties(): String?
@@ -27,4 +29,12 @@ interface Store {
     fun clearCookies()
 
     fun resetIndexCounter()
+
+    fun setWindowPosition(point: Point)
+
+    fun getWindowPosition(): Point
+
+    fun setWindowSize(size: Dimension)
+
+    fun getWindowSize(): Dimension
 }

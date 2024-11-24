@@ -8,6 +8,7 @@ import app.gaborbiro.flathunt.criteria.EXP
 import app.gaborbiro.flathunt.criteria.TIAGO
 import app.gaborbiro.flathunt.criteria.ValidationCriteria
 import app.gaborbiro.flathunt.data.di.DataModule
+import app.gaborbiro.flathunt.data.domain.Store
 import app.gaborbiro.flathunt.directions.di.DirectionsModule
 import app.gaborbiro.flathunt.repo.di.RepoModule
 import app.gaborbiro.flathunt.request.di.RequestModule
@@ -56,33 +57,44 @@ fun setupKoin(serviceConfig: String): KoinApplication {
             DirectionsModule().module,
         )
     }
+
+    val chromeOptions = ChromeOptions().apply {
+        // https://peter.sh/experiments/chromium-command-line-switches/
+        // start-maximized
+        // window-position=0,0", "window-size=1,1
+        addArguments(
+            "start-maximized",
+            "disable-gpu",
+//                        "headless",
+//                        "window-position=-1600,100",
+            "no-sandbox",
+            "disable-infobars",
+            "disable-dev-shm-usage",
+            "disable-browser-side-navigation",
+            "enable-automation",
+            "ignore-ssl-errors=yes",
+            "ignore-certificate-errors",
+
+            )
+        setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
+        addExtensions(File("EditThisCookie.crx"))
+    }
+
+    app.koin.get<Store>().let {
+        val position = it.getWindowPosition()
+        chromeOptions.addArguments("window-position=${position.x},${position.y}")
+        val size = it.getWindowSize()
+        if (size.height >= 0 && size.width >= 0) {
+            chromeOptions.addArguments("window-size=${size.width},${size.height}")
+        }
+    }
+
     val serviceModule = module {
         single<WebDriver> {
 //            RemoteWebDriver((driver.commandExecutor as ChromeDriverCommandExecutor).addressOfRemoteServer, DesiredCapabilities())
 
             System.setProperty("webdriver.chrome.driver", Paths.get("chromedriver.exe").toString())
-            val driver = ChromeDriver(
-                ChromeOptions().apply {
-                    // https://peter.sh/experiments/chromium-command-line-switches/
-                    // start-maximized
-                    // window-position=0,0", "window-size=1,1
-                    addArguments(
-                        "start-maximized",
-                        "disable-gpu",
-//                        "headless",
-                        "no-sandbox",
-                        "disable-infobars",
-                        "disable-dev-shm-usage",
-                        "disable-browser-side-navigation",
-                        "enable-automation",
-                        "ignore-ssl-errors=yes",
-                        "ignore-certificate-errors",
-
-                        )
-                    setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.DISMISS)
-                    addExtensions(File("EditThisCookie.crx"))
-                }
-            )
+            val driver = ChromeDriver(chromeOptions)
 //            val executor = (driver.commandExecutor as HttpCommandExecutor)
 //            println("Session: ${driver.sessionId} ${executor.addressOfRemoteServer}")
 //            val driver2 = createDriverFromSession(driver.sessionId, executor.addressOfRemoteServer)

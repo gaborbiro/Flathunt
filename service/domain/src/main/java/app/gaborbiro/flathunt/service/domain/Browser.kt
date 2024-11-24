@@ -11,6 +11,8 @@ interface Browser : WebDriver {
 
     fun openHTML(html: String)
 
+    fun savePositionAndSize()
+
     fun cleanup()
 
     fun pinTabs()
