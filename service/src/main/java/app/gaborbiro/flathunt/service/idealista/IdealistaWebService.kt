@@ -32,8 +32,8 @@ class IdealistaWebService : BaseWebService() {
     }
 
     override fun afterEnsureSession(driver: WebDriver) {
-        if (driver.findElements(By.className("show-user-auth-popup")).isNotEmpty()) {
-            // old session
+        driver.findElements(By.id("didomi-notice-agree-button")).firstOrNull()?.click()
+        if (driver.findElements(By.className("icon-user-no-logged-text")).isNotEmpty()) {
             login(driver)
         }
     }
@@ -143,12 +143,12 @@ class IdealistaWebService : BaseWebService() {
     }
 
     override fun login(driver: WebDriver): Boolean {
-        driver.findElement(By.className("sign-in-link")).click()
-        driver.findElement(By.id("email-input")).click()
-        driver.findElement(By.id("email-input")).sendKeys(USERNAME)
-        driver.findElement(By.id("password-input")).click()
-        driver.findElement(By.id("password-input")).sendKeys(PASSWORD)
-        driver.findElement(By.id("submit")).click()
+        driver.findElement(By.className("icon-user-no-logged-text")).click()
+        driver.findElement(By.className("js-email-field")).click()
+        driver.findElement(By.className("js-email-field")).sendKeys(USERNAME)
+        driver.findElement(By.className("js-password-field")).click()
+        driver.findElement(By.className("js-password-field")).sendKeys(PASSWORD)
+        driver.findElement(By.id("doLogin")).click()
         return true
     }
 }
