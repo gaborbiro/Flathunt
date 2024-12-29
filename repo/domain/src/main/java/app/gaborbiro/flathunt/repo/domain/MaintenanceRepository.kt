@@ -16,5 +16,5 @@ interface MaintenanceRepository {
 
     fun loadCookies()
 
-    fun openRoot()
+    fun login()
 }

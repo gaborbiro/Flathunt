@@ -100,7 +100,7 @@ class MaintenanceRepositoryImpl : MaintenanceRepository, KoinComponent {
             }
     }
 
-    override fun openRoot() {
-        webService.openRoot()
+    override fun login() {
+        webService.login()
     }
 }

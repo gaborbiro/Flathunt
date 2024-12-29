@@ -27,7 +27,7 @@ class MaintenanceUseCase : UseCase, KoinComponent {
             regedit,
             safeModeOn,
             safeModeOff,
-            root
+            login
         )
 
     private val clearBrowserCookies = command(
@@ -122,10 +122,10 @@ class MaintenanceUseCase : UseCase, KoinComponent {
         console.d("Safe mode disabled. Messages or properties will be labeled/marked unsuitable as needed.")
     }
 
-    private val root = command(
-        command = "root",
-        description = "open website"
+    private val login = command(
+        command = "login",
+        description = "open website and log in"
     ) {
-        repo.openRoot()
+        repo.login()
     }
 }

@@ -18,14 +18,14 @@ abstract class BaseWebService : WebService, KoinComponent {
     protected abstract val rootUrl: String
 
     /**
-     * If any of these are missing from session, will try to set them from store, but only if all are present in store
-     */
-    protected open val importantCookies: List<Pair<String, String>> = emptyList()
-
-    /**
      * Will override from store, even if partially
      */
     protected open val overrideCookies: List<Pair<String, String>> = emptyList()
+
+    /**
+     * If any of these are missing from session, will try to set them from store, but only if all are present in store
+     */
+    protected open val importantCookies: List<Pair<String, String>> = emptyList()
 
     private val store: Store by inject()
     private val console: ConsoleWriter by inject()
@@ -36,7 +36,7 @@ abstract class BaseWebService : WebService, KoinComponent {
     ///// Functions that require an open webpage
 
     final override fun getPageInfo(searchUrl: String, propertiesRemoved: Int): PageInfo {
-        ensurePageWithSession(searchUrl)
+        ensurePageWithSession(searchUrl, log = true)
         return getPageInfo(browser, searchUrl)
     }
 
@@ -88,7 +88,7 @@ abstract class BaseWebService : WebService, KoinComponent {
 
     ///// Functions that are not service dependent
 
-    protected fun ensurePageWithSession(vararg expectedUrls: String) {
+    protected fun ensurePageWithSession(vararg expectedUrls: String, log: Boolean = false) {
         runCatching { browser.currentUrl }.exceptionOrNull()?.let {
             browser.switchTo().window("")
         }
@@ -110,23 +110,26 @@ abstract class BaseWebService : WebService, KoinComponent {
 
         beforeEnsureSession(browser)
         val (importantCookiesAvailable, refresh) = browser.ensureImportantCookies(
-            importantCookies = importantCookies,
             overrideCookies = overrideCookies,
+            importantCookies = importantCookies,
             storedCookies = store.getCookies(),
+            log,
         )
-
-        if (importantCookiesAvailable.not() && login(browser)) {
-            Thread.sleep(500)
-            browser.getCookies()
-        }
         if (refresh) {
             browser[finalUrls[0]]
+        }
+        login(browser)
+
+        Thread.sleep(500)
+        browser[finalUrls[0]]
+        if (importantCookiesAvailable.not()) {
+            browser.getCookies()
         }
         afterEnsureSession(browser)
     }
 
-    override fun openRoot() {
-        ensurePageWithSession()
+    override fun login() {
+        ensurePageWithSession(log = true)
     }
 
     protected abstract fun login(driver: WebDriver): Boolean

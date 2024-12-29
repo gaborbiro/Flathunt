@@ -23,8 +23,8 @@ import java.util.regex.Pattern
 class IdealistaWebService : BaseWebService() {
 
     override val rootUrl = "https://www.idealista.pt/en"
-    override val importantCookies = listOf("datadome" to ".idealista.pt")
     override val overrideCookies = listOf("datadome" to ".idealista.pt")
+    override val importantCookies = listOf("datadome" to ".idealista.pt")
 
     companion object {
         private const val USERNAME = "gabor.biro@yahoo.com"
@@ -33,9 +33,6 @@ class IdealistaWebService : BaseWebService() {
 
     override fun afterEnsureSession(driver: WebDriver) {
         driver.findElements(By.id("didomi-notice-agree-button")).firstOrNull()?.click()
-        if (driver.findElements(By.className("icon-user-no-logged-text")).isNotEmpty()) {
-            login(driver)
-        }
     }
 
     override fun getPageInfo(driver: WebDriver, searchUrl: String): PageInfo {
@@ -84,8 +81,6 @@ class IdealistaWebService : BaseWebService() {
         if (matcher.find().not()) throw IllegalArgumentException("Cannot parse price: $priceStr")
         val price = DecimalFormat("#,###").parse(matcher.group(1)).toInt()
 
-        // peek https://www.idealista.pt/en/imovel/31059949/
-
         val features = driver.findElements(By.className("details-property_features"))
             .map { it.findElements(By.tagName("li")).map { it.text } }.flatten().distinct()
         var equipped = false
@@ -104,8 +99,9 @@ class IdealistaWebService : BaseWebService() {
         val energyCertificationElement =
             driver.findElements(By.xpath("//*[contains(text(), \"Energy performance certificate\")]/following-sibling::*/ul/li/*[last()]"))
                 .lastOrNull()
-        val energyCertification =
-            energyCertificationElement?.let { it.getAttribute("title").or() ?: it.text } ?: "Unknown"
+        val energyCertification = energyCertificationElement
+            ?.let { it.getAttribute("title").or() ?: it.text }
+            ?: "Unknown"
         val mapURL = (driver as JavascriptExecutor)
             .executeScript("return config['multimediaCarrousel']['map']['src'];") as String
         val center: List<String> = URI.create(mapURL).query.split("&")
@@ -143,12 +139,16 @@ class IdealistaWebService : BaseWebService() {
     }
 
     override fun login(driver: WebDriver): Boolean {
-        driver.findElement(By.className("icon-user-no-logged-text")).click()
-        driver.findElement(By.className("js-email-field")).click()
-        driver.findElement(By.className("js-email-field")).sendKeys(USERNAME)
-        driver.findElement(By.className("js-password-field")).click()
-        driver.findElement(By.className("js-password-field")).sendKeys(PASSWORD)
-        driver.findElement(By.id("doLogin")).click()
-        return true
+        driver.findElements(By.id("didomi-notice-agree-button")).firstOrNull()?.click()
+        if (driver.findElements(By.className("icon-user-no-logged-text")).isNotEmpty()) {
+            driver.findElement(By.className("icon-user-no-logged-text")).click()
+            driver.findElement(By.className("js-email-field")).click()
+            driver.findElement(By.className("js-email-field")).sendKeys(USERNAME)
+            driver.findElement(By.className("js-password-field")).click()
+            driver.findElement(By.className("js-password-field")).sendKeys(PASSWORD)
+            driver.findElement(By.id("doLogin")).click()
+            return true
+        }
+        return false
     }
 }

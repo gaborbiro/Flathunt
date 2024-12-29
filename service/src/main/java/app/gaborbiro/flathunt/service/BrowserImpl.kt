@@ -28,9 +28,10 @@ class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
     }
 
     fun ensureImportantCookies(
-        importantCookies: List<Pair<String, String>>,
         overrideCookies: List<Pair<String, String>>,
+        importantCookies: List<Pair<String, String>>,
         storedCookies: CookieSet?,
+        log: Boolean,
     ): Pair<Boolean, Boolean> {
         var needsRefresh = false
         var importantCookiesAvailable = false
@@ -40,6 +41,11 @@ class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
                 val options = driver.manage()
                 val browserCookies = options.cookies
 
+                if (overrideCookies.isNotEmpty()) {
+                    if (log) {
+                        console.i("Overriding ${overrideCookies.size} cookies. If page doesn't load, override following cookies manually: ${overrideCookies.joinToString { it.first + "/" + it.second }}")
+                    }
+                }
                 overrideCookies.forEach { (name, _) ->
                     cookies.firstOrNull { it.name == name }
                         ?.let {
@@ -51,8 +57,14 @@ class BrowserImpl : Browser, KoinComponent, JavascriptExecutor {
                 if (importantCookies.all { (name, domain) -> browserCookies.containsCookie(name, domain) }) {
                     // browser already has valid session cookies, nothing to do
                     importantCookiesAvailable = true
+                    if (log && importantCookies.isNotEmpty()) {
+                        console.i("${importantCookies.size} important cookies already present")
+                    }
                 } else {
-                    // browser has no session cookies
+                    if (log && importantCookies.isNotEmpty()) {
+                        console.i("Setting ${importantCookies.size} cookies")
+                    }
+                    // browser is missing important cookies
                     if (importantCookies.all { (name, domain) -> cookies.containsCookie(name, domain) }) {
                         // we have session cookies stored
                         options.deleteAllCookies()

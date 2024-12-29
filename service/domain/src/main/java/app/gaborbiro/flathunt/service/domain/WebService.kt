@@ -22,5 +22,5 @@ interface WebService {
 
     fun tagMessage(messageUrl: String, vararg tags: MessageTag)
 
-    fun openRoot()
+    fun login()
 }

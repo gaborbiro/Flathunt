@@ -56,7 +56,7 @@ class PropertyRepositoryImpl : PropertyRepository, KoinComponent {
     }
 
     override fun validate() {
-        webService.openRoot()
+        webService.login()
         val unsuitable = store.getProperties().filter { property ->
             if (validator.isValid(property)) {
                 val propertyWithRoutes = directionsRepository.validateDirections(property)
